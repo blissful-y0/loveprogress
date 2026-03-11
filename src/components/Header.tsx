@@ -58,7 +58,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-border-light">
       {/* Desktop Header */}
-      <div className="hidden lg:flex mx-auto max-w-[1280px] items-center justify-between h-16 px-8">
+      <div className="hidden lg:flex mx-auto max-w-[1280px] items-center justify-between h-20 px-8">
         <Link href="/" className="shrink-0 transition-opacity hover:opacity-80">
           <img
             src="/img/main/logo.png"
@@ -69,20 +69,20 @@ export default function Header() {
           />
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-[15px]">
           {NAV_ITEMS.map((item) => {
             const active = isActiveRoute(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative px-4 py-5 text-[14px] font-medium transition-colors hover:text-text-dark ${
+                className={`relative px-4 pb-[15px] pt-5 text-[15px] font-bold transition-colors hover:text-text-dark ${
                   active ? "text-text-dark" : "text-text-muted"
                 }`}
               >
                 {item.label}
                 <span
-                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[2.5px] bg-text-dark rounded-full transition-all duration-200 ${
+                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[3px] bg-text-dark rounded-full transition-all duration-200 ${
                     active ? "w-5/6 opacity-100" : "w-0 opacity-0"
                   }`}
                 />
@@ -108,16 +108,21 @@ export default function Header() {
           </button>
 
           {isLoginOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-[120px] rounded-xl border border-gray-200 bg-white shadow-lg shadow-black/5 overflow-hidden">
+            <div
+              className="absolute right-0 top-full mt-1.5 w-[100px] rounded-lg border border-text-light bg-white shadow-lg shadow-black/5 overflow-hidden"
+              style={{ height: "90px" }}
+            >
               {LOGIN_MENU_ITEMS.map((item, i) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block px-4 py-2.5 text-[13px] text-text-sub hover:bg-gray-50 transition-colors ${
-                    i > 0 ? "border-t border-gray-100" : ""
+                  className={`flex items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors ${
+                    i > 0 ? "" : ""
                   }`}
                 >
-                  {item.label}
+                  <span className="rounded-[5px] px-2 py-1 hover:bg-bg-light">
+                    {item.label}
+                  </span>
                 </Link>
               ))}
             </div>
@@ -129,7 +134,10 @@ export default function Header() {
       <div className="lg:hidden">
         {/* Top row: Logo + Login */}
         <div className="flex items-center justify-between h-14 px-4">
-          <Link href="/" className="shrink-0 transition-opacity hover:opacity-80">
+          <Link
+            href="/"
+            className="shrink-0 transition-opacity hover:opacity-80"
+          >
             <img
               src="/img/main/logo.png"
               alt="깨달음의 나무 정원"

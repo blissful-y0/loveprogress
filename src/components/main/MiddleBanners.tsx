@@ -9,18 +9,18 @@ import "swiper/css/pagination";
 
 // TODO: Replace with API data
 const MINI_CAROUSEL_SLIDES = [
-  { id: 1, image: "/img/main/중앙캐러셀.jpg", alt: "Phainaxa Wedding Cafe" },
-  { id: 2, image: "/img/main/중앙캐러셀.jpg", alt: "Phainaxa Wedding Cafe 2" },
-  { id: 3, image: "/img/main/중앙캐러셀.jpg", alt: "Phainaxa Wedding Cafe 3" },
+  { id: 1, image: "/img/main/middle-carousel.jpg", alt: "Phainaxa Wedding Cafe" },
+  { id: 2, image: "/img/main/middle-carousel.jpg", alt: "Phainaxa Wedding Cafe 2" },
+  { id: 3, image: "/img/main/middle-carousel.jpg", alt: "Phainaxa Wedding Cafe 3" },
 ];
 
 const ICON_CARDS = [
-  { id: 1, icon: "/img/main/topcarousel/학사일정.png", label: "학사일정" },
-  { id: 2, icon: "/img/main/topcarousel/신입생안내.png", label: "신입생안내" },
-  { id: 3, icon: "/img/main/topcarousel/예술교육원.png", label: "예술교육원" },
-  { id: 4, icon: "/img/main/topcarousel/졸업수료.png", label: "졸업수료" },
-  { id: 5, icon: "/img/main/topcarousel/대학원통합과정.png", label: "대학원통합과정" },
-  { id: 6, icon: "/img/main/topcarousel/산학협력단.png", label: "산학협력단" },
+  { id: 1, icon: "/img/main/topcarousel/academic-calendar.png", label: "학사일정" },
+  { id: 2, icon: "/img/main/topcarousel/freshmen-guide.png", label: "신입생안내" },
+  { id: 3, icon: "/img/main/topcarousel/arts-education.png", label: "예술교육원" },
+  { id: 4, icon: "/img/main/topcarousel/graduation.png", label: "졸업수료" },
+  { id: 5, icon: "/img/main/topcarousel/graduate-program.png", label: "대학원통합과정" },
+  { id: 6, icon: "/img/main/topcarousel/industry-collab.png", label: "산학협력단" },
 ];
 
 export default function MiddleBanners() {
@@ -58,15 +58,16 @@ export default function MiddleBanners() {
 
           {/* 6 icons filling remaining cells */}
           {ICON_CARDS.map((card) => (
-            <button
-              key={card.id}
-              className="group flex flex-col items-center justify-center gap-1.5 py-2 rounded-xl hover:bg-gray-50/80 transition-all duration-200 cursor-pointer"
-            >
-              <div className="w-[32px] h-[32px] transition-transform duration-200 group-hover:scale-105">
-                <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
-              </div>
+            <div key={card.id} className="flex flex-col items-center gap-1">
+              <button
+                className="group flex items-center justify-center aspect-square w-full bg-bg-light rounded-[10px] hover:brightness-95 transition-all duration-200 cursor-pointer"
+              >
+                <div className="w-[32px] h-[32px] transition-transform duration-200 group-hover:scale-105">
+                  <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
+                </div>
+              </button>
               <span className="text-[10px] text-text-sub font-medium whitespace-nowrap">{card.label}</span>
-            </button>
+            </div>
           ))}
         </div>
       </div>
@@ -88,7 +89,7 @@ export default function MiddleBanners() {
           >
             {MINI_CAROUSEL_SLIDES.map((slide) => (
               <SwiperSlide key={slide.id}>
-                <div className="w-[260px] h-[100px] rounded-xl overflow-hidden">
+                <div className="w-[260px] h-[100px] rounded-[15px] overflow-hidden">
                   <img
                     src={slide.image}
                     alt={slide.alt}
@@ -107,15 +108,16 @@ export default function MiddleBanners() {
         <div className="flex-1">
           <div className="grid grid-cols-6 gap-2">
             {ICON_CARDS.map((card) => (
-              <button
-                key={card.id}
-                className="group flex flex-col items-center gap-3 py-4 px-2 rounded-xl hover:bg-gray-50/80 transition-all duration-200 cursor-pointer"
-              >
-                <div className="w-[52px] h-[52px] transition-transform duration-200 group-hover:scale-105">
-                  <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
-                </div>
-                <span className="text-[13px] text-text-sub font-medium whitespace-nowrap">{card.label}</span>
-              </button>
+              <div key={card.id} className="flex flex-col items-center gap-2">
+                <button
+                  className="group flex items-center justify-center w-[100px] h-[100px] bg-bg-light rounded-[15px] hover:brightness-95 transition-all duration-200 cursor-pointer"
+                >
+                  <div className="w-[52px] h-[52px] transition-transform duration-200 group-hover:scale-105">
+                    <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
+                  </div>
+                </button>
+                <span className="text-[14px] text-text-sub font-medium whitespace-nowrap">{card.label}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -126,7 +128,7 @@ export default function MiddleBanners() {
         .mini-carousel .swiper-pagination { bottom: 0 !important; }
         .mini-bullet {
           display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-          background-color: #d0d0d0; margin: 0 3px; cursor: pointer;
+          background-color: #c0c0c0; margin: 0 3px; cursor: pointer;
           transition: all 0.2s ease;
         }
         .mini-bullet-active {

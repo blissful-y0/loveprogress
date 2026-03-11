@@ -5,7 +5,7 @@ const TOP_BAR_TEXT =
   "파이낙사 온리전 – 사랑의 진도 2 – 어린이/아이지만 졸업으미 허접으니 #31 –";
 
 const DISCLAIMER_TEXT =
-  "본 사이트는 비공식/비영리 팬 행사 안내 사이트이며 실제 학교나 교육 기관과는 관련이 없습니다.";
+  "이 행사는 오직 2차 창작 교류를 위한 행사로, 비공식/비영리 행위임을 밝힙니다.";
 
 export default function Footer() {
   return (
@@ -40,13 +40,13 @@ export default function Footer() {
       {/* Footer Content */}
       <div className="bg-[#f8f9fa]">
         <div className="mx-auto max-w-[1280px] px-6 lg:px-8 py-8">
-          <p className="text-[12px] text-text-light leading-[1.8] mb-5">
+          <p className="text-[12px] font-light text-text-muted leading-[1.8] mb-5">
             {DISCLAIMER_TEXT}
           </p>
 
-          <div className="flex flex-col gap-1.5 text-[12px] text-text-light leading-[1.8]">
+          <div className="flex flex-col gap-1.5 text-[12px] font-light text-text-muted leading-[1.8]">
             <p>
-              대표자명: 교무부장
+              대표자명: 교무처장
               <span className="mx-2 text-border">|</span>
               TWT:{" "}
               <Link
@@ -77,7 +77,7 @@ export default function Footer() {
                   '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
               }}
             >
-              Copyright &copy; 2026 깨달음의 나무 정원 교무지원 All rights reserved.
+              Copyright &copy; 2026 깨달음의 나무 정원 교무처장 All right reserved.
             </p>
           </div>
         </div>

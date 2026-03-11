@@ -53,7 +53,7 @@ export default function TopCarousel() {
   };
 
   return (
-    <section className="relative w-full py-4 md:py-6">
+    <section className="relative w-full pt-[30px] pb-4 md:pb-6">
       {/* Background color - top half only */}
       <div
         className="absolute top-0 left-0 w-full h-[85%] transition-colors duration-500"
@@ -97,11 +97,11 @@ export default function TopCarousel() {
                   />
                   {/* Pagination indicator - overlay on image */}
                   <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4">
-                    <div className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-white"
-                      style={{ backgroundColor: "rgba(0, 0, 0, 0.35)", height: "20px", minWidth: "45px" }}
+                    <div className="flex items-center gap-1 px-3 py-1 text-white"
+                      style={{ backgroundColor: "rgba(0, 0, 0, 0.15)", height: "20px", minWidth: "45px", borderRadius: "10px" }}
                     >
-                      <span className="text-[10px]">●</span>
-                      <span className="text-[10px]">
+                      <span className="text-[12px] font-medium">●</span>
+                      <span className="text-[12px] font-medium">
                         {activeIndex + 1} / {BANNER_SLIDES.length}
                       </span>
                     </div>
