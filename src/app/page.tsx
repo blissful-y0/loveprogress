@@ -1,7 +1,17 @@
+"use client";
+
+import TopCarousel from "@/components/main/TopCarousel";
+import MiddleBanners from "@/components/main/MiddleBanners";
+import BoardSections from "@/components/main/BoardSections";
+import QuickLinks from "@/components/main/QuickLinks";
+
 export default function Home() {
   return (
     <main>
-      <h1>사랑의 진도</h1>
+      <TopCarousel />
+      <MiddleBanners />
+      <BoardSections />
+      <QuickLinks />
     </main>
   );
 }
