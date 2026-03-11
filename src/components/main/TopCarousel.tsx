@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -14,93 +14,104 @@ const BANNER_SLIDES = [
   {
     id: 1,
     image: "/img/main/main.jpg",
-    backgroundColor: "#d6eaf8",
+    backgroundColor: "#2c3e6b",
     alt: "메인 배너 1",
   },
   {
     id: 2,
     image: "/img/main/main.jpg",
-    backgroundColor: "#f8d6d6",
+    backgroundColor: "#2c3e6b",
     alt: "메인 배너 2",
   },
   {
     id: 3,
     image: "/img/main/main.jpg",
-    backgroundColor: "#d6f8e0",
+    backgroundColor: "#2c3e6b",
     alt: "메인 배너 3",
   },
   {
     id: 4,
     image: "/img/main/main.jpg",
-    backgroundColor: "#f8f0d6",
+    backgroundColor: "#2c3e6b",
     alt: "메인 배너 4",
   },
   {
     id: 5,
     image: "/img/main/main.jpg",
-    backgroundColor: "#e0d6f8",
+    backgroundColor: "#2c3e6b",
     alt: "메인 배너 5",
   },
 ];
 
 export default function TopCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const currentBg = BANNER_SLIDES[activeIndex]?.backgroundColor ?? "#d6eaf8";
+  const [ready, setReady] = useState(false);
+  const currentBg = BANNER_SLIDES[activeIndex]?.backgroundColor ?? "transparent";
 
   const handleSlideChange = (swiper: SwiperType): void => {
     setActiveIndex(swiper.realIndex);
   };
 
   return (
-    <section
-      className="w-full transition-colors duration-500 py-6 md:py-10"
-      style={{ backgroundColor: currentBg }}
-    >
-      <div className="relative mx-auto max-w-[1280px] px-4">
-        <Swiper
-          modules={[Pagination]}
-          spaceBetween={20}
-          slidesPerView={1}
-          centeredSlides={true}
-          loop={true}
-          onSlideChange={handleSlideChange}
-          breakpoints={{
-            768: {
-              slidesPerView: 1.1,
-              spaceBetween: 24,
-            },
-            1280: {
-              slidesPerView: 1.15,
-              spaceBetween: 30,
-            },
-          }}
-          className="top-carousel"
+    <section className="relative w-full py-4 md:py-6">
+      {/* Background color - top half only */}
+      <div
+        className="absolute top-0 left-0 w-full h-[85%] transition-colors duration-500"
+        style={{ backgroundColor: currentBg }}
+      />
+      <div className="relative z-10 mx-auto w-full md:h-[350px] lg:h-[450px]">
+        <div
+          className="w-full h-full transition-opacity duration-300"
+          style={{ opacity: ready ? 1 : 0 }}
         >
-          {BANNER_SLIDES.map((slide) => (
-            <SwiperSlide key={slide.id}>
-              <div className="relative h-[250px] md:h-[350px] lg:h-[450px] overflow-hidden rounded-[20px] md:rounded-[30px]">
-                <Image
-                  src={slide.image}
-                  alt={slide.alt}
-                  fill
-                  className="object-cover"
-                  priority={slide.id === 1}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 1280px"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        {/* Pagination indicator */}
-        <div className="absolute bottom-10 right-8 md:bottom-12 md:right-12 z-10 flex items-center gap-1 rounded-full px-3 py-1 text-xs text-white"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.15)", height: "20px", minWidth: "45px" }}
-        >
-          <span className="text-[10px]">●</span>
-          <span className="text-[10px]">
-            {activeIndex + 1} / {BANNER_SLIDES.length}
-          </span>
+          <Swiper
+            modules={[Pagination]}
+            spaceBetween={20}
+            slidesPerView={1}
+            centeredSlides={true}
+            loop={true}
+            onSwiper={() => setReady(true)}
+            onSlideChange={handleSlideChange}
+            style={{ height: "100%" }}
+            breakpoints={{
+              768: {
+                slidesPerView: 1.1,
+                spaceBetween: 24,
+              },
+              1280: {
+                slidesPerView: 1.15,
+                spaceBetween: 30,
+              },
+            }}
+            className="top-carousel"
+          >
+            {BANNER_SLIDES.map((slide) => (
+              <SwiperSlide key={slide.id} style={{ height: "100%" }}>
+                <div className="relative h-full overflow-hidden rounded-2xl md:rounded-[30px]">
+                  <img
+                    src={slide.image}
+                    alt={slide.alt}
+                    width={1280}
+                    height={450}
+                    className="w-full h-auto md:h-full md:object-cover"
+                  />
+                  {/* Pagination indicator - overlay on image */}
+                  <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4">
+                    <div className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-white"
+                      style={{ backgroundColor: "rgba(0, 0, 0, 0.35)", height: "20px", minWidth: "45px" }}
+                    >
+                      <span className="text-[10px]">●</span>
+                      <span className="text-[10px]">
+                        {activeIndex + 1} / {BANNER_SLIDES.length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </div>
+
       </div>
     </section>
   );
