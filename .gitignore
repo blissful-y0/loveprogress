@@ -31,6 +31,16 @@ yarn-error.log*
 # env files
 .env*.local
 .env
+.env.*
+
+# secrets & credentials
+*.key
+*.cert
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+secrets.json
 
 # vercel
 .vercel
