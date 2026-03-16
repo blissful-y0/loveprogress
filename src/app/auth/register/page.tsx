@@ -2,14 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     nickname: "",
@@ -20,6 +17,7 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -83,26 +81,34 @@ export default function RegisterPage() {
         return;
       }
 
-      // 성공 시 자동 로그인
-      const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (signInError) {
-        // 가입은 성공했지만 자동 로그인 실패 → 로그인 페이지로 이동
-        router.push("/auth/login?registered=true");
-        return;
-      }
-
-      router.push("/");
+      setIsRegistered(true);
     } catch {
       setError("서버 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isRegistered) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+        <div className="w-full max-w-[500px] rounded-[15px] border border-border bg-white p-8 text-center shadow-md sm:p-10">
+          <h1 className="mb-4 text-2xl font-bold text-text-dark">
+            회원가입 완료
+          </h1>
+          <p className="mb-6 text-sm text-text-sub">
+            이메일 인증 메일을 발송했습니다. 메일함을 확인해주세요.
+          </p>
+          <Link
+            href="/auth/login"
+            className="inline-block rounded-[10px] bg-primary px-6 py-2.5 text-base font-semibold text-white hover:bg-primary/90"
+          >
+            로그인 페이지로 이동
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
