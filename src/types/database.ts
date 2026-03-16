@@ -19,10 +19,8 @@ export type BannerGroup = "top_carousel" | "middle_carousel" | "fixed_banner";
 
 export interface UserRow {
   id: string;
-  username: string;
   nickname: string;
   email: string;
-  password_hash: string;
   booth_name: string | null;
   phone_last4: string | null;
   role: UserRole;
@@ -111,13 +109,15 @@ export interface MainBannerRow {
 
 // ─── Public types (password_hash 제외) ───────────────────────
 
-export type UserPublic = Omit<UserRow, "password_hash">;
+// UserRow에 더 이상 password_hash가 없으므로 UserPublic = UserRow
+export type UserPublic = UserRow;
 
 export type QnaPostPublic = Omit<QnaPostRow, "password_hash">;
 
 // ─── Insert types (omit server-generated fields) ─────────────
 
-export type UserInsert = Omit<UserRow, "id" | "created_at" | "updated_at">;
+// id는 auth.users에서 받아오므로 Insert 시 필수 제공
+export type UserInsert = Omit<UserRow, "created_at" | "updated_at">;
 export type BoardPostInsert = Omit<BoardPostRow, "id" | "created_at" | "updated_at">;
 export type BoardCommentInsert = Omit<BoardCommentRow, "id" | "created_at" | "updated_at">;
 export type QnaPostInsert = Omit<QnaPostRow, "id" | "created_at">;

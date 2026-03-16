@@ -1,5 +1,7 @@
 -- ============================================================
 -- 사랑의 진도 (Love Progress) — Supabase Schema
+-- 인증은 Supabase Auth를 사용하며, public.users 테이블은
+-- 프로필 정보와 역할(role) 저장 용도로만 사용합니다.
 -- RLS 활성화: 기본 deny-all 정책, 인증/권한은 Next.js API에서 처리
 -- ============================================================
 
@@ -14,11 +16,9 @@ CREATE TYPE booth_keyword  AS ENUM ('그림회지', '글회지', '팬시굿즈',
 -- ─── users ────────────────────────────────────────────────
 
 CREATE TABLE users (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  username       TEXT        NOT NULL UNIQUE,
+  id             UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   nickname       TEXT        NOT NULL,
   email          TEXT        NOT NULL UNIQUE,
-  password_hash  TEXT        NOT NULL,
   booth_name     TEXT,
   phone_last4    TEXT,
   role           user_role   NOT NULL DEFAULT 'member',
