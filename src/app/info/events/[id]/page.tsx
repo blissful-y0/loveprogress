@@ -1,9 +1,27 @@
-export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+import { notFound } from "next/navigation";
+import { getPostById, getAdjacentPosts } from "@/lib/mock-board-data";
+import BoardDetailPage from "@/components/board/board-detail-page";
+
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export default async function EventDetailPage({ params }: Props) {
   const { id } = await params;
+  const post = getPostById("event", id);
+
+  if (!post) {
+    notFound();
+  }
+
+  const { prev, next } = getAdjacentPosts("event", id);
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <h1 className="text-2xl font-bold text-[#212121]">학내 행사 상세</h1>
-      <p className="text-[#909090]">게시글 #{id} - 준비 중입니다</p>
-    </div>
+    <BoardDetailPage
+      basePath="/info/events"
+      post={post}
+      prevPost={prev}
+      nextPost={next}
+    />
   );
 }

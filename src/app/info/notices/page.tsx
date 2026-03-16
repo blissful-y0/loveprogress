@@ -1,8 +1,17 @@
+"use client";
+
+import { getPostsByType } from "@/lib/mock-board-data";
+import BoardListPage from "@/components/board/board-list-page";
+
 export default function NoticesPage() {
+  const posts = getPostsByType("notice");
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <h1 className="text-2xl font-bold text-[#212121]">공지사항</h1>
-      <p className="text-[#909090]">준비 중입니다</p>
-    </div>
+    <BoardListPage
+      title="입학처 공지사항"
+      basePath="/info/notices"
+      emptyMessage="등록된 공지사항이 없습니다."
+      posts={posts}
+    />
   );
 }

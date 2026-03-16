@@ -1,8 +1,17 @@
+"use client";
+
+import { getPostsByType } from "@/lib/mock-board-data";
+import BoardListPage from "@/components/board/board-list-page";
+
 export default function EventsPage() {
+  const posts = getPostsByType("event");
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <h1 className="text-2xl font-bold text-[#212121]">학내 행사 안내</h1>
-      <p className="text-[#909090]">준비 중입니다</p>
-    </div>
+    <BoardListPage
+      title="학내 행사 안내"
+      basePath="/info/events"
+      emptyMessage="등록된 행사 안내가 없습니다."
+      posts={posts}
+    />
   );
 }
