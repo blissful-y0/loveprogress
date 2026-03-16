@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#fff3e0"/>
+  <text x="200" y="140" font-family="sans-serif" font-size="20" fill="#e65100" text-anchor="middle">BOOTH 5</text>
+  <text x="200" y="170" font-family="sans-serif" font-size="14" fill="#e65100" text-anchor="middle" opacity="0.7">Placeholder Image</text>
+</svg>
