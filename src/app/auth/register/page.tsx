@@ -8,30 +8,107 @@ import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     nickname: "",
     password: "",
-    email: "",
+    passwordConfirm: "",
     boothName: "",
     phoneLast4: "",
   });
-  const [usernameChecked, setUsernameChecked] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (field === "username") {
-      setUsernameChecked(false);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    if (!formData.nickname.trim()) {
+      setError("닉네임을 입력해주세요.");
+      return;
+    }
+
+    if (formData.nickname.trim().length > 20) {
+      setError("닉네임은 20자 이하여야 합니다.");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("비밀번호는 6자 이상이어야 합니다.");
+      return;
+    }
+
+    if (formData.password !== formData.passwordConfirm) {
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    if (formData.phoneLast4 && !/^\d{4}$/.test(formData.phoneLast4)) {
+      setError("휴대폰번호 뒷자리는 숫자 4자리여야 합니다.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 서버에서 원자적으로 auth user + 프로필 생성
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: formData.nickname.trim(),
+          email: formData.email,
+          password: formData.password,
+          boothName: formData.boothName.trim() || undefined,
+          phoneLast4: formData.phoneLast4.trim() || undefined,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.error ?? "회원가입에 실패했습니다.");
+        return;
+      }
+
+      setIsRegistered(true);
+    } catch {
+      setError("서버 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleCheckUsername = () => {
-    alert("준비중입니다");
-  };
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    // TODO: API 연동
-  };
+  if (isRegistered) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+        <div className="w-full max-w-[500px] rounded-[15px] border border-border bg-white p-8 text-center shadow-md sm:p-10">
+          <h1 className="mb-4 text-2xl font-bold text-text-dark">
+            회원가입 완료
+          </h1>
+          <p className="mb-6 text-sm text-text-sub">
+            이메일 인증 메일을 발송했습니다. 메일함을 확인해주세요.
+          </p>
+          <Link
+            href="/auth/login"
+            className="inline-block rounded-[10px] bg-primary px-6 py-2.5 text-base font-semibold text-white hover:bg-primary/90"
+          >
+            로그인 페이지로 이동
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
@@ -42,34 +119,20 @@ export default function RegisterPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Username with duplicate check */}
+          {/* Email */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="username" className="text-sm text-text-sub">
-              아이디 <span className="text-destructive">*</span>
+            <Label htmlFor="email" className="text-sm text-text-sub">
+              이메일 <span className="text-destructive">*</span>
             </Label>
-            <div className="flex gap-2">
-              <Input
-                id="username"
-                type="text"
-                placeholder="아이디를 입력하세요"
-                required
-                value={formData.username}
-                onChange={(e) => updateField("username", e.target.value)}
-                className="h-10 flex-1 rounded-lg border-border px-3 text-sm"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCheckUsername}
-                className={`h-10 shrink-0 rounded-lg border px-4 text-sm font-medium ${
-                  usernameChecked
-                    ? "border-primary bg-primary/5 text-primary"
-                    : "border-border text-text-sub hover:bg-muted"
-                }`}
-              >
-                {usernameChecked ? "확인완료" : "중복확인"}
-              </Button>
-            </div>
+            <Input
+              id="email"
+              type="email"
+              placeholder="이메일을 입력하세요"
+              required
+              value={formData.email}
+              onChange={(e) => updateField("email", e.target.value)}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
           </div>
 
           {/* Nickname */}
@@ -96,26 +159,27 @@ export default function RegisterPage() {
             <Input
               id="password"
               type="password"
-              placeholder="비밀번호를 입력하세요"
+              placeholder="비밀번호를 입력하세요 (6자 이상)"
               required
+              minLength={6}
               value={formData.password}
               onChange={(e) => updateField("password", e.target.value)}
               className="h-10 rounded-lg border-border px-3 text-sm"
             />
           </div>
 
-          {/* Email */}
+          {/* Password confirm */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email" className="text-sm text-text-sub">
-              이메일 <span className="text-destructive">*</span>
+            <Label htmlFor="passwordConfirm" className="text-sm text-text-sub">
+              비밀번호 확인 <span className="text-destructive">*</span>
             </Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="이메일을 입력하세요"
+              id="passwordConfirm"
+              type="password"
+              placeholder="비밀번호를 다시 입력하세요"
               required
-              value={formData.email}
-              onChange={(e) => updateField("email", e.target.value)}
+              value={formData.passwordConfirm}
+              onChange={(e) => updateField("passwordConfirm", e.target.value)}
               className="h-10 rounded-lg border-border px-3 text-sm"
             />
           </div>
@@ -159,12 +223,16 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Error message */}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
           {/* Register button */}
           <Button
             type="submit"
-            className="mx-auto mt-3 h-[40px] w-full max-w-[420px] rounded-[10px] bg-primary text-base font-semibold text-white hover:bg-primary/90"
+            disabled={isSubmitting}
+            className="mx-auto mt-3 h-[40px] w-full max-w-[420px] rounded-[10px] bg-primary text-base font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
           >
-            가입하기
+            {isSubmitting ? "가입 중..." : "가입하기"}
           </Button>
         </form>
 
@@ -179,7 +247,9 @@ export default function RegisterPage() {
           <button
             type="button"
             className="flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm text-text-sub transition-colors hover:bg-muted"
-            onClick={() => { /* TODO: API 연동 */ }}
+            onClick={() => {
+              /* TODO: Discord OAuth 연동 */
+            }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

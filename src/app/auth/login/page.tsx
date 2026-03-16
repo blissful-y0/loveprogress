@@ -1,20 +1,64 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { createClient } from "@/lib/supabase/client";
+
+const SAVED_EMAIL_KEY = "loveprogress_saved_email";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const router = useRouter();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [saveId, setSaveId] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  useEffect(() => {
+    const savedEmail = localStorage.getItem(SAVED_EMAIL_KEY);
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setSaveId(true);
+    }
+  }, []);
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: API 연동
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        if (authError.message === "Invalid login credentials") {
+          setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+        } else {
+          setError(authError.message);
+        }
+        return;
+      }
+
+      if (saveId) {
+        localStorage.setItem(SAVED_EMAIL_KEY, email);
+      } else {
+        localStorage.removeItem(SAVED_EMAIL_KEY);
+      }
+
+      router.push("/");
+      router.refresh();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -26,18 +70,18 @@ export default function LoginPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* ID */}
+          {/* Email */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="username" className="text-sm text-text-sub">
-              아이디
+            <Label htmlFor="email" className="text-sm text-text-sub">
+              이메일
             </Label>
             <Input
-              id="username"
-              type="text"
-              placeholder="아이디를 입력하세요"
+              id="email"
+              type="email"
+              placeholder="이메일을 입력하세요"
               required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="h-11 rounded-lg border-border px-3 text-sm"
             />
           </div>
@@ -58,7 +102,12 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Save ID checkbox */}
+          {/* Error message */}
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+
+          {/* Save email checkbox */}
           <div className="flex items-center gap-2">
             <Checkbox
               id="save-id"
@@ -69,16 +118,17 @@ export default function LoginPage() {
               htmlFor="save-id"
               className="cursor-pointer text-sm font-normal text-text-muted"
             >
-              아이디 저장
+              이메일 저장
             </Label>
           </div>
 
           {/* Login button */}
           <Button
             type="submit"
-            className="mx-auto mt-2 h-[50px] w-full max-w-[400px] rounded-[10px] bg-primary text-base font-semibold text-white hover:bg-primary/90"
+            disabled={isSubmitting}
+            className="mx-auto mt-2 h-[50px] w-full max-w-[400px] rounded-[10px] bg-primary text-base font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
           >
-            로그인
+            {isSubmitting ? "로그인 중..." : "로그인"}
           </Button>
         </form>
 
@@ -120,7 +170,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="overflow-hidden rounded-full transition-opacity hover:opacity-80"
-            onClick={() => { /* TODO: API 연동 */ }}
+            onClick={() => { /* TODO: Discord OAuth 연동 */ }}
             aria-label="Discord로 로그인"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -135,7 +185,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="overflow-hidden rounded-full transition-opacity hover:opacity-80"
-            onClick={() => { /* TODO: API 연동 */ }}
+            onClick={() => { /* TODO: Discord OAuth 연동 */ }}
             aria-label="Discord 간편 로그인"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
