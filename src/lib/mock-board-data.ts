@@ -154,44 +154,37 @@ const EVENT_POSTS: BoardPost[] = [
   },
 ];
 
-export function getNoticePosts(): BoardPost[] {
-  return [...NOTICE_POSTS].sort(
+const POSTS_BY_TYPE: Record<BoardPost["boardType"], BoardPost[]> = {
+  notice: NOTICE_POSTS,
+  event: EVENT_POSTS,
+};
+
+function sortByDateDesc(posts: readonly BoardPost[]): BoardPost[] {
+  return [...posts].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
 
-export function getEventPosts(): BoardPost[] {
-  return [...EVENT_POSTS].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+export function getPostsByType(type: BoardPost["boardType"]): BoardPost[] {
+  return sortByDateDesc(POSTS_BY_TYPE[type]);
 }
 
-export function getNoticeById(id: string): BoardPost | undefined {
-  return NOTICE_POSTS.find((p) => p.id === id);
+export function getPostById(
+  type: BoardPost["boardType"],
+  id: string
+): BoardPost | undefined {
+  return POSTS_BY_TYPE[type].find((p) => p.id === id);
 }
 
-export function getEventById(id: string): BoardPost | undefined {
-  return EVENT_POSTS.find((p) => p.id === id);
-}
-
-export function getAdjacentNotices(id: string): {
-  prev: BoardPost | null;
-  next: BoardPost | null;
-} {
-  const sorted = getNoticePosts();
+export function getAdjacentPosts(
+  type: BoardPost["boardType"],
+  id: string
+): { prev: BoardPost | null; next: BoardPost | null } {
+  const sorted = getPostsByType(type);
   const index = sorted.findIndex((p) => p.id === id);
-  return {
-    prev: index < sorted.length - 1 ? sorted[index + 1] : null,
-    next: index > 0 ? sorted[index - 1] : null,
-  };
-}
 
-export function getAdjacentEvents(id: string): {
-  prev: BoardPost | null;
-  next: BoardPost | null;
-} {
-  const sorted = getEventPosts();
-  const index = sorted.findIndex((p) => p.id === id);
+  if (index === -1) return { prev: null, next: null };
+
   return {
     prev: index < sorted.length - 1 ? sorted[index + 1] : null,
     next: index > 0 ? sorted[index - 1] : null,
@@ -200,8 +193,8 @@ export function getAdjacentEvents(id: string): {
 
 export function formatDate(dateString: string): string {
   const d = new Date(dateString);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
   return `${year}.${month}.${day}`;
 }
