@@ -3,27 +3,64 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
-import type { QnaItem } from "../_lib/types";
+import type { QnaItem, SecretQnaPayload } from "../_lib/types";
 import { CHARACTERS } from "../_lib/constants";
 
 export function QnaCard({ item }: { item: QnaItem }) {
   const [passwordInput, setPasswordInput] = useState("");
-  const [unlocked, setUnlocked] = useState(false);
+  const [secretPayload, setSecretPayload] = useState<SecretQnaPayload | null>(
+    null,
+  );
+  const [isVerifying, setIsVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
   const character = CHARACTERS.find((c) => c.id === item.characterId);
 
-  // TODO: POST /api/qna/:id/verify-password API 연동 필요 — 현재는 mock (비밀번호: 1234)
-  const handleVerify = () => {
-    if (passwordInput === "1234") {
-      setUnlocked(true);
+  const handleVerify = async () => {
+    if (!passwordInput.trim()) {
+      setVerifyError("비밀번호를 입력해주세요");
+      return;
+    }
+
+    setIsVerifying(true);
+
+    try {
+      const response = await fetch(`/api/qna/${item.id}/verify-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: passwordInput }),
+      });
+
+      const data = (await response.json()) as
+        | SecretQnaPayload
+        | { error?: string };
+
+      if (!response.ok) {
+        setVerifyError(
+          "error" in data && data.error
+            ? data.error
+            : "비밀번호를 다시 확인해주세요",
+        );
+        return;
+      }
+
+      setSecretPayload(data as SecretQnaPayload);
+      setPasswordInput("");
       setVerifyError("");
-    } else {
-      setVerifyError("비밀번호가 일치하지 않습니다");
+    } catch {
+      setVerifyError("잠시 후 다시 시도해주세요");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
-  const showContent = !item.isSecret || unlocked;
+  const showContent = !item.isSecret || secretPayload !== null;
+  const displayContent = item.isSecret ? secretPayload?.content ?? "" : item.content;
+  const displayAnswer = item.isSecret
+    ? secretPayload?.answer ?? null
+    : item.answer ?? null;
 
   return (
     <div className="border border-[#d0d0d0] rounded-[10px] overflow-hidden">
@@ -36,7 +73,7 @@ export function QnaCard({ item }: { item: QnaItem }) {
           <Lock size={14} className="text-muted-foreground shrink-0" />
         )}
 
-        {item.isSecret && !unlocked && (
+        {item.isSecret && !secretPayload && (
           <>
             <input
               type="text"
@@ -58,8 +95,9 @@ export function QnaCard({ item }: { item: QnaItem }) {
               size="sm"
               className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
               onClick={handleVerify}
+              disabled={isVerifying}
             >
-              게시물 보기
+              {isVerifying ? "확인 중..." : "게시물 보기"}
             </Button>
             {verifyError && (
               <span className="text-sm text-red-500">{verifyError}</span>
@@ -67,7 +105,7 @@ export function QnaCard({ item }: { item: QnaItem }) {
           </>
         )}
 
-        {(!item.isSecret || unlocked) && (
+        {(!item.isSecret || secretPayload) && (
           <span className="text-sm text-muted-foreground">{item.name}</span>
         )}
       </div>
@@ -90,20 +128,20 @@ export function QnaCard({ item }: { item: QnaItem }) {
             {/* Question */}
             <div className="bg-primary/10 p-4 text-sm text-foreground leading-relaxed min-h-[80px]">
               <p className="font-semibold text-xs text-primary mb-1">Q.</p>
-              {item.content}
+              {displayContent}
             </div>
 
             {/* Answer */}
-            {item.answer && (
+            {displayAnswer && (
               <div className="bg-muted p-4 text-sm text-muted-foreground leading-relaxed min-h-[60px]">
                 <p className="font-semibold text-xs text-muted-foreground mb-1">
                   A.
                 </p>
-                {item.answer}
+                {displayAnswer}
               </div>
             )}
 
-            {!item.answer && (
+            {!displayAnswer && (
               <div className="bg-[#f9f9f9] p-4 text-sm text-muted-foreground italic min-h-[60px] flex items-center">
                 아직 답변이 등록되지 않았습니다.
               </div>
@@ -113,7 +151,7 @@ export function QnaCard({ item }: { item: QnaItem }) {
       ) : (
         <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
           <Lock size={16} className="mr-2" />
-          비밀글입니다. 비밀번호를 입력하여 확인하세요.
+          비밀글입니다. 등록한 비밀번호를 입력하여 확인하세요.
         </div>
       )}
     </div>

@@ -6,3 +6,8 @@ export interface QnaItem {
   isSecret: boolean;
   answer?: string | null;
 }
+
+export interface SecretQnaPayload {
+  content: string;
+  answer: string | null;
+}

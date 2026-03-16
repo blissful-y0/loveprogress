@@ -1,5 +1,3 @@
-"use client";
-
 import { QnaCard } from "./_components/qna-card";
 import { WriteForm } from "./_components/write-form";
 import { MOCK_DATA } from "./_lib/constants";
