@@ -6,9 +6,18 @@ export const metadata: Metadata = {
     "파이낙사 온리전 :: 사랑의 진도 행사 개요, 일정, 장소, 유의사항 및 운영 규칙 안내",
 };
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
+function SectionHeading({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
   return (
-    <h2 className="mb-4 border-b-2 border-[#34aa8f] pb-2 text-xl font-bold text-[#212121] md:text-2xl">
+    <h2
+      id={id}
+      className="mb-4 border-b-2 border-primary pb-2 text-xl font-bold text-text-dark md:text-2xl"
+    >
       {children}
     </h2>
   );
@@ -23,10 +32,10 @@ function InfoRow({
 }) {
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
-      <dt className="min-w-[100px] shrink-0 font-semibold text-[#212121]">
+      <dt className="min-w-[100px] shrink-0 font-semibold text-text-dark">
         {label}
       </dt>
-      <dd className="text-[#505050]">{children}</dd>
+      <dd className="text-text-sub">{children}</dd>
     </div>
   );
 }
@@ -36,10 +45,10 @@ export default function EventInfoPage() {
     <div className="mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-6 md:py-16 lg:px-8">
       {/* 페이지 제목 */}
       <header className="mb-10 text-center md:mb-14">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[#212121] md:text-4xl">
+        <h1 className="text-3xl font-extrabold tracking-tight text-text-dark md:text-4xl">
           행사안내
         </h1>
-        <p className="mt-3 text-base text-[#505050] md:text-lg">
+        <p className="mt-3 text-base text-text-sub md:text-lg">
           파이낙사 온리전 :: 사랑의 진도
         </p>
       </header>
@@ -47,17 +56,17 @@ export default function EventInfoPage() {
       <div className="flex flex-col gap-12 md:gap-16">
         {/* 행사 개요 */}
         <section aria-labelledby="overview">
-          <SectionHeading>행사 개요</SectionHeading>
+          <SectionHeading id="overview">행사 개요</SectionHeading>
           <div className="rounded-2xl bg-[#f8faf9] p-5 md:p-8">
-            <p className="leading-relaxed text-[#505050]">
-              <strong className="text-[#212121]">
+            <p className="leading-relaxed text-text-sub">
+              <strong className="text-text-dark">
                 파이낙사 온리전 :: 사랑의 진도
               </strong>
               는 창작자와 팬이 함께 만들어가는 온리전 행사입니다. 다양한 장르의
               회지, 굿즈, 수공예품 등을 직접 만나볼 수 있으며, 참가 부스어들의
               개성 넘치는 작품을 한자리에서 감상하고 소통할 수 있는 자리입니다.
             </p>
-            <p className="mt-4 leading-relaxed text-[#505050]">
+            <p className="mt-4 leading-relaxed text-text-sub">
               나무정원이 주최하며, 참가자 간의 따뜻한 교류와 건전한 팬 문화를
               지향합니다. 많은 관심과 참여 부탁드립니다.
             </p>
@@ -66,7 +75,7 @@ export default function EventInfoPage() {
 
         {/* 날짜 / 장소 */}
         <section aria-labelledby="datetime">
-          <SectionHeading>날짜 / 장소</SectionHeading>
+          <SectionHeading id="datetime">날짜 / 장소</SectionHeading>
           <dl className="flex flex-col gap-4 rounded-2xl bg-[#f8faf9] p-5 md:p-8">
             <InfoRow label="행사명">
               파이낙사 온리전 :: 사랑의 진도
@@ -80,7 +89,7 @@ export default function EventInfoPage() {
 
         {/* 유의사항 */}
         <section aria-labelledby="precautions">
-          <SectionHeading>유의사항</SectionHeading>
+          <SectionHeading id="precautions">유의사항</SectionHeading>
           <ul className="flex flex-col gap-3 rounded-2xl bg-[#f8faf9] p-5 md:p-8">
             {[
               "행사장 내에서는 질서를 유지하고, 다른 참가자에게 불편을 주는 행위를 삼가 주세요.",
@@ -91,8 +100,8 @@ export default function EventInfoPage() {
               "귀중품은 반드시 본인이 직접 관리해 주세요.",
               "행사 관련 공지사항은 공식 트위터(@phainaxa_event) 및 본 사이트를 통해 안내됩니다.",
             ].map((text, i) => (
-              <li key={i} className="flex gap-2 text-[#505050]">
-                <span className="mt-0.5 shrink-0 text-[#34aa8f]">&#8226;</span>
+              <li key={i} className="flex gap-2 text-text-sub">
+                <span className="mt-0.5 shrink-0 text-primary">&#8226;</span>
                 <span className="leading-relaxed">{text}</span>
               </li>
             ))}
@@ -101,7 +110,7 @@ export default function EventInfoPage() {
 
         {/* 운영 규칙 */}
         <section aria-labelledby="rules">
-          <SectionHeading>운영 규칙</SectionHeading>
+          <SectionHeading id="rules">운영 규칙</SectionHeading>
           <ol className="flex flex-col gap-3 rounded-2xl bg-[#f8faf9] p-5 md:p-8">
             {[
               "부스 참가자는 행사 시작 1시간 전까지 입장 및 세팅을 완료해야 합니다.",
@@ -113,8 +122,8 @@ export default function EventInfoPage() {
               "무단 전단지 배포, 홍보물 부착 등은 금지됩니다.",
               "운영 규칙을 위반할 경우 퇴장 조치될 수 있습니다.",
             ].map((text, i) => (
-              <li key={i} className="flex gap-3 text-[#505050]">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#34aa8f] text-xs font-bold text-white">
+              <li key={i} className="flex gap-3 text-text-sub">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
                   {i + 1}
                 </span>
                 <span className="leading-relaxed">{text}</span>
@@ -126,7 +135,7 @@ export default function EventInfoPage() {
 
       {/* 관리자 수정 버튼 - 향후 admin 로그인 시에만 노출 */}
       {/* <div className="mt-12 flex justify-end">
-        <button className="rounded-lg bg-[#34aa8f] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#2d9a80] transition-colors">
+        <button className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#2d9a80] transition-colors">
           수정하기
         </button>
       </div> */}
