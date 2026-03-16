@@ -80,7 +80,7 @@ export default function EventInfoPage() {
             <InfoRow label="행사명">
               파이낙사 온리전 :: 사랑의 진도
             </InfoRow>
-            <InfoRow label="일시">2025년 4월 20일 (일) 11:00 ~ 17:00</InfoRow>
+            <InfoRow label="일시">2026년 4월 20일 (일) 11:00 ~ 17:00</InfoRow>
             <InfoRow label="장소">서울특별시 (상세 장소 추후 공지)</InfoRow>
             <InfoRow label="주최">나무정원</InfoRow>
             <InfoRow label="참가 규모">부스 다수 참가 예정</InfoRow>
