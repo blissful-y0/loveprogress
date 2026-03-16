@@ -17,7 +17,7 @@ export default function RegisterPage() {
   });
   const [usernameChecked, setUsernameChecked] = useState(false);
 
-  const updateField = (field: string, value: string) => {
+  const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (field === "username") {
       setUsernameChecked(false);
@@ -25,13 +25,13 @@ export default function RegisterPage() {
   };
 
   const handleCheckUsername = () => {
-    console.log("아이디 중복확인:", formData.username);
+    // TODO: API 연동
     setUsernameChecked(true);
   };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log("회원가입 시도:", formData);
+    // TODO: API 연동
   };
 
   return (
@@ -53,6 +53,7 @@ export default function RegisterPage() {
                 id="username"
                 type="text"
                 placeholder="아이디를 입력하세요"
+                required
                 value={formData.username}
                 onChange={(e) => updateField("username", e.target.value)}
                 className="h-10 flex-1 rounded-lg border-border px-3 text-sm"
@@ -81,6 +82,7 @@ export default function RegisterPage() {
               id="nickname"
               type="text"
               placeholder="닉네임을 입력하세요"
+              required
               value={formData.nickname}
               onChange={(e) => updateField("nickname", e.target.value)}
               className="h-10 rounded-lg border-border px-3 text-sm"
@@ -96,6 +98,7 @@ export default function RegisterPage() {
               id="password"
               type="password"
               placeholder="비밀번호를 입력하세요"
+              required
               value={formData.password}
               onChange={(e) => updateField("password", e.target.value)}
               className="h-10 rounded-lg border-border px-3 text-sm"
@@ -111,6 +114,7 @@ export default function RegisterPage() {
               id="email"
               type="email"
               placeholder="이메일을 입력하세요"
+              required
               value={formData.email}
               onChange={(e) => updateField("email", e.target.value)}
               className="h-10 rounded-lg border-border px-3 text-sm"
@@ -146,6 +150,8 @@ export default function RegisterPage() {
             <Input
               id="phoneLast4"
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               placeholder="휴대폰번호 뒷자리를 입력하세요"
               value={formData.phoneLast4}
               onChange={(e) => updateField("phoneLast4", e.target.value)}
@@ -174,7 +180,7 @@ export default function RegisterPage() {
           <button
             type="button"
             className="flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm text-text-sub transition-colors hover:bg-muted"
-            onClick={() => console.log("Discord 간편 회원가입")}
+            onClick={() => { /* TODO: API 연동 */ }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

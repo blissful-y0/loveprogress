@@ -14,12 +14,12 @@ export default function LoginPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log("로그인 시도:", { username, password, saveId });
+    // TODO: API 연동
   };
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-[500px] rounded-[15px] border border-border bg-white p-8 shadow-sm sm:p-10">
+      <div className="w-full max-w-[500px] rounded-[15px] border border-border bg-white p-8 shadow-md sm:p-10">
         {/* Title */}
         <h1 className="mb-8 text-center text-2xl font-bold text-text-dark">
           로그인
@@ -35,6 +35,7 @@ export default function LoginPage() {
               id="username"
               type="text"
               placeholder="아이디를 입력하세요"
+              required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="h-11 rounded-lg border-border px-3 text-sm"
@@ -50,6 +51,7 @@ export default function LoginPage() {
               id="password"
               type="password"
               placeholder="비밀번호를 입력하세요"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="h-11 rounded-lg border-border px-3 text-sm"
@@ -61,7 +63,7 @@ export default function LoginPage() {
             <Checkbox
               id="save-id"
               checked={saveId}
-              onCheckedChange={(checked) => setSaveId(checked)}
+              onCheckedChange={(checked) => setSaveId(checked === true)}
             />
             <Label
               htmlFor="save-id"
@@ -116,7 +118,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="overflow-hidden rounded-full transition-opacity hover:opacity-80"
-            onClick={() => console.log("Discord 로그인")}
+            onClick={() => { /* TODO: API 연동 */ }}
             aria-label="Discord로 로그인"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -131,7 +133,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="overflow-hidden rounded-full transition-opacity hover:opacity-80"
-            onClick={() => console.log("Discord 간편 로그인")}
+            onClick={() => { /* TODO: API 연동 */ }}
             aria-label="Discord 간편 로그인"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
