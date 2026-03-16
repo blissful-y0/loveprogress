@@ -15,7 +15,7 @@ export type BoothKeyword =
 
 export type BannerGroup = "top_carousel" | "middle_carousel" | "fixed_banner";
 
-// ─── Row types (matching DB tables) ──────────────────────────
+// ─── Row types (matching DB tables) ──────────────────────────────
 
 export interface UserRow {
   id: string;
@@ -109,6 +109,12 @@ export interface MainBannerRow {
   is_active: boolean;
 }
 
+// ─── Public types (password_hash 제외) ───────────────────────
+
+export type UserPublic = Omit<UserRow, "password_hash">;
+
+export type QnaPostPublic = Omit<QnaPostRow, "password_hash">;
+
 // ─── Insert types (omit server-generated fields) ─────────────
 
 export type UserInsert = Omit<UserRow, "id" | "created_at" | "updated_at">;
@@ -123,14 +129,14 @@ export type MainBannerInsert = Omit<MainBannerRow, "id">;
 
 // ─── Update types (all fields optional except id) ────────────
 
-export type UserUpdate = Partial<Omit<UserRow, "id" | "created_at">> & { id: string };
-export type BoardPostUpdate = Partial<Omit<BoardPostRow, "id" | "created_at">> & { id: string };
-export type BoardCommentUpdate = Partial<Omit<BoardCommentRow, "id" | "created_at">> & { id: string };
-export type QnaAnswerUpdate = Partial<Omit<QnaAnswerRow, "id" | "created_at">> & { id: string };
-export type BoothUpdate = Partial<Omit<BoothRow, "id" | "created_at">> & { id: string };
+export type UserUpdate = Partial<Omit<UserRow, "id" | "created_at" | "updated_at">> & { id: string };
+export type BoardPostUpdate = Partial<Omit<BoardPostRow, "id" | "created_at" | "updated_at">> & { id: string };
+export type BoardCommentUpdate = Partial<Omit<BoardCommentRow, "id" | "created_at" | "updated_at">> & { id: string };
+export type QnaAnswerUpdate = Partial<Omit<QnaAnswerRow, "id" | "created_at" | "updated_at">> & { id: string };
+export type BoothUpdate = Partial<Omit<BoothRow, "id" | "created_at" | "updated_at">> & { id: string };
 export type MainBannerUpdate = Partial<Omit<MainBannerRow, "id">> & { id: string };
 
-// ─── Supabase Database type ──────────────────────────────────
+// ─── Supabase Database type ──────────────────────────────
 
 export interface Database {
   public: {

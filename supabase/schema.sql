@@ -1,16 +1,17 @@
 -- ============================================================
 -- 사랑의 진도 (Love Progress) — Supabase Schema
--- RLS 미사용: 인증/권한은 Next.js API 미들웨어에서 처리
+-- RLS 활성화: 기본 deny-all 정책, 인증/권한은 Next.js API에서 처리
 -- ============================================================
 
--- ─── Custom enum types ──────────────────────────────────────
+-- ─── Custom enum types ──────────────────────────────────────────
 
 CREATE TYPE user_role      AS ENUM ('member', 'booth_member', 'admin');
 CREATE TYPE board_type     AS ENUM ('notice', 'event', 'booth_private');
 CREATE TYPE booth_age_type AS ENUM ('general', 'adult');
 CREATE TYPE banner_group   AS ENUM ('top_carousel', 'middle_carousel', 'fixed_banner');
+CREATE TYPE booth_keyword  AS ENUM ('그림회지', '글회지', '팬시굿즈', '수공예품', '무료나눔');
 
--- ─── users ──────────────────────────────────────────────────
+-- ─── users ────────────────────────────────────────────────
 
 CREATE TABLE users (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -27,7 +28,9 @@ CREATE TABLE users (
 
 CREATE INDEX idx_users_role ON users (role);
 
--- ─── board_posts ────────────────────────────────────────────
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- ─── board_posts ──────────────────────────────────────────
 
 CREATE TABLE board_posts (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -45,6 +48,8 @@ CREATE TABLE board_posts (
 CREATE INDEX idx_board_posts_type_created ON board_posts (board_type, created_at DESC);
 CREATE INDEX idx_board_posts_author       ON board_posts (author_user_id);
 
+ALTER TABLE board_posts ENABLE ROW LEVEL SECURITY;
+
 -- ─── board_comments ─────────────────────────────────────────
 
 CREATE TABLE board_comments (
@@ -59,7 +64,9 @@ CREATE TABLE board_comments (
 
 CREATE INDEX idx_board_comments_post ON board_comments (post_id, created_at);
 
--- ─── qna_posts ──────────────────────────────────────────────
+ALTER TABLE board_comments ENABLE ROW LEVEL SECURITY;
+
+-- ─── qna_posts ───────────────────────────────────────────
 
 CREATE TABLE qna_posts (
   id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -69,13 +76,15 @@ CREATE TABLE qna_posts (
   image_key          TEXT,
   content            TEXT    NOT NULL,
   consent_to_privacy BOOLEAN NOT NULL DEFAULT false,
-  created_ip         TEXT    NOT NULL,
+  created_ip         INET    NOT NULL,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_qna_posts_created ON qna_posts (created_at DESC);
 
--- ─── qna_answers ────────────────────────────────────────────
+ALTER TABLE qna_posts ENABLE ROW LEVEL SECURITY;
+
+-- ─── qna_answers ──────────────────────────────────────────
 
 CREATE TABLE qna_answers (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -88,7 +97,9 @@ CREATE TABLE qna_answers (
 
 CREATE UNIQUE INDEX idx_qna_answers_post ON qna_answers (qna_post_id);
 
--- ─── booths ─────────────────────────────────────────────────
+ALTER TABLE qna_answers ENABLE ROW LEVEL SECURITY;
+
+-- ─── booths ───────────────────────────────────────────────
 
 CREATE TABLE booths (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -101,17 +112,21 @@ CREATE TABLE booths (
   updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now()
 );
 
+ALTER TABLE booths ENABLE ROW LEVEL SECURITY;
+
 -- ─── booth_keywords ─────────────────────────────────────────
 
 CREATE TABLE booth_keywords (
-  id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  booth_id UUID NOT NULL REFERENCES booths (id) ON DELETE CASCADE,
-  keyword  TEXT NOT NULL
+  id       UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  booth_id UUID          NOT NULL REFERENCES booths (id) ON DELETE CASCADE,
+  keyword  booth_keyword NOT NULL
 );
 
 CREATE INDEX idx_booth_keywords_booth ON booth_keywords (booth_id);
 
--- ─── booth_participants ─────────────────────────────────────
+ALTER TABLE booth_keywords ENABLE ROW LEVEL SECURITY;
+
+-- ─── booth_participants ───────────────────────────────────────
 
 CREATE TABLE booth_participants (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -122,6 +137,8 @@ CREATE TABLE booth_participants (
 );
 
 CREATE INDEX idx_booth_participants_booth ON booth_participants (booth_id, role_order);
+
+ALTER TABLE booth_participants ENABLE ROW LEVEL SECURITY;
 
 -- ─── main_banners ───────────────────────────────────────────
 
@@ -136,6 +153,8 @@ CREATE TABLE main_banners (
 );
 
 CREATE INDEX idx_main_banners_group ON main_banners (group_type, sort_order);
+
+ALTER TABLE main_banners ENABLE ROW LEVEL SECURITY;
 
 -- ─── updated_at 자동 갱신 트리거 ────────────────────────────
 
