@@ -53,7 +53,34 @@ CREATE INDEX idx_board_posts_author       ON board_posts (author_user_id);
 
 ALTER TABLE board_posts ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "board_posts_select_all" ON board_posts FOR SELECT TO authenticated, anon USING (true);
+DROP POLICY IF EXISTS "board_posts_select_all" ON board_posts;
+
+-- 공지사항/이벤트: 누구나 읽기 가능
+CREATE POLICY "board_posts_select_public" ON board_posts
+  FOR SELECT TO authenticated, anon
+  USING (board_type IN ('notice', 'event') AND is_secret = false);
+
+-- 부스 전용 게시판: booth_member/admin만 읽기 (비밀글 제외)
+CREATE POLICY "board_posts_select_booth" ON board_posts
+  FOR SELECT TO authenticated
+  USING (
+    board_type = 'booth_private'
+    AND is_secret = false
+    AND EXISTS (
+      SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN ('booth_member', 'admin')
+    )
+  );
+
+-- 비밀글: 작성자 본인 또는 admin만 읽기
+CREATE POLICY "board_posts_select_secret" ON board_posts
+  FOR SELECT TO authenticated
+  USING (
+    is_secret = true
+    AND (
+      author_user_id = auth.uid()
+      OR EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin')
+    )
+  );
 
 -- ─── board_comments ─────────────────────────────────────────
 
@@ -71,7 +98,32 @@ CREATE INDEX idx_board_comments_post ON board_comments (post_id, created_at);
 
 ALTER TABLE board_comments ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "board_comments_select_all" ON board_comments FOR SELECT TO authenticated, anon USING (true);
+DROP POLICY IF EXISTS "board_comments_select_all" ON board_comments;
+
+-- 공지사항/이벤트 게시글의 댓글: 누구나 읽기
+CREATE POLICY "board_comments_select_public" ON board_comments
+  FOR SELECT TO authenticated, anon
+  USING (
+    EXISTS (
+      SELECT 1 FROM board_posts
+      WHERE board_posts.id = board_comments.post_id
+      AND board_posts.board_type IN ('notice', 'event')
+    )
+  );
+
+-- 부스 전용 게시글의 댓글: booth_member/admin만 읽기
+CREATE POLICY "board_comments_select_booth" ON board_comments
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM board_posts
+      WHERE board_posts.id = board_comments.post_id
+      AND board_posts.board_type = 'booth_private'
+    )
+    AND EXISTS (
+      SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN ('booth_member', 'admin')
+    )
+  );
 
 -- ─── qna_posts ───────────────────────────────────────────
 
