@@ -23,7 +23,7 @@ export default function BoardListPage({
   emptyMessage,
   posts,
 }: BoardListPageProps) {
-  const pinnedPost = posts.find((p) => p.isPinned);
+  const pinnedPosts = posts.filter((p) => p.isPinned);
   const regularPosts = posts.filter((p) => !p.isPinned);
   const totalPages = Math.max(1, Math.ceil(regularPosts.length / ITEMS_PER_PAGE));
 
@@ -48,9 +48,10 @@ export default function BoardListPage({
         <span className="text-center">작성시간</span>
       </div>
 
-      {/* Pinned Post */}
-      {pinnedPost && (
+      {/* Pinned Posts */}
+      {pinnedPosts.map((pinnedPost) => (
         <Link
+          key={pinnedPost.id}
           href={`${basePath}/${pinnedPost.id}`}
           className="grid grid-cols-1 md:grid-cols-[60px_1fr_100px_120px] items-center py-3.5 border-b border-[#e5e5e5] bg-[#f9fdfb] hover:bg-[#f0f9f6] transition-colors"
         >
@@ -79,7 +80,7 @@ export default function BoardListPage({
             <span>{formatDate(pinnedPost.createdAt)}</span>
           </span>
         </Link>
-      )}
+      ))}
 
       {/* Regular Posts */}
       {paginatedPosts.map((post, idx) => {
@@ -118,7 +119,7 @@ export default function BoardListPage({
       })}
 
       {/* Empty state */}
-      {regularPosts.length === 0 && !pinnedPost && (
+      {regularPosts.length === 0 && pinnedPosts.length === 0 && (
         <div className="flex items-center justify-center py-20 text-[#909090] text-sm">
           {emptyMessage}
         </div>
