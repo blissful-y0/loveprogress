@@ -18,25 +18,16 @@ export default function RegisterPage() {
     boothName: "",
     phoneLast4: "",
   });
-  const [emailChecked, setEmailChecked] = useState(false);
-  const [emailAvailable, setEmailAvailable] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (field === "email") {
-      setEmailChecked(false);
-      setEmailAvailable(false);
-    }
   };
 
-  const handleCheckEmail = async () => {
-    if (!formData.email) {
-      setError("이메일을 입력해주세요.");
-      return;
-    }
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
@@ -44,47 +35,13 @@ export default function RegisterPage() {
       return;
     }
 
-    setIsCheckingEmail(true);
-    setError("");
-
-    try {
-      const res = await fetch("/api/auth/check-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error ?? "중복 확인에 실패했습니다.");
-        return;
-      }
-
-      setEmailChecked(true);
-      setEmailAvailable(data.available);
-
-      if (!data.available) {
-        setError("이미 사용 중인 이메일입니다.");
-      }
-    } catch {
-      setError("서버 오류가 발생했습니다.");
-    } finally {
-      setIsCheckingEmail(false);
-    }
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!emailChecked || !emailAvailable) {
-      setError("이메일 중복확인을 해주세요.");
+    if (!formData.nickname.trim()) {
+      setError("닉네임을 입력해주세요.");
       return;
     }
 
-    if (!formData.nickname.trim()) {
-      setError("닉네임을 입력해주세요.");
+    if (formData.nickname.trim().length > 20) {
+      setError("닉네임은 20자 이하여야 합니다.");
       return;
     }
 
@@ -98,34 +55,22 @@ export default function RegisterPage() {
       return;
     }
 
+    if (formData.phoneLast4 && !/^\d{4}$/.test(formData.phoneLast4)) {
+      setError("휴대폰번호 뒷자리는 숫자 4자리여야 합니다.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-
-      const { data: signUpData, error: signUpError } =
-        await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-        });
-
-      if (signUpError) {
-        setError(signUpError.message);
-        return;
-      }
-
-      if (!signUpData.user) {
-        setError("회원가입에 실패했습니다.");
-        return;
-      }
-
+      // 서버에서 원자적으로 auth user + 프로필 생성
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: signUpData.user.id,
           nickname: formData.nickname.trim(),
           email: formData.email,
+          password: formData.password,
           boothName: formData.boothName.trim() || undefined,
           phoneLast4: formData.phoneLast4.trim() || undefined,
         }),
@@ -134,11 +79,24 @@ export default function RegisterPage() {
       const result = await res.json();
 
       if (!res.ok) {
-        setError(result.error ?? "프로필 생성에 실패했습니다.");
+        setError(result.error ?? "회원가입에 실패했습니다.");
         return;
       }
 
-      router.push("/auth/login?registered=true");
+      // 성공 시 자동 로그인
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (signInError) {
+        // 가입은 성공했지만 자동 로그인 실패 → 로그인 페이지로 이동
+        router.push("/auth/login?registered=true");
+        return;
+      }
+
+      router.push("/");
     } catch {
       setError("서버 오류가 발생했습니다.");
     } finally {
@@ -155,39 +113,20 @@ export default function RegisterPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Email with duplicate check */}
+          {/* Email */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email" className="text-sm text-text-sub">
               이메일 <span className="text-destructive">*</span>
             </Label>
-            <div className="flex gap-2">
-              <Input
-                id="email"
-                type="email"
-                placeholder="이메일을 입력하세요"
-                required
-                value={formData.email}
-                onChange={(e) => updateField("email", e.target.value)}
-                className="h-10 flex-1 rounded-lg border-border px-3 text-sm"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCheckEmail}
-                disabled={isCheckingEmail}
-                className={`h-10 shrink-0 rounded-lg border px-4 text-sm font-medium ${
-                  emailChecked && emailAvailable
-                    ? "border-primary bg-primary/5 text-primary"
-                    : "border-border text-text-sub hover:bg-muted"
-                }`}
-              >
-                {isCheckingEmail
-                  ? "확인 중..."
-                  : emailChecked && emailAvailable
-                    ? "확인완료"
-                    : "중복확인"}
-              </Button>
-            </div>
+            <Input
+              id="email"
+              type="email"
+              placeholder="이메일을 입력하세요"
+              required
+              value={formData.email}
+              onChange={(e) => updateField("email", e.target.value)}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
           </div>
 
           {/* Nickname */}
@@ -279,9 +218,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Error message */}
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           {/* Register button */}
           <Button
@@ -304,7 +241,9 @@ export default function RegisterPage() {
           <button
             type="button"
             className="flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm text-text-sub transition-colors hover:bg-muted"
-            onClick={() => { /* TODO: Discord OAuth 연동 */ }}
+            onClick={() => {
+              /* TODO: Discord OAuth 연동 */
+            }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

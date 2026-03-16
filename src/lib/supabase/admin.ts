@@ -12,7 +12,9 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL");
+    throw new Error(
+      "Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL",
+    );
   }
 
   _supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey, {
@@ -21,11 +23,3 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
 
   return _supabaseAdmin;
 }
-
-/** @deprecated getSupabaseAdmin() 함수를 사용하세요. 빌드 시 환경변수 누락 오류 방지. */
-export const supabaseAdmin = new Proxy({} as SupabaseClient<Database>, {
-  get(_target, prop) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (getSupabaseAdmin() as any)[prop];
-  },
-});
