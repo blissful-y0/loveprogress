@@ -1,3 +1,4 @@
+// 이 클라이언트는 인증된 유저 세션용. 관리자 작업은 admin.ts의 supabaseAdmin 사용
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
