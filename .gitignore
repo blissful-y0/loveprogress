@@ -60,3 +60,4 @@ playwright-report/
 test-results/
 desktop-full.png
 mobile-full.png
+.worktrees/

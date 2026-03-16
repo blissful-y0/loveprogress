@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) {
       const firstError =
-        parsed.error.errors[0]?.message ?? "입력값이 올바르지 않습니다.";
+        parsed.error.issues[0]?.message ?? "입력값이 올바르지 않습니다.";
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
