@@ -76,7 +76,7 @@ export default function BoothCard({ booth }: BoothCardProps) {
       ? booth.hoverImageKey
       : booth.thumbnailImageKey;
 
-  const allParticipants = [booth.owner, ...booth.participants];
+  const allParticipants = [booth.owner, ...booth.participants.slice(0, 3)];
 
   return (
     <article className="group overflow-hidden rounded-[15px] bg-white shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100">
@@ -99,9 +99,7 @@ export default function BoothCard({ booth }: BoothCardProps) {
         {/* Booth name + age badge */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-[15px] font-bold text-text-dark leading-snug line-clamp-1">
-            {booth.name.length > 20
-              ? `${booth.name.slice(0, 20)}...`
-              : booth.name}
+            {booth.name}
           </h3>
           <AgeBadge ageType={booth.ageType} />
         </div>

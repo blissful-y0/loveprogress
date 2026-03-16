@@ -28,6 +28,7 @@ export const AGE_FILTERS = [
   { label: "#성인", value: "adult" },
 ] as const;
 
+// 키워드 값은 DB enum과 일치, 스펙 원문의 공백은 UI 표시용
 export const KEYWORD_FILTERS: readonly BoothKeyword[] = [
   "그림회지",
   "글회지",

@@ -70,10 +70,11 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
                 <button
                   key={filter.value}
                   type="button"
+                  aria-pressed={isActive}
                   onClick={() => handleAgeFilter(filter.value as AgeFilterValue)}
                   className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors cursor-pointer ${
                     isActive
-                      ? "bg-[#34aa8f] text-white"
+                      ? "bg-primary text-primary-foreground"
                       : "bg-gray-100 text-text-sub hover:bg-gray-200"
                   }`}
                 >
@@ -94,10 +95,11 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
                 <button
                   key={keyword}
                   type="button"
+                  aria-pressed={isActive}
                   onClick={() => handleKeywordToggle(keyword)}
                   className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors cursor-pointer ${
                     isActive
-                      ? "bg-[#34aa8f] text-white"
+                      ? "bg-primary text-primary-foreground"
                       : "bg-gray-100 text-text-sub hover:bg-gray-200"
                   }`}
                 >
@@ -122,7 +124,7 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
                 setAgeFilter("all");
                 setKeywordFilters(new Set());
               }}
-              className="mt-4 text-[13px] text-[#34aa8f] font-medium hover:underline cursor-pointer"
+              className="mt-4 text-[13px] text-primary font-medium hover:underline cursor-pointer"
             >
               필터 초기화
             </button>
