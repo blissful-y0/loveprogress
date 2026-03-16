@@ -25,8 +25,7 @@ export default function RegisterPage() {
   };
 
   const handleCheckUsername = () => {
-    // TODO: API 연동
-    setUsernameChecked(true);
+    alert("준비중입니다");
   };
 
   const handleSubmit = (e: FormEvent) => {

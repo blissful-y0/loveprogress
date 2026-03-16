@@ -84,19 +84,21 @@ export default function LoginPage() {
 
         {/* Links */}
         <div className="mt-6 flex items-center justify-center gap-1 text-sm text-text-muted">
-          <Link
-            href="/auth/find-id"
-            className="px-2 transition-colors hover:text-text-dark"
+          <span
+            className="relative px-2 opacity-50 cursor-not-allowed"
+            title="준비중"
+            onClick={(e) => e.preventDefault()}
           >
             ID찾기
-          </Link>
+          </span>
           <span className="text-border-light">|</span>
-          <Link
-            href="/auth/reset-password"
-            className="px-2 transition-colors hover:text-text-dark"
+          <span
+            className="relative px-2 opacity-50 cursor-not-allowed"
+            title="준비중"
+            onClick={(e) => e.preventDefault()}
           >
             비밀번호 재설정
-          </Link>
+          </span>
           <span className="text-border-light">|</span>
           <Link
             href="/auth/register"
