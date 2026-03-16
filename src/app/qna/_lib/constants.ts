@@ -13,7 +13,8 @@ export const CHARACTERS = [
 export const PLACEHOLDER_TEXT =
   "행사에 관한 문의를 남겨주세요. 확인 후 교무처장이 직접 답변을 남겨드립니다.\n등록한 질문은 수정하거나 삭제할 수 없습니다.\n안전한 서비스 이용을 위해 문의글 작성자의 IP정보를 수집합니다.";
 
-// TODO: 실제 API 연동 시 비밀글 content는 서버에서 검증 후 반환
+// TODO: 비밀글의 content/answer는 서버에서 비밀번호 검증 후에만 반환해야 함
+// 현재 mock에서는 빈 값으로 처리
 export const MOCK_DATA: QnaItem[] = [
   {
     id: 5,
@@ -37,9 +38,9 @@ export const MOCK_DATA: QnaItem[] = [
     id: 3,
     name: "박진도",
     characterId: 5,
-    content: "비밀글입니다",
+    content: "",
     isSecret: true,
-    answer: "확인 후 개별 연락드리겠습니다.",
+    answer: undefined,
   },
   {
     id: 2,
@@ -53,9 +54,9 @@ export const MOCK_DATA: QnaItem[] = [
     id: 1,
     name: "정온리",
     characterId: 7,
-    content: "비밀글입니다",
+    content: "",
     isSecret: true,
-    answer: null,
+    answer: undefined,
   },
 ];
 

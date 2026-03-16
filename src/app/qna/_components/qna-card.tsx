@@ -13,13 +13,13 @@ export function QnaCard({ item }: { item: QnaItem }) {
 
   const character = CHARACTERS.find((c) => c.id === item.characterId);
 
+  // TODO: POST /api/qna/:id/verify-password API 연동 필요 — 현재는 mock (비밀번호: 1234)
   const handleVerify = () => {
-    // TODO: POST /api/qna/:id/verify-password API 연동 필요 — 현재는 mock
-    if (passwordInput.trim()) {
+    if (passwordInput === "1234") {
       setUnlocked(true);
       setVerifyError("");
     } else {
-      setVerifyError("비밀번호를 입력해주세요.");
+      setVerifyError("비밀번호가 일치하지 않습니다");
     }
   };
 

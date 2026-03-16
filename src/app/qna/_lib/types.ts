@@ -4,5 +4,5 @@ export interface QnaItem {
   characterId: number;
   content: string;
   isSecret: boolean;
-  answer: string | null;
+  answer?: string | null;
 }
