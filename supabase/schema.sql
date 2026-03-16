@@ -99,6 +99,7 @@ CREATE INDEX idx_board_comments_post ON board_comments (post_id, created_at);
 ALTER TABLE board_comments ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "board_comments_select_all" ON board_comments;
+DROP POLICY IF EXISTS "board_comments_select_secret" ON board_comments;
 
 -- 공지사항/이벤트 게시글의 댓글: 누구나 읽기
 CREATE POLICY "board_comments_select_public" ON board_comments
@@ -108,6 +109,7 @@ CREATE POLICY "board_comments_select_public" ON board_comments
       SELECT 1 FROM board_posts
       WHERE board_posts.id = board_comments.post_id
       AND board_posts.board_type IN ('notice', 'event')
+      AND board_posts.is_secret = false
     )
   );
 
@@ -119,9 +121,27 @@ CREATE POLICY "board_comments_select_booth" ON board_comments
       SELECT 1 FROM board_posts
       WHERE board_posts.id = board_comments.post_id
       AND board_posts.board_type = 'booth_private'
+      AND board_posts.is_secret = false
     )
     AND EXISTS (
       SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN ('booth_member', 'admin')
+    )
+  );
+
+-- 비밀글의 댓글: 작성자 본인 또는 admin만 읽기
+CREATE POLICY "board_comments_select_secret" ON board_comments
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM board_posts
+      LEFT JOIN users ON users.id = auth.uid()
+      WHERE board_posts.id = board_comments.post_id
+        AND board_posts.is_secret = true
+        AND (
+          board_posts.author_user_id = auth.uid()
+          OR users.role = 'admin'
+        )
     )
   );
 
@@ -161,7 +181,19 @@ CREATE UNIQUE INDEX idx_qna_answers_post ON qna_answers (qna_post_id);
 
 ALTER TABLE qna_answers ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "qna_answers_select_all" ON qna_answers FOR SELECT TO authenticated, anon USING (true);
+DROP POLICY IF EXISTS "qna_answers_select_all" ON qna_answers;
+
+-- 비밀 Q&A 답변은 서버에서 비밀번호 확인 후 service-role로만 조회
+CREATE POLICY "qna_answers_select_public" ON qna_answers
+  FOR SELECT TO authenticated, anon
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM qna_posts
+      WHERE qna_posts.id = qna_answers.qna_post_id
+        AND qna_posts.is_secret = false
+    )
+  );
 
 -- ─── booths ───────────────────────────────────────────────
 
