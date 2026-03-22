@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient as createAnonClient } from "@supabase/supabase-js";
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { rateLimit } from "@/lib/rate-limit";
 import type { UserInsert } from "@/types/database";
 
 const registerSchema = z.object({
@@ -20,6 +21,13 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Rate limiting: 5 requests per 10 minutes per IP
+  const rateLimitResponse = rateLimit(request, "auth-register", {
+    maxRequests: 5,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await request.json();
 
@@ -59,6 +67,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "회원가입에 실패했습니다." }, { status: 400 });
     }
 
+    // email_confirm 활성화 시 중복 이메일은 identities 배열이 비어 있음 (email enumeration 방지)
+    if (!authData.user.identities || authData.user.identities.length === 0) {
+      return NextResponse.json({ error: "이미 가입된 이메일입니다." }, { status: 409 });
+    }
+
     // 2. 프로필 생성
     const insertData: UserInsert = {
       id: authData.user.id,
@@ -75,7 +88,7 @@ export async function POST(request: Request) {
     ).insert(insertData);
 
     if (profileError) {
-      // 롤백: auth user 삭제
+      // 롤백: auth user 삭제 (단, 기존 유저 ID가 아님이 identities 검사로 이미 확인됨)
       console.error("Profile insert error:", profileError);
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       return NextResponse.json(
