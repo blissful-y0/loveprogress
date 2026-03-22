@@ -10,7 +10,7 @@ type VerifyRouteContext = {
 };
 
 export async function POST(request: Request, { params }: VerifyRouteContext) {
-  const rateLimitResponse = rateLimit(request, "qna-verify-password", {
+  const rateLimitResponse = await rateLimit(request, "qna-verify-password", {
     maxRequests: 5,
     windowMs: 60_000,
   });
