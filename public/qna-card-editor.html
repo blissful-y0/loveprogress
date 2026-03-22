@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QnA 카드 에디터</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      background: #16213e;
+      border-bottom: 1px solid #0f3460;
+      flex-shrink: 0;
+    }
+    header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #6ee7d0;
+      letter-spacing: 0.04em;
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #34aa8f; color: #fff; }
+    .btn-ghost { background: #0f3460; color: #6ee7d0; border: 1px solid #34aa8f44; }
+    .btn-copy { background: #2a2a4a; color: #aaa; border: 1px solid #333; }
+
+    /* ── Main layout ── */
+    main {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── Left panel ── */
+    .editor-panel {
+      width: 45%;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #0f3460;
+    }
+    .tabs {
+      display: flex;
+      background: #0d1b2a;
+      border-bottom: 1px solid #0f3460;
+      flex-shrink: 0;
+    }
+    .tab {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      user-select: none;
+    }
+    .tab.active {
+      color: #6ee7d0;
+      border-bottom-color: #34aa8f;
+    }
+    .tab:hover:not(.active) { color: #aaa; }
+
+    textarea {
+      flex: 1;
+      background: #0d1b2a;
+      color: #c9d1d9;
+      border: none;
+      padding: 16px;
+      font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+    textarea:focus { background: #0f1e30; }
+    .editor-pane { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .editor-pane.hidden { display: none; }
+
+    /* ── Right panel ── */
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: #0d1b2a;
+      border-bottom: 1px solid #0f3460;
+      flex-shrink: 0;
+    }
+    .preview-header span {
+      font-size: 12px;
+      color: #555;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .preview-status {
+      font-size: 11px;
+      color: #34aa8f;
+      font-weight: 600;
+    }
+    iframe {
+      flex: 1;
+      border: none;
+      background: #f0f4f2;
+    }
+
+    /* ── Resize handle ── */
+    .resizer {
+      width: 5px;
+      background: #0f3460;
+      cursor: col-resize;
+      flex-shrink: 0;
+    }
+    .resizer:hover { background: #34aa8f44; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #34aa8f;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 10px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎨 QnA 카드 에디터</h1>
+  <div class="header-actions">
+    <button class="btn btn-copy" onclick="copyCSS()">CSS 복사</button>
+    <button class="btn btn-ghost" onclick="resetEditor()">초기화</button>
+    <button class="btn btn-primary" onclick="downloadHTML()">HTML 다운로드</button>
+  </div>
+</header>
+
+<main>
+  <!-- Left: Editor -->
+  <div class="editor-panel" id="editorPanel">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('html')">HTML</div>
+      <div class="tab" onclick="switchTab('css')">CSS</div>
+    </div>
+    <div class="editor-pane" id="htmlPane">
+      <textarea id="htmlEditor" spellcheck="false" oninput="updatePreview()"></textarea>
+    </div>
+    <div class="editor-pane hidden" id="cssPane">
+      <textarea id="cssEditor" spellcheck="false" oninput="updatePreview()"></textarea>
+    </div>
+  </div>
+
+  <div class="resizer" id="resizer"></div>
+
+  <!-- Right: Preview -->
+  <div class="preview-panel">
+    <div class="preview-header">
+      <span>Preview</span>
+      <span class="preview-status" id="previewStatus">실시간 업데이트 중</span>
+    </div>
+    <iframe id="preview" title="미리보기"></iframe>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────
+//  Initial HTML
+// ─────────────────────────────────────────
+const INITIAL_HTML = `<div class="page">
+
+  <!-- 접수 폼 카드 -->
+  <div class="card write-card">
+    <div class="top-bar">깨달음의 나무 정원 · 상담 접수</div>
+    <div class="card-body">
+      <!-- 증명사진 (클릭 시 변경) -->
+      <div class="photo-col">
+        <div class="photo-frame">
+          <div class="photo-placeholder">사진</div>
+        </div>
+      </div>
+      <!-- 폼 필드 -->
+      <div class="form-fields">
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">성명</label>
+            <input type="text" class="field-input" placeholder="이름을 입력하세요" maxlength="20">
+          </div>
+          <div class="field-group">
+            <label class="field-label">비밀번호</label>
+            <input type="password" class="field-input" placeholder="4~10자리" maxlength="10">
+          </div>
+        </div>
+        <div class="field-group full">
+          <label class="field-label">문의 내용</label>
+          <textarea class="field-textarea" placeholder="행사에 관한 문의를 남겨주세요.&#10;확인 후 총장이 직접 답변을 남겨드립니다."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="footer-left">
+        <label class="check-label"><input type="checkbox"> 비밀글</label>
+        <span>개인정보 수집 동의</span>
+        <label class="check-label"><input type="checkbox"> 동의함</label>
+        <span class="total-count">총 12개의 문의</span>
+      </div>
+      <button class="submit-btn">접수하기</button>
+    </div>
+  </div>
+
+  <!-- QnA 카드 (일반) -->
+  <div class="card qna-card">
+    <div class="top-bar">
+      <span class="school-name">깨달음의 나무 정원</span>
+      <div class="top-bar-right">
+        <span class="badge badge-answered">답변완료</span>
+        <span class="no-label">No. 001</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="photo-col">
+        <div class="photo-frame">
+          <div class="photo-placeholder">사진</div>
+        </div>
+      </div>
+      <div class="info-rows">
+        <div class="info-row">
+          <span class="info-label">성명</span>
+          <span class="info-divider">|</span>
+          <span class="info-value">홍길동</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">소속</span>
+          <span class="info-divider">|</span>
+          <span class="info-value">체육특기생</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">학번</span>
+          <span class="info-divider">|</span>
+          <span class="info-value mono">2026-001</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">접수일</span>
+          <span class="info-divider">|</span>
+          <span class="info-value mono">2026.03.23</span>
+        </div>
+      </div>
+      <div class="stamp">
+        <div class="stamp-inner">
+          <div class="stamp-ring"></div>
+          <span class="stamp-text">나무<br>정원</span>
+        </div>
+      </div>
+    </div>
+    <div class="content-band">
+      <span class="content-label">문의</span>
+      <div class="content-divider"></div>
+      <p class="content-text">안녕하세요, 부스 관련하여 문의드립니다. 혹시 부스 위치가...</p>
+    </div>
+    <div class="card-footer">
+      <span class="footer-date">2026.03.23</span>
+      <button class="expand-btn">펼치기</button>
+    </div>
+  </div>
+
+  <!-- QnA 카드 (비밀글 + 펼쳐진 상태) -->
+  <div class="card qna-card">
+    <div class="top-bar">
+      <span class="school-name">깨달음의 나무 정원</span>
+      <div class="top-bar-right">
+        <span class="badge badge-secret">비밀글</span>
+        <span class="no-label">No. 002</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="photo-col">
+        <div class="photo-frame">
+          <div class="photo-placeholder">사진</div>
+        </div>
+      </div>
+      <div class="info-rows">
+        <div class="info-row">
+          <span class="info-label">성명</span>
+          <span class="info-divider">|</span>
+          <span class="info-value">이순신</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">소속</span>
+          <span class="info-divider">|</span>
+          <span class="info-value">교지모델</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">학번</span>
+          <span class="info-divider">|</span>
+          <span class="info-value mono">2026-002</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">접수일</span>
+          <span class="info-divider">|</span>
+          <span class="info-value mono">2026.03.22</span>
+        </div>
+      </div>
+      <div class="stamp">
+        <div class="stamp-inner">
+          <div class="stamp-ring"></div>
+          <span class="stamp-text">나무<br>정원</span>
+        </div>
+      </div>
+    </div>
+    <div class="content-band">
+      <span class="content-label">문의</span>
+      <div class="content-divider"></div>
+      <p class="content-text secret-placeholder">비밀번호를 입력하면 내용을 볼 수 있습니다</p>
+    </div>
+    <!-- 비밀번호 입력 -->
+    <div class="password-row">
+      <input type="password" class="pw-input" placeholder="비밀번호 입력">
+      <button class="pw-btn">확인</button>
+    </div>
+    <div class="card-footer">
+      <span class="footer-date">2026.03.22</span>
+    </div>
+    <!-- 펼쳐진 내용 (답변 있는 상태) -->
+    <div class="expanded-section">
+      <div class="qa-block">
+        <p class="qa-title q-title">Q. 문의 내용</p>
+        <div class="qa-content q-content">
+          개인적으로 여쭤볼 게 있어서 비밀글로 남깁니다.<br>
+          혹시 부스 운영 시간 관련해서 별도로 협의가 가능한지 궁금합니다.
+        </div>
+      </div>
+      <div class="qa-block">
+        <p class="qa-title a-title">A. 답변</p>
+        <div class="qa-content a-content">
+          안녕하세요! 네, 별도 협의 가능합니다. 이메일로 연락주세요.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>`;
+
+// ─────────────────────────────────────────
+//  Initial CSS
+// ─────────────────────────────────────────
+const INITIAL_CSS = `/* ── 전체 페이지 ── */
+.page {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Noto Sans KR', sans-serif;
+}
+
+/* ── 공통 카드 ── */
+.card {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1.5px solid #e0f0ea;
+  box-shadow: 0 2px 10px rgba(52, 170, 143, 0.06);
+}
+
+/* ── 상단 바 ── */
+.top-bar {
+  background: #34aa8f;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.school-name { color: rgba(255,255,255,0.9); }
+.top-bar-right { display: flex; align-items: center; gap: 8px; }
+.no-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); }
+
+/* ── 배지 ── */
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 99px;
+}
+.badge-answered { background: rgba(255,255,255,0.2); }
+.badge-secret { background: rgba(0,0,0,0.15); }
+
+/* ── 카드 바디 ── */
+.card-body {
+  background: #fff;
+  padding: 16px 20px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* ── 증명사진 ── */
+.photo-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.photo-frame {
+  width: 100px;
+  height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photo-placeholder {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 600;
+}
+.photo-label { font-size: 10px; color: #aaa; letter-spacing: 0.04em; }
+
+/* ── 정보 행 ── */
+.info-rows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+.info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.info-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34aa8f;
+  letter-spacing: 0.05em;
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.info-divider {
+  font-size: 12px;
+  color: #cce8e0;
+  flex-shrink: 0;
+}
+.info-value {
+  font-size: 15px;
+  color: #505050;
+  font-weight: 500;
+}
+.info-value.mono {
+  font-size: 14px;
+  color: #505050;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.04em;
+}
+
+/* ── 도장 ── */
+.stamp {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4px;
+}
+.stamp-inner {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid #34aa8f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.stamp-ring {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(52,170,143,0.25);
+}
+.stamp-text {
+  font-size: 10px;
+  font-weight: 700;
+  color: #34aa8f;
+  line-height: 1.4;
+  text-align: center;
+  letter-spacing: 0.06em;
+  z-index: 1;
+}
+
+/* ── 문의 내용 밴드 ── */
+.content-band {
+  background: #f5fbf8;
+  border-top: 1.5px solid #dff0e9;
+  padding: 12px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.content-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34aa8f;
+  letter-spacing: 0.05em;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.content-divider {
+  width: 1.5px;
+  align-self: stretch;
+  background: #cce9e0;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+.content-text {
+  font-size: 14px;
+  color: #505050;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.secret-placeholder { color: #bbb; font-style: italic; }
+
+/* ── 비밀번호 입력 행 ── */
+.password-row {
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  padding: 12px 20px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.pw-input {
+  height: 36px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
+  width: 128px;
+  outline: none;
+}
+.pw-input:focus { border-color: #34aa8f; }
+.pw-btn {
+  height: 36px;
+  background: #34aa8f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── 카드 푸터 ── */
+.card-footer {
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-date { font-size: 13px; color: #bbb; }
+.expand-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: #34aa8f;
+  border: 1.5px solid #34aa8f;
+  border-radius: 8px;
+  padding: 6px 16px;
+  background: transparent;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.expand-btn:hover { background: #34aa8f; color: #fff; }
+
+/* ── 펼쳐진 Q/A 영역 ── */
+.expanded-section {
+  background: #fff;
+  border-top: 1.5px dashed #dff0e9;
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.qa-block { display: flex; flex-direction: column; gap: 8px; }
+.qa-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+}
+.q-title { color: #34aa8f; }
+.a-title { color: #888; }
+.qa-content {
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+.q-content { background: #f0f9f6; color: #333; }
+.a-content { background: #f8f8f8; color: #505050; }
+
+/* ── 접수 폼 전용 ── */
+.form-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.field-row { display: flex; gap: 12px; }
+.field-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.field-group.full { flex: unset; }
+.field-label { font-size: 12px; font-weight: 700; color: #34aa8f; letter-spacing: 0.04em; }
+.field-input {
+  height: 42px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 9px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: #505050;
+  background: #fafafa;
+  outline: none;
+  transition: border-color .15s;
+}
+.field-input::placeholder { font-size: 12px; font-weight: 300; color: #bbb; }
+.field-input:focus { border-color: #34aa8f; }
+.field-textarea {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: #505050;
+  background: #fafafa;
+  resize: none;
+  height: 90px;
+  line-height: 1.6;
+  outline: none;
+  transition: border-color .15s;
+  font-family: inherit;
+}
+.field-textarea::placeholder { font-size: 12px; font-weight: 300; color: #bbb; }
+.field-textarea:focus { border-color: #34aa8f; }
+.footer-left { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #707070; flex-wrap: wrap; }
+.check-label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.total-count { font-size: 12px; color: #bbb; }
+.submit-btn {
+  background: #34aa8f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 28px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.submit-btn:hover { opacity: 0.88; }`;
+
+// ─────────────────────────────────────────
+//  Editor logic
+// ─────────────────────────────────────────
+const htmlEditor = document.getElementById('htmlEditor');
+const cssEditor  = document.getElementById('cssEditor');
+const preview    = document.getElementById('preview');
+const toast      = document.getElementById('toast');
+
+let currentTab = 'html';
+let debounceTimer = null;
+
+// Init
+htmlEditor.value = INITIAL_HTML;
+cssEditor.value  = INITIAL_CSS;
+updatePreview();
+
+function buildPreviewDoc() {
+  return `<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #f0f4f2; }
+${cssEditor.value}
+</style>
+</head><body>
+${htmlEditor.value}
+</body></html>`;
+}
+
+function updatePreview() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    preview.srcdoc = buildPreviewDoc();
+    document.getElementById('previewStatus').textContent = '업데이트됨 ' + new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }, 300);
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')[tab === 'html' ? 0 : 1].classList.add('active');
+  document.getElementById('htmlPane').classList.toggle('hidden', tab !== 'html');
+  document.getElementById('cssPane').classList.toggle('hidden', tab !== 'css');
+}
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+function copyCSS() {
+  navigator.clipboard.writeText(cssEditor.value).then(() => showToast('CSS 복사됨!'));
+}
+
+function downloadHTML() {
+  const blob = new Blob([buildPreviewDoc()], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'qna-card-design.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('다운로드 완료!');
+}
+
+function resetEditor() {
+  if (!confirm('초기 상태로 되돌리시겠어요?')) return;
+  htmlEditor.value = INITIAL_HTML;
+  cssEditor.value  = INITIAL_CSS;
+  updatePreview();
+  showToast('초기화됨');
+}
+
+// Tab key support in textareas
+[htmlEditor, cssEditor].forEach(el => {
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = el.selectionStart, end = el.selectionEnd;
+      el.value = el.value.substring(0, s) + '  ' + el.value.substring(end);
+      el.selectionStart = el.selectionEnd = s + 2;
+      updatePreview();
+    }
+  });
+});
+
+// ── Resizer drag ──
+const resizer     = document.getElementById('resizer');
+const editorPanel = document.getElementById('editorPanel');
+let isResizing = false;
+let startX, startW;
+
+resizer.addEventListener('mousedown', e => {
+  isResizing = true;
+  startX = e.clientX;
+  startW = editorPanel.offsetWidth;
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'col-resize';
+});
+document.addEventListener('mousemove', e => {
+  if (!isResizing) return;
+  const w = Math.max(260, Math.min(startW + (e.clientX - startX), window.innerWidth - 200));
+  editorPanel.style.width = w + 'px';
+});
+document.addEventListener('mouseup', () => {
+  isResizing = false;
+  document.body.style.userSelect = '';
+  document.body.style.cursor = '';
+});
+</script>
+</body>
+</html>

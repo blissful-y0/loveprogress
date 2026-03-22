@@ -66,7 +66,7 @@ export interface QnaPostRow {
 export interface QnaAnswerRow {
   id: string;
   qna_post_id: string;
-  admin_user_id: string;
+  admin_user_id: string | null;
   content: string;
   created_at: string;
   updated_at: string;

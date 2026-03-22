@@ -150,3 +150,46 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 }
+
+export async function DELETE(request: Request, { params }: RouteContext) {
+  try {
+    const supabaseAuth = await createClient();
+    const {
+      data: { user },
+    } = await supabaseAuth.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: profile } = (await (supabaseAdmin.from("users") as any)
+      .select("role")
+      .eq("id", user.id)
+      .single()) as { data: { role: string } | null };
+
+    if (!profile || profile.role !== "admin") {
+      return NextResponse.json({ error: "관리자만 삭제할 수 있습니다." }, { status: 403 });
+    }
+
+    const { id: qnaPostId } = await params;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabaseAdmin.from("qna_answers") as any)
+      .delete()
+      .eq("qna_post_id", qnaPostId);
+
+    if (error) {
+      return NextResponse.json({ error: "답변 삭제에 실패했습니다." }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json(
+      { error: "서버 오류가 발생했습니다." },
+      { status: 500 },
+    );
+  }
+}

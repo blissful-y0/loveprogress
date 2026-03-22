@@ -171,7 +171,7 @@ CREATE POLICY "qna_posts_insert_all" ON qna_posts FOR INSERT TO authenticated, a
 CREATE TABLE qna_answers (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   qna_post_id   UUID        NOT NULL REFERENCES qna_posts (id) ON DELETE CASCADE,
-  admin_user_id UUID        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  admin_user_id UUID        REFERENCES users (id) ON DELETE CASCADE,
   content       TEXT        NOT NULL,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()

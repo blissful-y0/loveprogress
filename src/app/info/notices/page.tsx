@@ -61,6 +61,11 @@ export default async function NoticesPage({ searchParams }: Props) {
     <BoardListPage
       title="입학처 공지사항"
       basePath="/info/notices"
+      pageHeader={{
+        label: "깨달음의 나무 정원",
+        title: "입학 · 교육",
+        subtitle: "입학 안내 및 교육 공지사항을 확인하세요.",
+      }}
       emptyMessage="등록된 공지사항이 없습니다."
       pinnedPosts={pinnedPosts ?? []}
       regularPosts={regularPosts ?? []}

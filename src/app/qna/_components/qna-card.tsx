@@ -26,13 +26,13 @@ function formatStudentId(index: number): string {
 function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex items-baseline gap-2.5">
-      <span className="text-[11px] font-bold text-primary tracking-wide w-9 text-right shrink-0">
+      <span className="text-[11px] font-bold text-primary tracking-wide w-[44px] text-right shrink-0">
         {label}
       </span>
       <span className="text-[12px] text-[#cce8e0] shrink-0">|</span>
       <span className={mono
         ? "text-[14px] text-[#505050] font-mono tracking-wide"
-        : "text-[15px] text-[#212121] font-medium"
+        : "text-[15px] text-[#505050] font-medium"
       }>
         {value}
       </span>
@@ -102,12 +102,11 @@ export function QnaCard({ item, index }: QnaCardProps) {
       {/* ── ID card body ── */}
       <div className="bg-white px-5 py-4 flex gap-5 items-start">
         {/* Photo */}
-        <div className="flex flex-col items-center gap-1.5 shrink-0">
-          <div className="w-[100px] h-[120px] rounded-[10px] overflow-hidden border-[2.5px] border-primary">
+        <div className="shrink-0">
+          <div className="w-[100px] h-[120px] rounded-[10px] overflow-hidden bg-[#fafafa]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={character.src} alt={character.label} className="w-full h-full object-cover" />
           </div>
-          <span className="text-[10px] text-[#aaa] tracking-wide">증명사진</span>
         </div>
 
         {/* Info rows */}
@@ -120,12 +119,12 @@ export function QnaCard({ item, index }: QnaCardProps) {
 
         {/* Stamp */}
         <div className="shrink-0 flex items-center justify-center pt-1">
-          <div className="w-[60px] h-[60px] rounded-full border-2 border-primary flex items-center justify-center relative">
-            <div className="absolute inset-[4px] rounded-full border border-primary/25" />
-            <span className="text-[10px] font-bold text-primary leading-snug text-center tracking-wide z-10">
-              나무<br />정원
-            </span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.hasAnswer ? "/img/qna/stamp-answered.png" : "/img/qna/stamp-no-answer.png"}
+            alt={item.hasAnswer ? "답변완료 도장" : "나무정원 도장"}
+            className="w-[72px] h-[72px] object-contain"
+          />
         </div>
       </div>
 

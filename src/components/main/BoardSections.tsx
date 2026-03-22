@@ -40,83 +40,92 @@ export default async function BoardSections() {
   const featuredEvent = events?.[0] ?? null;
 
   return (
-    <section className="mx-auto max-w-[1280px] px-6 lg:px-8 py-6 md:py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-16">
-        {/* Notice section */}
+    <section className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-14">
+
+        {/* ── Notice ── */}
         <div className="flex flex-col">
-          <div className="flex items-end justify-between pb-5">
-            <div className="flex items-baseline gap-3">
-              <h2 className="text-[24px] font-bold text-text-dark shrink-0">
-                Notice
-              </h2>
-              <p className="text-[14px] font-bold text-text-sub hidden md:block">
-                나무정원에서 전하는 주요 공지를 확인하세요.
-              </p>
+          {/* Header */}
+          <div className="flex items-end justify-between mb-4">
+            <div>
+              <p className="text-[11px] font-bold text-primary tracking-[0.18em] uppercase mb-1">깨달음의 나무 정원</p>
+              <h2 className="text-[20px] font-bold text-[#1a1a1a] leading-none">공지사항</h2>
             </div>
             <Link
               href="/info/notices"
-              className="text-[14px] font-bold text-text-sub hover:text-text-dark transition-colors shrink-0"
+              className="text-[12px] text-[#aaa] hover:text-primary transition-colors pb-0.5"
             >
-              more &gt;
+              더보기 →
             </Link>
           </div>
 
-          <div className="border-t-2 border-border-light flex-1 flex flex-col">
-            <ul className="flex-1">
-              {noticeList.length === 0 && (
-                <li className="py-3 text-sm text-text-muted text-center">
-                  등록된 공지사항이 없습니다.
-                </li>
-              )}
-              {noticeList.map((notice, i) => (
-                <li key={notice.id}>
-                  <Link
-                    href={`/info/notices/${notice.id}`}
-                    className={`flex items-center gap-3 py-3 group ${
-                      i < noticeList.length - 1
-                        ? "border-b border-border-light"
-                        : ""
-                    }`}
-                  >
-                    <span className="w-1 h-1 rounded-full bg-text-muted shrink-0" />
-                    <span className="flex-1 text-[16px] font-semibold text-text-sub truncate group-hover:text-primary transition-colors">
-                      {notice.title}
+          {/* Top border */}
+          <div className="h-[1.5px] bg-[#e0f0ea] mb-0" />
+
+          {/* List */}
+          <ul className="flex-1">
+            {noticeList.length === 0 && (
+              <li className="py-8 text-sm text-[#bbb] text-center">
+                등록된 공지사항이 없습니다.
+              </li>
+            )}
+            {noticeList.map((notice, i) => (
+              <li key={notice.id}>
+                <Link
+                  href={`/info/notices/${notice.id}`}
+                  className={`flex items-center gap-3 py-3 group ${
+                    i < noticeList.length - 1 ? "border-b border-[#f0f0f0]" : ""
+                  }`}
+                >
+                  <span className="w-[5px] h-[5px] rounded-full bg-primary/40 shrink-0" />
+                  <span className="flex-1 text-[14px] text-[#333] truncate group-hover:text-primary transition-colors">
+                    {notice.title}
+                  </span>
+                  {isNewPost(notice.created_at) && (
+                    <span className="shrink-0 px-1.5 py-px rounded-[3px] text-[10px] font-bold text-white bg-primary leading-none">
+                      N
                     </span>
-                    {isNewPost(notice.created_at) && (
-                      <span className="shrink-0 w-[28px] h-[15px] flex items-center justify-center rounded-[2px] text-[12px] font-light text-white bg-primary leading-none">
-                        N
-                      </span>
-                    )}
-                    <span className="shrink-0 text-[16px] font-light text-[#a5a5a5] tabular-nums">
-                      {formatDate(notice.created_at)}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <div className="border-b-2 border-border-light mt-auto" />
-          </div>
+                  )}
+                  <span className="shrink-0 text-[12px] text-[#bbb] tabular-nums">
+                    {formatDate(notice.created_at)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {/* Bottom border */}
+          <div className="h-[1.5px] bg-[#e0f0ea] mt-auto" />
         </div>
 
-        {/* Academic Info section */}
+        {/* ── Academic Info ── */}
         <div className="flex flex-col">
-          <div className="flex items-end justify-between pb-5">
-            <h2 className="text-[24px] font-bold text-text-dark">
-              Academic Info
-            </h2>
+          {/* Header */}
+          <div className="flex items-end justify-between mb-4">
+            <div>
+              <p className="text-[11px] font-bold text-primary tracking-[0.18em] uppercase mb-1">깨달음의 나무 정원</p>
+              <h2 className="text-[20px] font-bold text-[#1a1a1a] leading-none">학사 안내</h2>
+            </div>
             <Link
               href="/info/events"
-              className="text-[14px] font-bold text-text-sub hover:text-text-dark transition-colors"
+              className="text-[12px] text-[#aaa] hover:text-primary transition-colors pb-0.5"
             >
-              more &gt;
+              더보기 →
             </Link>
           </div>
 
-          <div className="border-t-2 border-border-light pt-2 flex-1 flex flex-col">
+          {/* Top border */}
+          <div className="h-[1.5px] bg-[#e0f0ea]" />
+
+          {/* Featured event */}
+          <div className="flex-1 pt-4">
             {featuredEvent ? (
-              <div className="flex gap-5">
-                {/* Featured post image */}
-                <div className="w-[160px] md:w-[200px] h-[190px] md:h-[230px] rounded-[15px] overflow-hidden shrink-0">
+              <Link
+                href={`/info/events/${featuredEvent.id}`}
+                className="flex gap-4 group"
+              >
+                {/* Thumbnail */}
+                <div className="w-[120px] md:w-[140px] h-[140px] md:h-[160px] rounded-[12px] overflow-hidden shrink-0 bg-[#f0f4f0]">
                   <img
                     src="/img/main/board/event.jpg"
                     alt={featuredEvent.title}
@@ -124,44 +133,33 @@ export default async function BoardSections() {
                   />
                 </div>
 
-                {/* Featured post content */}
+                {/* Content */}
                 <div className="flex flex-col justify-between flex-1 min-w-0 py-1">
-                  <div>
-                    <h3 className="text-[16px] font-semibold text-text-sub mb-3 line-clamp-2">
+                  <div className="space-y-2">
+                    <h3 className="text-[14px] font-semibold text-[#1a1a1a] line-clamp-2 group-hover:text-primary transition-colors leading-snug">
                       {featuredEvent.title}
                     </h3>
-                    <p className="text-[14px] font-light text-text-light leading-[1.8] line-clamp-5">
-                      {featuredEvent.content.slice(0, 150)}
-                      {featuredEvent.content.length > 150 ? "..." : ""}
+                    <p className="text-[12px] text-[#bbb]">
+                      {formatDate(featuredEvent.created_at)}
+                    </p>
+                    <p className="text-[13px] text-[#777] leading-relaxed line-clamp-3 break-all">
+                      {featuredEvent.content.replace(/\s+/g, " ").trim().slice(0, 120)}
+                      {featuredEvent.content.length > 120 ? "..." : ""}
                     </p>
                   </div>
-
-                  <div className="mt-4">
-                    <Link
-                      href="https://x.com/phainaxa_event"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block opacity-60 hover:opacity-100 transition-opacity"
-                    >
-                      <div className="w-[30px] h-[30px] rounded-full bg-bg-light overflow-hidden flex items-center justify-center">
-                        <img
-                          src="/img/main/board/twitter.png"
-                          alt="Twitter"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </Link>
-                  </div>
                 </div>
-              </div>
+              </Link>
             ) : (
-              <div className="flex items-center justify-center py-10 text-sm text-text-muted">
-                등록된 행사 안내가 없습니다.
+              <div className="flex items-center justify-center py-10 text-sm text-[#bbb]">
+                등록된 학사 안내가 없습니다.
               </div>
             )}
           </div>
-          <div className="border-b-2 border-border-light mt-auto" />
+
+          {/* Bottom border */}
+          <div className="h-[1.5px] bg-[#e0f0ea] mt-4" />
         </div>
+
       </div>
     </section>
   );

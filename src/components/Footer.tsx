@@ -1,8 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 
-const TOP_BAR_TEXT =
-  "파이낙사 온리전 – 사랑의 진도 2 – 어린이/아이지만 졸업으미 허접으니 #31 –";
+const TOP_BAR_TEXT = "파이낙사 온리전 – 사랑의 진도 2 –";
 
 const DISCLAIMER_TEXT =
   "이 행사는 오직 2차 창작 교류를 위한 행사로, 비공식/비영리 행위임을 밝힙니다.";
@@ -12,7 +11,7 @@ export default function Footer() {
     <footer className="w-full">
       {/* Top Bar */}
       <div className="border-t border-border-light bg-white">
-        <div className="mx-auto max-w-[1280px] px-6 lg:px-8 flex items-center justify-between py-4">
+        <div className="mx-auto max-w-[1280px] px-6 lg:px-8 flex items-center justify-between py-2.5">
           <p className="text-[13px] text-text-light leading-relaxed">
             {TOP_BAR_TEXT}
           </p>
@@ -39,14 +38,14 @@ export default function Footer() {
 
       {/* Footer Content */}
       <div className="bg-[#f8f9fa]">
-        <div className="mx-auto max-w-[1280px] px-6 lg:px-8 py-8">
-          <p className="text-[12px] font-light text-text-muted leading-[1.8] mb-5">
+        <div className="mx-auto max-w-[1280px] px-6 lg:px-8 py-3">
+          <p className="text-[12px] font-light text-text-muted leading-[1.8] mb-2">
             {DISCLAIMER_TEXT}
           </p>
 
-          <div className="flex flex-col gap-1.5 text-[12px] font-light text-text-muted leading-[1.8]">
+          <div className="flex flex-col gap-0.5 text-[12px] font-light text-text-muted leading-[1.8]">
             <p>
-              대표자명: 교무처장
+              대표자명: 총장
               <span className="mx-2 text-border">|</span>
               TWT:{" "}
               <Link
@@ -69,7 +68,7 @@ export default function Footer() {
             <p className="text-text-lighter">release on 2025. 04. 20.</p>
           </div>
 
-          <div className="mt-6 pt-5 border-t border-gray-200">
+          <div className="mt-2 pt-2 border-t border-gray-200">
             <p
               className="text-[11px] text-text-lighter leading-relaxed"
               style={{
@@ -77,7 +76,7 @@ export default function Footer() {
                   '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
               }}
             >
-              Copyright &copy; 2026 깨달음의 나무 정원 교무처장 All right reserved.
+              Copyright &copy; 2026 깨달음의 나무 정원 총장 All right reserved.
             </p>
           </div>
         </div>
