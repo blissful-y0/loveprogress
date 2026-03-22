@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
+const HTML_MARKER = "<!--LOVEPROGRESS:HTML-->";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +34,7 @@ function PostList({
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   async function fetchPosts() {
     setLoading(true);
@@ -52,12 +55,18 @@ function PostList({
   async function handleDelete(id: string, title: string) {
     if (!confirm(`"${title}" 게시글을 삭제하시겠습니까?`)) return;
     setDeletingId(id);
+    setDeleteError("");
     try {
       const res = await fetch(`/api/boards/${id}`, { method: "DELETE" });
       if (res.ok) {
         fetchPosts();
         onDelete();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setDeleteError(data.error ?? "삭제에 실패했습니다.");
       }
+    } catch {
+      setDeleteError("서버 오류가 발생했습니다.");
     } finally {
       setDeletingId(null);
     }
@@ -78,6 +87,10 @@ function PostList({
   }
 
   return (
+    <div className="space-y-1">
+      {deleteError && (
+        <p className="text-sm text-red-500 mb-2">{deleteError}</p>
+      )}
     <div className="divide-y divide-[#e5e5e5]">
       {posts.map((post) => (
         <div key={post.id} className="flex items-center justify-between py-3 gap-3">
@@ -109,6 +122,7 @@ function PostList({
           </div>
         </div>
       ))}
+    </div>
     </div>
   );
 }
@@ -156,7 +170,7 @@ function HtmlUploader({
       const res = await fetch("/api/boards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boardType, title: title.trim(), content: htmlContent }),
+        body: JSON.stringify({ boardType, title: title.trim(), content: HTML_MARKER + htmlContent }),
       });
 
       const data = await res.json();
