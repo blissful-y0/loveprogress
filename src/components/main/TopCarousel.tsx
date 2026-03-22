@@ -19,39 +19,15 @@ const BANNER_SLIDES = [
   },
   {
     id: 2,
-    image: "/img/main/main.jpg",
-    backgroundColor: "#2c3e6b",
+    image: "/img/main/main2.jpg",
+    backgroundColor: "#f0ebe2",
     alt: "메인 배너 2",
   },
   {
     id: 3,
-    image: "/img/main/main.jpg",
-    backgroundColor: "#2c3e6b",
-    alt: "메인 배너 3",
-  },
-  {
-    id: 4,
-    image: "/img/main/main.jpg",
-    backgroundColor: "#2c3e6b",
-    alt: "메인 배너 4",
-  },
-  {
-    id: 5,
-    image: "/img/main/main.jpg",
-    backgroundColor: "#2c3e6b",
-    alt: "메인 배너 5",
-  },
-  {
-    id: 6,
-    image: "/img/main/main2.jpg",
-    backgroundColor: "#f0ebe2",
-    alt: "메인 배너 6",
-  },
-  {
-    id: 7,
     image: "/img/main/main3.jpg",
     backgroundColor: "#ede8dd",
-    alt: "메인 배너 7",
+    alt: "메인 배너 3",
   },
 ];
 
