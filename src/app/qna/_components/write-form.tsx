@@ -3,35 +3,79 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PrivacyModal } from "./privacy-modal";
-import { CHARACTERS, PLACEHOLDER_TEXT, TOTAL_USERS } from "../_lib/constants";
+import { CHARACTERS, PLACEHOLDER_TEXT } from "../_lib/constants";
 
-export function WriteForm() {
-  const [selectedChar, setSelectedChar] = useState(1);
+interface WriteFormProps {
+  onPostCreated: () => void;
+  totalCount: number;
+}
+
+export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
+  const [selectedCharKey, setSelectedCharKey] = useState<string>(CHARACTERS[0].key);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [isSecret, setIsSecret] = useState(false);
   const [content, setContent] = useState("");
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedCharacter = CHARACTERS.find((c) => c.id === selectedChar);
+  const selectedCharacter = CHARACTERS.find((c) => c.key === selectedCharKey);
 
-  const handleSubmit = () => {
-    if (!name.trim() || !password.trim() || !content.trim()) {
-      setFormError("이름, 비밀번호, 내용을 모두 입력해주세요.");
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      setFormError("이름을 입력해주세요.");
+      return;
+    }
+    if (!password.trim()) {
+      setFormError("비밀번호를 입력해주세요.");
+      return;
+    }
+    if (!content.trim()) {
+      setFormError("내용을 입력해주세요.");
       return;
     }
     if (!privacyAgreed) {
       setFormError("개인정보 수집 및 이용에 동의해주세요.");
       return;
     }
+
     setFormError("");
-    // TODO: POST /api/qna API 연동 필요 — 현재는 데모
-    setName("");
-    setPassword("");
-    setContent("");
-    setIsSecret(false);
-    setPrivacyAgreed(false);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/qna", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          writerName: name.trim(),
+          password: password,
+          isSecret,
+          imageKey: selectedCharKey,
+          content: content.trim(),
+          consentToPrivacy: true,
+        }),
+      });
+
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        setFormError(data.error ?? "글 작성에 실패했습니다.");
+        return;
+      }
+
+      setName("");
+      setPassword("");
+      setContent("");
+      setIsSecret(false);
+      setPrivacyAgreed(false);
+      setSelectedCharKey(CHARACTERS[0].key);
+      onPostCreated();
+    } catch {
+      setFormError("잠시 후 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -59,10 +103,10 @@ export function WriteForm() {
           <div className="flex flex-wrap items-center gap-2">
             {CHARACTERS.map((char) => (
               <button
-                key={char.id}
-                onClick={() => setSelectedChar(char.id)}
+                key={char.key}
+                onClick={() => setSelectedCharKey(char.key)}
                 className={`w-[40px] h-[40px] rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
-                  selectedChar === char.id
+                  selectedCharKey === char.key
                     ? "border-primary ring-2 ring-primary/30 scale-110"
                     : "border-[#d0d0d0] opacity-60 hover:opacity-100"
                 }`}
@@ -77,7 +121,7 @@ export function WriteForm() {
               </button>
             ))}
             <span className="ml-2 text-sm text-muted-foreground">
-              {TOTAL_USERS}명이 이용했어요
+              {totalCount}명이 이용했어요
             </span>
           </div>
 
@@ -117,8 +161,9 @@ export function WriteForm() {
             <Button
               className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm w-full sm:w-auto"
               onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              작성하기
+              {isSubmitting ? "작성 중..." : "작성하기"}
             </Button>
           </div>
         </div>

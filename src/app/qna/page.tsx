@@ -1,6 +1,4 @@
-import { QnaCard } from "./_components/qna-card";
-import { WriteForm } from "./_components/write-form";
-import { MOCK_DATA } from "./_lib/constants";
+import { QnaList } from "./_components/qna-list";
 
 export default function QnaPage() {
   return (
@@ -8,15 +6,8 @@ export default function QnaPage() {
       {/* Page title */}
       <h1 className="text-2xl font-bold text-foreground text-center">QnA</h1>
 
-      {/* Write form */}
-      <WriteForm />
-
-      {/* QnA list */}
-      <div className="space-y-4">
-        {MOCK_DATA.map((item) => (
-          <QnaCard key={item.id} item={item} />
-        ))}
-      </div>
+      {/* QnA list with write form and pagination */}
+      <QnaList />
     </div>
   );
 }

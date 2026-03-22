@@ -21,16 +21,15 @@ export async function POST(request: Request, { params }: VerifyRouteContext) {
   }
 
   const { id } = await params;
-  const qnaId = Number(id);
 
-  if (!Number.isInteger(qnaId)) {
+  if (!id) {
     return NextResponse.json(
       { error: "존재하지 않는 문의입니다" },
       { status: 404 },
     );
   }
 
-  const secretPayload = verifySecretQnaPassword(qnaId, body.password);
+  const secretPayload = await verifySecretQnaPassword(id, body.password);
 
   if (!secretPayload) {
     return NextResponse.json(
