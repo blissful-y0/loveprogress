@@ -8,6 +8,7 @@ import PinManager from "./_components/pin-manager";
 import MemberManager from "./_components/member-manager";
 import AboutPageManager from "./_components/about-page-manager";
 import QnaManager from "./_components/qna-manager";
+import BoothManager from "./_components/booth-manager";
 
 export default function AdminPage() {
   return (
@@ -22,6 +23,7 @@ export default function AdminPage() {
           <TabsTrigger value="members">회원관리</TabsTrigger>
           <TabsTrigger value="about">대학소개</TabsTrigger>
           <TabsTrigger value="qna">QnA 관리</TabsTrigger>
+          <TabsTrigger value="booths">부스 관리</TabsTrigger>
         </TabsList>
 
         <TabsContent value="banners" className="mt-6">
@@ -46,6 +48,10 @@ export default function AdminPage() {
 
         <TabsContent value="qna" className="mt-6">
           <QnaManager />
+        </TabsContent>
+
+        <TabsContent value="booths" className="mt-6">
+          <BoothManager />
         </TabsContent>
       </Tabs>
     </div>
