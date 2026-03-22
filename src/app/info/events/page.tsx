@@ -10,7 +10,8 @@ interface Props {
 
 export default async function EventsPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams;
-  const page = Math.max(1, Number(pageParam ?? "1"));
+  const rawPage = Number(pageParam ?? "1");
+  const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
   const supabase = await createClient();
@@ -63,9 +64,10 @@ export default async function EventsPage({ searchParams }: Props) {
       emptyMessage="등록된 행사 안내가 없습니다."
       pinnedPosts={pinnedPosts ?? []}
       regularPosts={regularPosts ?? []}
-      total={total}
+      totalRegular={totalRegular}
       page={page}
       totalPages={totalPages}
+      itemsPerPage={ITEMS_PER_PAGE}
       isAdmin={isAdmin}
     />
   );

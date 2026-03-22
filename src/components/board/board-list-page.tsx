@@ -15,9 +15,10 @@ interface BoardListPageProps {
   emptyMessage: string;
   pinnedPosts: BoardPostRow[];
   regularPosts: BoardPostRow[];
-  total: number;
+  totalRegular: number;
   page: number;
   totalPages: number;
+  itemsPerPage: number;
   isAdmin: boolean;
 }
 
@@ -27,9 +28,10 @@ export default function BoardListPage({
   emptyMessage,
   pinnedPosts,
   regularPosts,
-  total,
+  totalRegular,
   page,
   totalPages,
+  itemsPerPage,
   isAdmin,
 }: BoardListPageProps) {
   const router = useRouter();
@@ -48,8 +50,7 @@ export default function BoardListPage({
     router.push(`${basePath}${qs ? `?${qs}` : ""}`);
   }
 
-  const pinnedCount = pinnedPosts.length;
-  const regularStartIndex = total - pinnedCount - (page - 1) * 10;
+  const regularStartIndex = totalRegular - (page - 1) * itemsPerPage;
 
   return (
     <div className="mx-auto w-full max-w-[1280px] px-6 lg:px-8 py-10">

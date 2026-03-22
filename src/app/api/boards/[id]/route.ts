@@ -27,9 +27,20 @@ const updatePostSchema = z.object({
     .optional(),
 });
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(_request: Request, { params }: RouteContext) {
   try {
     const { id } = await params;
+
+    if (!UUID_REGEX.test(id)) {
+      return NextResponse.json(
+        { error: "유효하지 않은 게시글 ID입니다." },
+        { status: 400 },
+      );
+    }
+
     const supabase = await createClient();
 
     const { data: post, error } = await supabase
@@ -79,6 +90,14 @@ export async function GET(_request: Request, { params }: RouteContext) {
 export async function PUT(request: Request, { params }: RouteContext) {
   try {
     const { id } = await params;
+
+    if (!UUID_REGEX.test(id)) {
+      return NextResponse.json(
+        { error: "유효하지 않은 게시글 ID입니다." },
+        { status: 400 },
+      );
+    }
+
     const supabase = await createClient();
 
     const {
@@ -125,10 +144,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: post, error } = await (
-      supabaseAdmin.from("board_posts") as any
-    )
+    const { data: post, error } = await supabaseAdmin
+      .from("board_posts")
       .update(updateData)
       .eq("id", id)
       .select()

@@ -21,8 +21,10 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") as BoardType | null;
-    const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
-    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? "10")));
+    const rawPage = Number(searchParams.get("page") ?? "1");
+    const rawLimit = Number(searchParams.get("limit") ?? "10");
+    const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
+    const limit = Number.isFinite(rawLimit) ? Math.min(50, Math.max(1, rawLimit)) : 10;
 
     if (!type || !["notice", "event"].includes(type)) {
       return NextResponse.json(
@@ -111,18 +113,19 @@ export async function POST(request: Request) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: post, error } = await (
-      supabaseAdmin.from("board_posts") as any
-    ).insert({
-      board_type: boardType,
-      title,
-      content,
-      author_user_id: authUser.id,
-      author_display_name: profile.nickname,
-      is_pinned: false,
-      is_secret: false,
-    }).select().single();
+    const { data: post, error } = await supabaseAdmin
+      .from("board_posts")
+      .insert({
+        board_type: boardType,
+        title,
+        content,
+        author_user_id: authUser.id,
+        author_display_name: profile.nickname,
+        is_pinned: false,
+        is_secret: false,
+      })
+      .select()
+      .single();
 
     if (error) {
       return NextResponse.json(
