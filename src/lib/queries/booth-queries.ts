@@ -14,13 +14,19 @@ type AnySupabaseClient = { from: (table: string) => any };
 const BOOTH_PUBLIC_COLUMNS =
   "id, name, thumbnail_image_key, hover_image_key, age_type, created_at, updated_at";
 
+/** Admin-only columns: public columns + password_last4 */
+const BOOTH_ADMIN_COLUMNS = `${BOOTH_PUBLIC_COLUMNS}, password_last4`;
+
 interface FetchBoothsOptions {
   readonly ageType?: BoothAgeType;
   readonly ascending?: boolean;
+  /** Include password_last4 in results. Admin use only. */
+  readonly includePasswordLast4?: boolean;
 }
 
 /**
- * Fetch booths with keywords and participants, excluding password_last4.
+ * Fetch booths with keywords and participants.
+ * Pass includePasswordLast4: true for admin routes that need the full row.
  * Accepts any Supabase client (session-scoped or service-role).
  */
 export async function fetchBoothsWithDetails(
@@ -28,10 +34,11 @@ export async function fetchBoothsWithDetails(
   options?: FetchBoothsOptions,
 ): Promise<{ data: BoothWithDetails[] | null; error: string | null }> {
   const ascending = options?.ascending ?? false;
+  const columns = options?.includePasswordLast4 ? BOOTH_ADMIN_COLUMNS : BOOTH_PUBLIC_COLUMNS;
 
   let boothQuery = supabase
     .from("booths")
-    .select(BOOTH_PUBLIC_COLUMNS)
+    .select(columns)
     .order("created_at", { ascending });
 
   if (options?.ageType) {

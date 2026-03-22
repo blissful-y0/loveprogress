@@ -3,6 +3,28 @@ import { NextResponse } from "next/server";
 import { isAdminError, verifyAdmin } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { boothBaseSchema } from "@/lib/schemas/booth-schema";
+import { fetchBoothsWithDetails } from "@/lib/queries/booth-queries";
+
+export async function GET() {
+  try {
+    const adminResult = await verifyAdmin();
+    if (isAdminError(adminResult)) return adminResult;
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: booths, error } = await fetchBoothsWithDetails(supabaseAdmin, {
+      ascending: true,
+      includePasswordLast4: true,
+    });
+
+    if (error || !booths) {
+      return NextResponse.json({ error: "부스 목록을 불러올 수 없습니다." }, { status: 500 });
+    }
+
+    return NextResponse.json({ booths });
+  } catch {
+    return NextResponse.json({ error: "부스 목록을 불러올 수 없습니다." }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
