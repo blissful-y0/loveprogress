@@ -25,7 +25,7 @@ const updatePostSchema = z.object({
     .string()
     .trim()
     .min(1, "내용을 입력해주세요.")
-    .max(10000, "내용은 10000자 이하여야 합니다.")
+    .max(500000, "내용이 너무 큽니다.")
     .optional(),
 });
 
@@ -162,6 +162,65 @@ export async function PUT(request: Request, { params }: RouteContext) {
     }
 
     return NextResponse.json({ success: true, post });
+  } catch {
+    return NextResponse.json(
+      { error: "서버 오류가 발생했습니다." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(_request: Request, { params }: RouteContext) {
+  try {
+    const { id } = await params;
+
+    if (!UUID_REGEX.test(id)) {
+      return NextResponse.json(
+        { error: "유효하지 않은 게시글 ID입니다." },
+        { status: 400 },
+      );
+    }
+
+    const supabase = await createClient();
+
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+
+    if (!authUser) {
+      return NextResponse.json(
+        { error: "로그인이 필요합니다." },
+        { status: 401 },
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", authUser.id)
+      .single<{ role: string }>();
+
+    if (!profile || profile.role !== "admin") {
+      return NextResponse.json(
+        { error: "관리자 권한이 필요합니다." },
+        { status: 403 },
+      );
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { error } = await (supabaseAdmin.from("board_posts") as any)
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      return NextResponse.json(
+        { error: "게시글 삭제에 실패했습니다." },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },

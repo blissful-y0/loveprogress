@@ -51,9 +51,16 @@ export default function BoardDetailPage({
       <Separator className="mt-4 mb-0 bg-[#e5e5e5]" />
 
       {/* Content */}
-      <div className="py-8 min-h-[240px] text-[#505050] text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-        {post.content}
-      </div>
+      {post.content.trimStart().startsWith("<") ? (
+        <div
+          className="py-8 min-h-[240px] overflow-x-auto [&_img]:max-w-full [&_table]:w-full [&_a]:text-[#34aa8f] [&_a]:underline"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
+      ) : (
+        <div className="py-8 min-h-[240px] text-[#505050] text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+          {post.content}
+        </div>
+      )}
 
       <Separator className="bg-[#e5e5e5]" />
 
