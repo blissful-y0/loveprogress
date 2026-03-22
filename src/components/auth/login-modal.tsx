@@ -156,8 +156,12 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
     if (open) {
       const savedEmail = localStorage.getItem(SAVED_EMAIL_KEY);
       if (savedEmail) { setEmail(savedEmail); setSaveId(true); }
+    } else {
+      setPassword("");
+      setError("");
+      if (!saveId) setEmail("");
     }
-  }, [open]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
