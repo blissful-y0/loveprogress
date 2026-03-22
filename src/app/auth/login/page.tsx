@@ -415,7 +415,7 @@ export default function LoginPage() {
         </div>
 
         {/* Social login icons */}
-        <div className="mt-5 flex items-center justify-center gap-4">
+        <div className="mt-5 flex items-center justify-center">
           <button
             type="button"
             className="overflow-hidden rounded-full transition-opacity hover:opacity-80"
@@ -426,21 +426,6 @@ export default function LoginPage() {
             <img
               src="/img/login/discord_i.jpg"
               alt="Discord"
-              width={48}
-              height={48}
-              className="size-12 rounded-full object-cover"
-            />
-          </button>
-          <button
-            type="button"
-            className="overflow-hidden rounded-full transition-opacity hover:opacity-80"
-            onClick={() => { /* TODO: Discord OAuth 연동 */ }}
-            aria-label="Discord 간편 로그인"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/img/login/discord_i2.jpg"
-              alt="Discord 간편"
               width={48}
               height={48}
               className="size-12 rounded-full object-cover"
