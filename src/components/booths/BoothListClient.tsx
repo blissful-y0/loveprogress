@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Booth, BoothKeyword } from "@/lib/mock-booth-data";
+import type { BoothKeyword } from "@/types/database";
+import type { BoothCardData } from "@/types/booth";
 import { AGE_FILTERS, KEYWORD_FILTERS } from "@/lib/mock-booth-data";
 import BoothCard from "./BoothCard";
 
 interface BoothListClientProps {
-  readonly booths: readonly Booth[];
+  readonly booths: readonly BoothCardData[];
 }
 
 type AgeFilterValue = "all" | "general" | "adult";

@@ -2,10 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import type { Booth } from "@/lib/mock-booth-data";
+import type { BoothCardData } from "@/types/booth";
 
 interface BoothCardProps {
-  readonly booth: Booth;
+  readonly booth: BoothCardData;
 }
 
 function TwitterIcon() {
@@ -48,7 +48,10 @@ function KeywordBadge({ keyword }: { readonly keyword: string }) {
 function ParticipantItem({
   participant,
 }: {
-  readonly participant: { readonly name: string; readonly snsUrl?: string };
+  readonly participant: {
+    readonly name: string;
+    readonly snsUrl: string | null;
+  };
 }) {
   return (
     <span className="inline-flex items-center gap-1 text-[13px] text-text-sub">
