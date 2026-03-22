@@ -27,6 +27,7 @@ CREATE TABLE users (
 );
 
 CREATE INDEX idx_users_role ON users (role);
+CREATE UNIQUE INDEX idx_users_nickname_unique ON users (nickname);
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 

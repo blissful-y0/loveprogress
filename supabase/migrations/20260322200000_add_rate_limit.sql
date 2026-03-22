@@ -34,3 +34,6 @@ BEGIN
   RETURN v_count;
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION increment_rate_limit(TEXT, INTEGER, BIGINT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION increment_rate_limit(TEXT, INTEGER, BIGINT) TO service_role;

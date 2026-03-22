@@ -5,6 +5,14 @@ const path = require("node:path");
 
 const schemaPath = path.join(__dirname, "..", "supabase", "schema.sql");
 const schema = fs.readFileSync(schemaPath, "utf8");
+const rateLimitMigrationPath = path.join(
+  __dirname,
+  "..",
+  "supabase",
+  "migrations",
+  "20260322200000_add_rate_limit.sql",
+);
+const rateLimitMigration = fs.readFileSync(rateLimitMigrationPath, "utf8");
 
 function getPolicyBlock(policyName) {
   const marker = `CREATE POLICY "${policyName}"`;
@@ -49,4 +57,22 @@ test("qna answers are not globally readable", () => {
 
   const policy = getPolicyBlock("qna_answers_select_public");
   assert.match(policy, /qna_posts\.is_secret = false/);
+});
+
+test("users nickname is unique at the schema level", () => {
+  assert.match(
+    schema,
+    /nickname\s+TEXT\s+NOT NULL UNIQUE|CREATE UNIQUE INDEX .*nickname/i,
+  );
+});
+
+test("rate limit function is not executable by public", () => {
+  assert.match(
+    rateLimitMigration,
+    /REVOKE EXECUTE ON FUNCTION increment_rate_limit\(TEXT,\s*INTEGER,\s*BIGINT\) FROM PUBLIC;/,
+  );
+  assert.match(
+    rateLimitMigration,
+    /GRANT EXECUTE ON FUNCTION increment_rate_limit\(TEXT,\s*INTEGER,\s*BIGINT\) TO service_role;/,
+  );
 });
