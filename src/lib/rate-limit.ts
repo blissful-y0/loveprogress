@@ -29,7 +29,8 @@ export async function rateLimit(
 
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin.rpc("increment_rate_limit", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabaseAdmin.rpc as any)("increment_rate_limit", {
       p_key: key,
       p_max: options.maxRequests,
       p_window_ms: options.windowMs,
