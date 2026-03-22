@@ -5,24 +5,7 @@ import { WriteForm } from "./write-form";
 import { QnaCard } from "./qna-card";
 import { Pagination } from "./pagination";
 import { QNA_PAGE_LIMIT } from "../_lib/constants";
-
-interface QnaPost {
-  id: string;
-  writer_name: string;
-  is_secret: boolean;
-  image_key: string | null;
-  content: string;
-  created_at: string;
-  answer: string | null;
-  hasAnswer: boolean;
-}
-
-interface QnaListResponse {
-  posts: QnaPost[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+import type { QnaPost, QnaListResponse } from "../_lib/types";
 
 export function QnaList() {
   const [posts, setPosts] = useState<QnaPost[]>([]);

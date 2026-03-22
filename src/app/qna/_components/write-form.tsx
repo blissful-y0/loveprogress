@@ -121,7 +121,7 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
               </button>
             ))}
             <span className="ml-2 text-sm text-muted-foreground">
-              {totalCount}명이 이용했어요
+              총 {totalCount}개의 문의가 등록됐어요
             </span>
           </div>
 

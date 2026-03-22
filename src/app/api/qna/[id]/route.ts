@@ -27,7 +27,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
       supabase.from("qna_posts") as any
     )
       .select(
-        "id, writer_name, is_secret, image_key, content, consent_to_privacy, created_ip, created_at",
+        "id, writer_name, is_secret, image_key, content, consent_to_privacy, created_at",
       )
       .eq("id", id)
       .single()) as {

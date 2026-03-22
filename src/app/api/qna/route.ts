@@ -13,6 +13,7 @@ const createQnaSchema = z.object({
     .max(20, "이름은 20자 이하여야 합니다."),
   password: z
     .string()
+    .min(4, "비밀번호는 4자 이상이어야 합니다.")
     .max(10, "비밀번호는 10자 이하여야 합니다.")
     .optional(),
   isSecret: z.boolean(),
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
       supabase.from("qna_posts") as any
     )
       .select(
-        "id, writer_name, is_secret, image_key, content, consent_to_privacy, created_ip, created_at",
+        "id, writer_name, is_secret, image_key, content, consent_to_privacy, created_at",
       )
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1)) as {
@@ -170,7 +171,7 @@ export async function POST(request: Request) {
         created_ip: clientIp,
       })
       .select(
-        "id, writer_name, is_secret, image_key, content, consent_to_privacy, created_ip, created_at",
+        "id, writer_name, is_secret, image_key, content, consent_to_privacy, created_at",
       )
       .single()) as {
       data: QnaPostPublic | null;

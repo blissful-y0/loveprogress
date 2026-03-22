@@ -1,13 +1,8 @@
-import type { QnaAnswerRow, QnaPostPublic } from "@/types/database";
+import type { QnaPostPublic } from "@/types/database";
 
-export interface QnaItem {
-  id: string;
-  name: string;
-  imageKey: string | null;
-  content: string;
-  isSecret: boolean;
-  createdAt: string;
+export interface QnaPost extends QnaPostPublic {
   answer: string | null;
+  hasAnswer: boolean;
 }
 
 export interface SecretQnaPayload {
@@ -16,8 +11,7 @@ export interface SecretQnaPayload {
 }
 
 export interface QnaListResponse {
-  posts: QnaPostPublic[];
-  answers: Record<string, QnaAnswerRow>;
+  posts: QnaPost[];
   total: number;
   page: number;
   totalPages: number;

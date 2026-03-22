@@ -3,22 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Lock, CheckCircle2 } from "lucide-react";
-import type { SecretQnaPayload } from "../_lib/types";
+import type { QnaPost, SecretQnaPayload } from "../_lib/types";
 import { getCharacterByKey } from "../_lib/constants";
 
-interface QnaPostItem {
-  id: string;
-  writer_name: string;
-  is_secret: boolean;
-  image_key: string | null;
-  content: string;
-  created_at: string;
-  answer: string | null;
-  hasAnswer: boolean;
-}
-
 interface QnaCardProps {
-  item: QnaPostItem;
+  item: QnaPost;
   index: number;
 }
 
