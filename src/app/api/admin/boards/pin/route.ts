@@ -26,7 +26,24 @@ export async function POST(request: Request) {
     const { boardType, postId } = parsed.data;
     const supabaseAdmin = getSupabaseAdmin();
 
-    // 1. Save currently pinned post IDs for rollback
+    // 1. Verify the target post exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: targetPost, error: targetError } = await (
+      supabaseAdmin.from("board_posts") as any
+    )
+      .select("id")
+      .eq("id", postId)
+      .eq("board_type", boardType)
+      .single();
+
+    if (targetError || !targetPost) {
+      return NextResponse.json(
+        { error: "해당 게시글을 찾을 수 없습니다." },
+        { status: 404 },
+      );
+    }
+
+    // 2. Save currently pinned post IDs for rollback
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: previouslyPinned } = await (
       supabaseAdmin.from("board_posts") as any
@@ -39,7 +56,7 @@ export async function POST(request: Request) {
       (p: { id: string }) => p.id,
     );
 
-    // 2. Unpin all existing pinned posts of this board type
+    // 3. Unpin all existing pinned posts of this board type
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: unpinError } = await (
       supabaseAdmin.from("board_posts") as any
@@ -55,16 +72,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Pin the selected post
+    // 4. Pin the selected post
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: pinError } = await (
+    const { data: pinData, error: pinError } = await (
       supabaseAdmin.from("board_posts") as any
     )
       .update({ is_pinned: true })
       .eq("id", postId)
-      .eq("board_type", boardType);
+      .eq("board_type", boardType)
+      .select("id");
 
-    if (pinError) {
+    if (pinError || !pinData || pinData.length === 0) {
       // Rollback: restore previously pinned posts
       for (const prevId of previousPinnedIds) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

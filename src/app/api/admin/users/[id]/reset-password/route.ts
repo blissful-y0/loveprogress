@@ -21,7 +21,15 @@ export async function POST(
     );
   }
 
-  const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD ?? "702430";
+  const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+
+  if (!defaultPassword) {
+    return NextResponse.json(
+      { error: "초기화 비밀번호가 설정되지 않았습니다." },
+      { status: 500 },
+    );
+  }
+
   const supabaseAdmin = getSupabaseAdmin();
 
   const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
