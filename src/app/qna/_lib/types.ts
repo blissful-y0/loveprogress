@@ -1,13 +1,18 @@
-export interface QnaItem {
-  id: number;
-  name: string;
-  characterId: number;
-  content: string;
-  isSecret: boolean;
-  answer?: string | null;
+import type { QnaPostPublic } from "@/types/database";
+
+export interface QnaPost extends QnaPostPublic {
+  answer: string | null;
+  hasAnswer: boolean;
 }
 
 export interface SecretQnaPayload {
   content: string;
   answer: string | null;
+}
+
+export interface QnaListResponse {
+  posts: QnaPost[];
+  total: number;
+  page: number;
+  totalPages: number;
 }

@@ -112,7 +112,7 @@ export interface MainBannerRow {
 // UserRow에 더 이상 password_hash가 없으므로 UserPublic = UserRow
 export type UserPublic = UserRow;
 
-export type QnaPostPublic = Omit<QnaPostRow, "password_hash">;
+export type QnaPostPublic = Omit<QnaPostRow, "password_hash" | "created_ip">;
 
 // ─── Insert types (omit server-generated fields) ─────────────
 

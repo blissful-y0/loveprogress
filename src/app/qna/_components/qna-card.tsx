@@ -2,11 +2,25 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Lock } from "lucide-react";
-import type { QnaItem, SecretQnaPayload } from "../_lib/types";
-import { CHARACTERS } from "../_lib/constants";
+import { Lock, CheckCircle2 } from "lucide-react";
+import type { QnaPost, SecretQnaPayload } from "../_lib/types";
+import { getCharacterByKey } from "../_lib/constants";
 
-export function QnaCard({ item }: { item: QnaItem }) {
+interface QnaCardProps {
+  item: QnaPost;
+  index: number;
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}.${month}.${day}`;
+}
+
+export function QnaCard({ item, index }: QnaCardProps) {
+  const [expanded, setExpanded] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [secretPayload, setSecretPayload] = useState<SecretQnaPayload | null>(
     null,
@@ -14,7 +28,7 @@ export function QnaCard({ item }: { item: QnaItem }) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
-  const character = CHARACTERS.find((c) => c.id === item.characterId);
+  const character = getCharacterByKey(item.image_key);
 
   const handleVerify = async () => {
     if (!passwordInput.trim()) {
@@ -27,9 +41,7 @@ export function QnaCard({ item }: { item: QnaItem }) {
     try {
       const response = await fetch(`/api/qna/${item.id}/verify-password`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: passwordInput }),
       });
 
@@ -49,6 +61,7 @@ export function QnaCard({ item }: { item: QnaItem }) {
       setSecretPayload(data as SecretQnaPayload);
       setPasswordInput("");
       setVerifyError("");
+      setExpanded(true);
     } catch {
       setVerifyError("잠시 후 다시 시도해주세요");
     } finally {
@@ -56,31 +69,62 @@ export function QnaCard({ item }: { item: QnaItem }) {
     }
   };
 
-  const showContent = !item.isSecret || secretPayload !== null;
-  const displayContent = item.isSecret ? secretPayload?.content ?? "" : item.content;
-  const displayAnswer = item.isSecret
+  const handleHeaderClick = () => {
+    if (item.is_secret && !secretPayload) {
+      return;
+    }
+    setExpanded((prev) => !prev);
+  };
+
+  const showContent =
+    expanded && (!item.is_secret || secretPayload !== null);
+  const displayContent = item.is_secret
+    ? secretPayload?.content ?? ""
+    : item.content;
+  const displayAnswer = item.is_secret
     ? secretPayload?.answer ?? null
     : item.answer ?? null;
 
   return (
     <div className="border border-[#d0d0d0] rounded-[10px] overflow-hidden">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 px-4 py-3 bg-white border-b border-[#e5e5e5]">
+      <div
+        className="flex flex-wrap items-center gap-3 px-4 py-3 bg-white border-b border-[#e5e5e5] cursor-pointer"
+        onClick={handleHeaderClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleHeaderClick();
+          }
+        }}
+      >
         <span className="font-semibold text-sm text-foreground shrink-0">
-          No. {item.id}
+          No. {index}
         </span>
-        {item.isSecret && (
+        {item.is_secret && (
           <Lock size={14} className="text-muted-foreground shrink-0" />
         )}
+        {item.hasAnswer && (
+          <CheckCircle2
+            size={14}
+            className="text-primary shrink-0"
+            aria-label="답변 완료"
+          />
+        )}
 
-        {item.isSecret && !secretPayload && (
-          <>
-            <input
-              type="text"
-              value={item.name}
-              readOnly
-              className="border border-[#d0d0d0] rounded-md px-2 py-1 text-sm w-24 bg-[#f9f9f9] text-muted-foreground"
-            />
+        <span className="text-sm text-muted-foreground">{item.writer_name}</span>
+
+        <span className="text-xs text-muted-foreground ml-auto">
+          {formatDate(item.created_at)}
+        </span>
+      </div>
+
+      {/* Secret post password prompt */}
+      {item.is_secret && !secretPayload && (
+        <div className="px-4 py-3 bg-[#fafafa] border-b border-[#e5e5e5]">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="password"
               placeholder="비밀번호"
@@ -89,12 +133,21 @@ export function QnaCard({ item }: { item: QnaItem }) {
                 setPasswordInput(e.target.value);
                 setVerifyError("");
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleVerify();
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
               className="border border-[#d0d0d0] rounded-md px-2 py-1 text-sm w-28"
             />
             <Button
               size="sm"
               className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
-              onClick={handleVerify}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleVerify();
+              }}
               disabled={isVerifying}
             >
               {isVerifying ? "확인 중..." : "게시물 보기"}
@@ -102,23 +155,25 @@ export function QnaCard({ item }: { item: QnaItem }) {
             {verifyError && (
               <span className="text-sm text-red-500">{verifyError}</span>
             )}
-          </>
-        )}
-
-        {(!item.isSecret || secretPayload) && (
-          <span className="text-sm text-muted-foreground">{item.name}</span>
-        )}
-      </div>
+          </div>
+          {!expanded && (
+            <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
+              <Lock size={16} className="mr-2" />
+              비밀글입니다. 등록한 비밀번호를 입력하여 확인하세요.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Body */}
-      {showContent ? (
+      {showContent && (
         <div className="flex flex-col md:flex-row">
           {/* Character image */}
           <div className="flex items-center justify-center p-4 md:w-[140px] shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={character?.src}
-              alt={character?.label ?? "character"}
+              src={character.src}
+              alt={character.label}
               className="w-[100px] h-[120px] md:w-[120px] md:h-[150px] object-contain"
             />
           </div>
@@ -126,32 +181,38 @@ export function QnaCard({ item }: { item: QnaItem }) {
           {/* Content area */}
           <div className="flex-1 flex flex-col gap-0">
             {/* Question */}
-            <div className="bg-primary/10 p-4 text-sm text-foreground leading-relaxed min-h-[80px]">
+            <div
+              className="p-4 text-sm text-foreground leading-relaxed min-h-[80px]"
+              style={{ backgroundColor: "#eaf6f4" }}
+            >
               <p className="font-semibold text-xs text-primary mb-1">Q.</p>
-              {displayContent}
+              <p className="whitespace-pre-wrap">{displayContent}</p>
             </div>
 
             {/* Answer */}
-            {displayAnswer && (
-              <div className="bg-muted p-4 text-sm text-muted-foreground leading-relaxed min-h-[60px]">
+            {displayAnswer ? (
+              <div
+                className="p-4 text-sm text-muted-foreground leading-relaxed min-h-[60px]"
+                style={{ backgroundColor: "#f0f0f0" }}
+              >
                 <p className="font-semibold text-xs text-muted-foreground mb-1">
                   A.
                 </p>
-                {displayAnswer}
+                <p className="whitespace-pre-wrap">{displayAnswer}</p>
               </div>
-            )}
-
-            {!displayAnswer && (
+            ) : (
               <div className="bg-[#f9f9f9] p-4 text-sm text-muted-foreground italic min-h-[60px] flex items-center">
                 아직 답변이 등록되지 않았습니다.
               </div>
             )}
           </div>
         </div>
-      ) : (
-        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-          <Lock size={16} className="mr-2" />
-          비밀글입니다. 등록한 비밀번호를 입력하여 확인하세요.
+      )}
+
+      {/* Non-secret collapsed state */}
+      {!item.is_secret && !expanded && (
+        <div className="px-4 py-3 text-sm text-muted-foreground bg-[#fafafa]">
+          클릭하여 내용을 확인하세요.
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { verifySecretQnaPassword } from "@/app/qna/_lib/secret-qna.server";
+import { rateLimit } from "@/lib/rate-limit";
 
 type VerifyRouteContext = {
   params: Promise<{
@@ -9,6 +10,12 @@ type VerifyRouteContext = {
 };
 
 export async function POST(request: Request, { params }: VerifyRouteContext) {
+  const rateLimitResponse = rateLimit(request, "qna-verify-password", {
+    maxRequests: 5,
+    windowMs: 60_000,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   const body = (await request.json().catch(() => null)) as {
     password?: unknown;
   } | null;
@@ -21,16 +28,15 @@ export async function POST(request: Request, { params }: VerifyRouteContext) {
   }
 
   const { id } = await params;
-  const qnaId = Number(id);
 
-  if (!Number.isInteger(qnaId)) {
+  if (!id) {
     return NextResponse.json(
       { error: "존재하지 않는 문의입니다" },
       { status: 404 },
     );
   }
 
-  const secretPayload = verifySecretQnaPassword(qnaId, body.password);
+  const secretPayload = await verifySecretQnaPassword(id, body.password);
 
   if (!secretPayload) {
     return NextResponse.json(
