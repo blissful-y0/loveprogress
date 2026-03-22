@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { useUser } from "@/hooks/useUser";
+import LoginModal from "@/components/auth/login-modal";
 
 interface NavItem {
   readonly label: string;
@@ -27,11 +28,6 @@ interface MenuItem {
   readonly onClick?: () => void;
 }
 
-const GUEST_MENU_ITEMS: readonly MenuItem[] = [
-  { label: "회원가입", href: "/auth/register" },
-  { label: "로그인", href: "/auth/login" },
-] as const;
-
 function isActiveRoute(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname.startsWith(href);
@@ -41,6 +37,7 @@ export default function Header() {
   const pathname = usePathname();
   const { user, loading, signOut } = useUser();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const loginRef = useRef<HTMLDivElement>(null);
 
   const closeLogin = useCallback(() => setIsLoginOpen(false), []);
@@ -60,7 +57,7 @@ export default function Header() {
     return items;
   }, [user?.role, handleSignOut]);
 
-  const menuItems = user ? userMenuItems : GUEST_MENU_ITEMS;
+  const menuItems = user ? userMenuItems : [];
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -187,9 +184,9 @@ export default function Header() {
           {!loading && (
             <button
               type="button"
-              onClick={() => setIsLoginOpen((prev) => !prev)}
+              onClick={() => user ? setIsLoginOpen((prev) => !prev) : setIsLoginModalOpen(true)}
               className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-              aria-label={user ? "사용자 메뉴" : "로그인 메뉴"}
+              aria-label={user ? "사용자 메뉴" : "로그인"}
             >
               <img
                 src="/img/main/login.png"
@@ -201,7 +198,7 @@ export default function Header() {
             </button>
           )}
 
-          {renderDesktopDropdown()}
+          {user && renderDesktopDropdown()}
         </div>
       </div>
 
@@ -226,9 +223,9 @@ export default function Header() {
             {!loading && (
               <button
                 type="button"
-                onClick={() => setIsLoginOpen((prev) => !prev)}
+                onClick={() => user ? setIsLoginOpen((prev) => !prev) : setIsLoginModalOpen(true)}
                 className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-                aria-label={user ? "사용자 메뉴" : "로그인 메뉴"}
+                aria-label={user ? "사용자 메뉴" : "로그인"}
               >
                 <img
                   src="/img/main/login.png"
@@ -240,7 +237,7 @@ export default function Header() {
               </button>
             )}
 
-            {renderMobileDropdown()}
+            {user && renderMobileDropdown()}
           </div>
         </div>
 
@@ -267,6 +264,7 @@ export default function Header() {
           })}
         </nav>
       </div>
+      <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
     </header>
   );
 }
