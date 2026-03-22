@@ -41,6 +41,18 @@ const BANNER_SLIDES = [
     backgroundColor: "#2c3e6b",
     alt: "메인 배너 5",
   },
+  {
+    id: 6,
+    image: "/img/main/main2.jpg",
+    backgroundColor: "#f0ebe2",
+    alt: "메인 배너 6",
+  },
+  {
+    id: 7,
+    image: "/img/main/main3.jpg",
+    backgroundColor: "#ede8dd",
+    alt: "메인 배너 7",
+  },
 ];
 
 export default function TopCarousel() {
