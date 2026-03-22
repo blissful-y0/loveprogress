@@ -1,6 +1,9 @@
+import DOMPurify from "isomorphic-dompurify";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import type { BoardPostRow } from "@/types/database";
+
+const HTML_MARKER = "<!--LOVEPROGRESS:HTML-->";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -51,9 +54,18 @@ export default function BoardDetailPage({
       <Separator className="mt-4 mb-0 bg-[#e5e5e5]" />
 
       {/* Content */}
-      <div className="py-8 min-h-[240px] text-[#505050] text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-        {post.content}
-      </div>
+      {post.content.startsWith(HTML_MARKER) ? (
+        <div
+          className="py-8 min-h-[240px] overflow-x-auto [&_img]:max-w-full [&_table]:w-full [&_a]:text-[#34aa8f] [&_a]:underline"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(post.content.slice(HTML_MARKER.length)),
+          }}
+        />
+      ) : (
+        <div className="py-8 min-h-[240px] text-[#505050] text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+          {post.content}
+        </div>
+      )}
 
       <Separator className="bg-[#e5e5e5]" />
 

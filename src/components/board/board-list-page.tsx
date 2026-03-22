@@ -168,7 +168,7 @@ export default function BoardListPage({
 
       {/* Empty state */}
       {regularPosts.length === 0 && pinnedPosts.length === 0 && (
-        <div className="flex items-center justify-center py-20 text-[#909090] text-sm">
+        <div className="flex min-h-[300px] items-center justify-center text-[#909090] text-sm">
           {emptyMessage}
         </div>
       )}

@@ -16,7 +16,7 @@ const createPostSchema = z.object({
     .string()
     .trim()
     .min(1, "내용을 입력해주세요.")
-    .max(10000, "내용은 10000자 이하여야 합니다."),
+    .max(500000, "내용이 너무 큽니다."),
 });
 
 export async function GET(request: Request) {

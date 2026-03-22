@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import BannerManager from "./_components/banner-manager";
+import BoardManager from "./_components/board-manager";
 import PinManager from "./_components/pin-manager";
 import MemberManager from "./_components/member-manager";
 
@@ -14,12 +15,17 @@ export default function AdminPage() {
       <Tabs defaultValue="banners" className="w-full">
         <TabsList>
           <TabsTrigger value="banners">배너관리</TabsTrigger>
+          <TabsTrigger value="boards">게시판관리</TabsTrigger>
           <TabsTrigger value="pins">공지관리</TabsTrigger>
           <TabsTrigger value="members">회원관리</TabsTrigger>
         </TabsList>
 
         <TabsContent value="banners" className="mt-6">
           <BannerManager />
+        </TabsContent>
+
+        <TabsContent value="boards" className="mt-6">
+          <BoardManager />
         </TabsContent>
 
         <TabsContent value="pins" className="mt-6">
