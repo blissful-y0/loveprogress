@@ -101,13 +101,13 @@ export default function BoardListPage({
         <Link
           key={pinnedPost.id}
           href={`${basePath}/${pinnedPost.id}`}
-          className="grid grid-cols-1 md:grid-cols-[60px_1fr_100px_120px] items-center py-3.5 border-b border-[#e5e5e5] bg-[#f9fdfb] hover:bg-[#f0f9f6] transition-colors"
+          className="flex items-center gap-2 px-4 md:px-0 md:grid md:grid-cols-[60px_1fr_100px_120px] py-3.5 border-b border-[#e5e5e5] bg-[#f9fdfb] hover:bg-[#f0f9f6] transition-colors"
         >
           <span className="hidden md:flex justify-center">
             <span className="text-base" role="img" aria-label="공지">📢</span>
           </span>
-          <span className="flex items-center gap-2 px-4 md:pl-4 md:pr-0">
-            <span className="md:hidden text-base" role="img" aria-label="공지">📢</span>
+          <span className="flex-1 min-w-0 flex items-center gap-2 md:pl-4">
+            <span className="md:hidden text-base shrink-0" role="img" aria-label="공지">📢</span>
             <Badge className="shrink-0 bg-primary text-white text-[11px] px-1.5 py-0 hover:bg-primary">
               공지
             </Badge>
@@ -118,17 +118,14 @@ export default function BoardListPage({
               <Badge className="shrink-0 bg-red-500 text-white text-[10px] px-1 py-0 hover:bg-red-500">N</Badge>
             )}
           </span>
+          <span className="shrink-0 whitespace-nowrap text-[11px] text-[#aaa] md:hidden">
+            {pinnedPost.author_display_name} · {formatDate(pinnedPost.created_at)}
+          </span>
           <span className="hidden md:block text-center text-sm text-[#505050]">
             {pinnedPost.author_display_name}
           </span>
           <span className="hidden md:block text-center text-sm text-[#909090]">
             {formatDate(pinnedPost.created_at)}
-          </span>
-          {/* Mobile meta */}
-          <span className="flex md:hidden items-center gap-1.5 px-4 mt-1 text-[11px] text-[#aaa]">
-            <span>{pinnedPost.author_display_name}</span>
-            <span>·</span>
-            <span>{formatDate(pinnedPost.created_at)}</span>
           </span>
         </Link>
       ))}
@@ -140,15 +137,12 @@ export default function BoardListPage({
           <Link
             key={post.id}
             href={`${basePath}/${post.id}`}
-            className="grid grid-cols-1 md:grid-cols-[60px_1fr_100px_120px] items-center py-3.5 border-b border-[#e5e5e5] hover:bg-[#f9fdfb] transition-colors"
+            className="flex items-center gap-2 px-4 md:px-0 md:grid md:grid-cols-[60px_1fr_100px_120px] py-3.5 border-b border-[#e5e5e5] hover:bg-[#f9fdfb] transition-colors"
           >
-            <span className="hidden md:block text-center text-sm text-[#aaa]">
+            <span className="shrink-0 w-5 text-right text-[11px] text-[#ccc] md:w-auto md:text-center md:text-sm md:text-[#aaa]">
               {displayNumber}
             </span>
-            <span className="flex items-center gap-2 px-4 md:pl-4 md:pr-0">
-              <span className="md:hidden text-[11px] text-[#ccc] min-w-[20px]">
-                {displayNumber}
-              </span>
+            <span className="flex-1 min-w-0 flex items-center gap-1.5 md:pl-4">
               <span className="text-[#212121] truncate text-sm md:text-[15px]">
                 {post.title}
               </span>
@@ -156,17 +150,14 @@ export default function BoardListPage({
                 <Badge className="shrink-0 bg-red-500 text-white text-[10px] px-1 py-0 hover:bg-red-500">N</Badge>
               )}
             </span>
+            <span className="shrink-0 whitespace-nowrap text-[11px] text-[#aaa] md:hidden">
+              {post.author_display_name} · {formatDate(post.created_at)}
+            </span>
             <span className="hidden md:block text-center text-sm text-[#505050]">
               {post.author_display_name}
             </span>
             <span className="hidden md:block text-center text-sm text-[#909090]">
               {formatDate(post.created_at)}
-            </span>
-            {/* Mobile meta */}
-            <span className="flex md:hidden items-center gap-1.5 px-4 mt-1 text-[11px] text-[#aaa]">
-              <span>{post.author_display_name}</span>
-              <span>·</span>
-              <span>{formatDate(post.created_at)}</span>
             </span>
           </Link>
         );
