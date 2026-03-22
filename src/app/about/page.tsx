@@ -1,7 +1,6 @@
 import DOMPurify from "isomorphic-dompurify";
 import { createClient } from "@/lib/supabase/server";
-
-const HTML_MARKER = "<!--LOVEPROGRESS:HTML-->";
+import { HTML_CONTENT_MARKER } from "@/lib/constants";
 
 async function getAboutContent(): Promise<string> {
   try {
@@ -19,9 +18,9 @@ async function getAboutContent(): Promise<string> {
 
 export default async function AboutPage() {
   const content = await getAboutContent();
-  const isHtml = content.startsWith(HTML_MARKER);
+  const isHtml = content.startsWith(HTML_CONTENT_MARKER);
   const sanitizedHtml = isHtml
-    ? DOMPurify.sanitize(content.slice(HTML_MARKER.length))
+    ? DOMPurify.sanitize(content.slice(HTML_CONTENT_MARKER.length))
     : null;
 
   if (!content) {

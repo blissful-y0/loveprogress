@@ -2,10 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { UploadIcon, ExternalLinkIcon } from "lucide-react";
-
-const HTML_MARKER = "<!--LOVEPROGRESS:HTML-->";
+import { HTML_CONTENT_MARKER } from "@/lib/constants";
 
 export default function AboutPageManager() {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -48,7 +46,7 @@ export default function AboutPageManager() {
       const res = await fetch("/api/site-pages/about", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: HTML_MARKER + htmlContent }),
+        body: JSON.stringify({ content: HTML_CONTENT_MARKER + htmlContent }),
       });
 
       const data = await res.json();
