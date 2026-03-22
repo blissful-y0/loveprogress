@@ -1,8 +1,260 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useUser } from "@/hooks/useUser";
+import { formatDate } from "@/lib/format-date";
+import type { BoardPostRow } from "@/types/database";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  LockIcon,
+  PenLineIcon,
+} from "lucide-react";
+
+const ITEMS_PER_PAGE = 10;
+
+interface PostsResponse {
+  posts: BoardPostRow[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export default function BoothBoardPage() {
+  const { user, loading: userLoading } = useUser();
+  const [posts, setPosts] = useState<BoardPostRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const canAccess =
+    !userLoading &&
+    user &&
+    (user.role === "booth_member" || user.role === "admin");
+
+  const fetchPosts = useCallback(async (page: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(
+        `/api/booth-board?page=${page}&limit=${ITEMS_PER_PAGE}`,
+      );
+      const data: PostsResponse = await res.json();
+
+      if (!res.ok) {
+        setError((data as unknown as { error: string }).error ?? "게시글을 불러오지 못했습니다.");
+        return;
+      }
+
+      setPosts(data.posts);
+      setTotal(data.total);
+    } catch {
+      setError("게시글을 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (canAccess) {
+      fetchPosts(currentPage);
+    } else if (!userLoading) {
+      setLoading(false);
+    }
+  }, [canAccess, currentPage, fetchPosts, userLoading]);
+
+  // Access denied
+  if (!userLoading && !canAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <h1 className="text-2xl font-bold text-[#212121]">부스어 전용 게시판</h1>
+        <p className="text-[#909090]">부스어 인증이 필요합니다.</p>
+        {!user && (
+          <Link href="/auth/login">
+            <Button className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f]">
+              로그인
+            </Button>
+          </Link>
+        )}
+      </div>
+    );
+  }
+
+  // Loading
+  if (userLoading || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-[#909090] text-sm">로딩 중...</p>
+      </div>
+    );
+  }
+
+  const pinnedPosts = posts.filter((p) => p.is_pinned);
+  const regularPosts = posts.filter((p) => !p.is_pinned);
+  const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
+
+  // Calculate display numbers for regular posts
+  const regularTotal = total - pinnedPosts.length;
+  const startNumber = regularTotal - (currentPage - 1) * ITEMS_PER_PAGE;
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <h1 className="text-2xl font-bold text-[#212121]">부스어 전용 게시판</h1>
-      <p className="text-[#909090]">준비 중입니다</p>
+    <div className="mx-auto w-full max-w-[1280px] px-6 lg:px-8 py-10">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-[#212121] md:text-3xl">
+          부스어 전용 게시판
+        </h1>
+        <Link href="/booth-board/write">
+          <Button className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f]">
+            <PenLineIcon className="size-4 mr-1" />
+            글쓰기
+          </Button>
+        </Link>
+      </div>
+      <Separator className="mt-4 mb-0 bg-[#212121]" />
+
+      {/* Error */}
+      {error && (
+        <div className="py-8 text-center text-sm text-red-500">{error}</div>
+      )}
+
+      {/* Table Header - Desktop */}
+      <div className="hidden md:grid md:grid-cols-[60px_1fr_100px_120px] items-center py-3 text-sm font-semibold text-[#505050] border-b border-[#e5e5e5]">
+        <span className="text-center">번호</span>
+        <span className="pl-4">제목</span>
+        <span className="text-center">글쓴이</span>
+        <span className="text-center">작성시간</span>
+      </div>
+
+      {/* Pinned Posts */}
+      {pinnedPosts.map((pinnedPost) => (
+        <Link
+          key={pinnedPost.id}
+          href={`/booth-board/${pinnedPost.id}`}
+          className="grid grid-cols-1 md:grid-cols-[60px_1fr_100px_120px] items-center py-3.5 border-b border-[#e5e5e5] bg-[#f9fdfb] hover:bg-[#f0f9f6] transition-colors"
+        >
+          <span className="hidden md:flex justify-center text-xs text-[#34aa8f] font-semibold">
+            공지
+          </span>
+          <span className="flex items-center gap-2 pl-4 pr-4 md:pr-0">
+            <span className="md:hidden text-xs text-[#34aa8f] font-semibold">
+              공지
+            </span>
+            <Badge className="shrink-0 bg-[#34aa8f] text-white text-[11px] px-1.5 py-0 hover:bg-[#34aa8f]">
+              공지
+            </Badge>
+            <span className="text-[#212121] font-medium truncate text-sm md:text-base">
+              {pinnedPost.title}
+            </span>
+          </span>
+          <span className="hidden md:block text-center text-sm text-[#505050]">
+            {pinnedPost.author_display_name}
+          </span>
+          <span className="hidden md:block text-center text-sm text-[#909090]">
+            {formatDate(pinnedPost.created_at)}
+          </span>
+          {/* Mobile meta */}
+          <span className="flex md:hidden items-center gap-2 pl-4 mt-1 text-xs text-[#909090]">
+            <span>{pinnedPost.author_display_name}</span>
+            <span>·</span>
+            <span>{formatDate(pinnedPost.created_at)}</span>
+          </span>
+        </Link>
+      ))}
+
+      {/* Regular Posts */}
+      {regularPosts.map((post, idx) => {
+        const displayNumber = startNumber - idx;
+        return (
+          <Link
+            key={post.id}
+            href={`/booth-board/${post.id}`}
+            className="grid grid-cols-1 md:grid-cols-[60px_1fr_100px_120px] items-center py-3.5 border-b border-[#e5e5e5] hover:bg-[#fafafa] transition-colors"
+          >
+            <span className="hidden md:block text-center text-sm text-[#909090]">
+              {displayNumber}
+            </span>
+            <span className="flex items-center gap-2 pl-4 pr-4 md:pr-0">
+              <span className="md:hidden text-xs text-[#909090] min-w-[24px]">
+                {displayNumber}
+              </span>
+              {post.is_secret && (
+                <LockIcon className="size-3.5 shrink-0 text-[#909090]" />
+              )}
+              <span className="text-[#212121] truncate text-sm md:text-base">
+                {post.is_secret ? "비밀글입니다." : post.title}
+              </span>
+            </span>
+            <span className="hidden md:block text-center text-sm text-[#505050]">
+              {post.author_display_name}
+            </span>
+            <span className="hidden md:block text-center text-sm text-[#909090]">
+              {formatDate(post.created_at)}
+            </span>
+            {/* Mobile meta */}
+            <span className="flex md:hidden items-center gap-2 pl-4 mt-1 text-xs text-[#909090]">
+              <span>{post.author_display_name}</span>
+              <span>·</span>
+              <span>{formatDate(post.created_at)}</span>
+            </span>
+          </Link>
+        );
+      })}
+
+      {/* Empty state */}
+      {!error && posts.length === 0 && (
+        <div className="flex items-center justify-center py-20 text-[#909090] text-sm">
+          아직 게시글이 없습니다.
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1 mt-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            className="text-[#505050]"
+          >
+            <ChevronLeftIcon className="size-4" />
+          </Button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={page === currentPage ? "default" : "ghost"}
+              size="icon"
+              onClick={() => setCurrentPage(page)}
+              className={
+                page === currentPage
+                  ? "bg-[#34aa8f] text-white hover:bg-[#2d9a7f]"
+                  : "text-[#505050]"
+              }
+            >
+              {page}
+            </Button>
+          ))}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            className="text-[#505050]"
+          >
+            <ChevronRightIcon className="size-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
