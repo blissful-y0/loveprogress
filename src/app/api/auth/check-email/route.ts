@@ -9,7 +9,7 @@ const checkEmailSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const rateLimitResponse = rateLimit(request, "check-email", {
+  const rateLimitResponse = await rateLimit(request, "check-email", {
     maxRequests: 10,
     windowMs: 60 * 1000,
   });

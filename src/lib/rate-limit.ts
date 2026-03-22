@@ -1,27 +1,10 @@
 import { NextResponse } from "next/server";
 
-interface RateLimitEntry {
-  count: number;
-  resetTime: number;
-}
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-const rateLimitStore = new Map<string, RateLimitEntry>();
-
-// Clean up expired entries periodically (every 5 minutes)
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-
-let lastCleanup = Date.now();
-
-function cleanupExpiredEntries(): void {
-  const now = Date.now();
-  if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
-
-  lastCleanup = now;
-  for (const [key, entry] of rateLimitStore) {
-    if (now >= entry.resetTime) {
-      rateLimitStore.delete(key);
-    }
-  }
+interface RateLimitOptions {
+  readonly maxRequests: number;
+  readonly windowMs: number;
 }
 
 function getClientIp(request: Request): string {
@@ -32,40 +15,44 @@ function getClientIp(request: Request): string {
   );
 }
 
-interface RateLimitOptions {
-  readonly maxRequests: number;
-  readonly windowMs: number;
-}
-
-export function rateLimit(
+/**
+ * Supabase DB 기반 rate limiting — 서버리스(Vercel) 환경에서도 영속적으로 동작.
+ * DB 오류 시 허용(fail-open)하여 서비스 중단을 방지.
+ */
+export async function rateLimit(
   request: Request,
   endpoint: string,
   options: RateLimitOptions,
-): NextResponse | null {
-  cleanupExpiredEntries();
-
+): Promise<NextResponse | null> {
   const ip = getClientIp(request);
   const key = `${endpoint}:${ip}`;
-  const now = Date.now();
 
-  const existing = rateLimitStore.get(key);
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin.rpc("increment_rate_limit", {
+      p_key: key,
+      p_max: options.maxRequests,
+      p_window_ms: options.windowMs,
+    });
 
-  if (!existing || now >= existing.resetTime) {
-    rateLimitStore.set(key, { count: 1, resetTime: now + options.windowMs });
+    if (error) {
+      // DB 오류 시 요청 허용 (fail-open)
+      console.error("Rate limit DB error:", error.message);
+      return null;
+    }
+
+    const count = data as number;
+    if (count > options.maxRequests) {
+      return NextResponse.json(
+        { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+        { status: 429 },
+      );
+    }
+  } catch (err) {
+    // 예외 시 요청 허용 (fail-open)
+    console.error("Rate limit error:", err);
     return null;
   }
-
-  if (existing.count >= options.maxRequests) {
-    return NextResponse.json(
-      { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
-      { status: 429 },
-    );
-  }
-
-  rateLimitStore.set(key, {
-    count: existing.count + 1,
-    resetTime: existing.resetTime,
-  });
 
   return null;
 }

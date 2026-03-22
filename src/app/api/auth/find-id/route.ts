@@ -21,7 +21,7 @@ function maskEmail(email: string): string {
 }
 
 export async function POST(request: Request) {
-  const rateLimitResponse = rateLimit(request, "find-id", {
+  const rateLimitResponse = await rateLimit(request, "find-id", {
     maxRequests: 5,
     windowMs: 60 * 1000,
   });
