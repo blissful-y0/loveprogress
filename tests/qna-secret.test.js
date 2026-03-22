@@ -8,8 +8,8 @@ const qnaCardSource = fs.readFileSync(
   path.join(rootDir, "src", "app", "qna", "_components", "qna-card.tsx"),
   "utf8",
 );
-const constantsSource = fs.readFileSync(
-  path.join(rootDir, "src", "app", "qna", "_lib", "constants.ts"),
+const qnaRouteSource = fs.readFileSync(
+  path.join(rootDir, "src", "app", "api", "qna", "route.ts"),
   "utf8",
 );
 const verifyRoutePath = path.join(
@@ -27,9 +27,9 @@ test("secret qna client does not use a hardcoded password", () => {
   assert.doesNotMatch(qnaCardSource, /1234/);
 });
 
-test("secret qna mock data does not bundle protected content", () => {
-  assert.match(constantsSource, /content:\s*""/);
-  assert.match(constantsSource, /answer:\s*undefined/);
+test("secret qna list response strips protected content server-side", () => {
+  assert.match(qnaRouteSource, /content:\s*post\.is_secret\s*\?\s*""\s*:\s*post\.content/);
+  assert.match(qnaRouteSource, /answer:\s*post\.is_secret\s*\?\s*null\s*:/);
 });
 
 test("secret qna verification is handled by a server route", () => {

@@ -20,6 +20,20 @@ const registerSchema = z.object({
     .optional(),
 });
 
+function isDuplicateNicknameError(error: unknown): boolean {
+  const candidate = error as
+    | { code?: string; message?: string; details?: string }
+    | null
+    | undefined;
+
+  if (!candidate) return false;
+
+  return (
+    candidate.code === "23505" &&
+    `${candidate.message ?? ""} ${candidate.details ?? ""}`.includes("nickname")
+  );
+}
+
 export async function POST(request: Request) {
   // Rate limiting: 5 requests per 10 minutes per IP
   const rateLimitResponse = await rateLimit(request, "auth-register", {
@@ -94,6 +108,12 @@ export async function POST(request: Request) {
       // 롤백: auth user 삭제 (단, 기존 유저 ID가 아님이 identities 검사로 이미 확인됨)
       console.error("Profile insert error:", profileError);
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      if (isDuplicateNicknameError(profileError)) {
+        return NextResponse.json(
+          { error: "이미 사용 중인 닉네임입니다." },
+          { status: 409 },
+        );
+      }
       return NextResponse.json(
         { error: "회원가입에 실패했습니다." },
         { status: 500 },
