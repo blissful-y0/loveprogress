@@ -40,6 +40,7 @@ export default function Header() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const desktopLoginRef = useRef<HTMLDivElement>(null);
   const mobileLoginRef = useRef<HTMLDivElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
 
   const closeLogin = useCallback(() => setIsLoginOpen(false), []);
 
@@ -77,6 +78,12 @@ export default function Header() {
   useEffect(() => {
     closeLogin();
   }, [pathname, closeLogin]);
+
+  useEffect(() => {
+    if (!mobileNavRef.current) return;
+    const activeLink = mobileNavRef.current.querySelector<HTMLElement>("[data-active]");
+    activeLink?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [pathname]);
 
   const menuHeight = menuItems.length * 45;
 
@@ -247,13 +254,14 @@ export default function Header() {
         </div>
 
         {/* Bottom row: Scrollable nav */}
-        <nav className="flex overflow-x-auto scrollbar-hide border-t border-gray-100">
+        <nav ref={mobileNavRef} className="flex overflow-x-auto scrollbar-hide border-t border-gray-100">
           {NAV_ITEMS.map((item) => {
             const active = isActiveRoute(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                data-active={active ? "" : undefined}
                 className={`relative shrink-0 px-4 py-2.5 text-[13px] font-medium transition-colors whitespace-nowrap ${
                   active ? "text-text-dark" : "text-text-muted"
                 }`}

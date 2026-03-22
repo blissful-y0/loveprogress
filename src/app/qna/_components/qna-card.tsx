@@ -30,10 +30,10 @@ function InfoRow({ label, value, mono = false }: { label: string; value: string;
         {label}
       </span>
       <span className="text-[12px] text-[#cce8e0] shrink-0">|</span>
-      <span className={mono
+      <span className={`overflow-hidden truncate ${mono
         ? "text-[14px] text-[#505050] font-mono tracking-wide"
         : "text-[15px] text-[#505050] font-medium"
-      }>
+      }`}>
         {value}
       </span>
     </div>
@@ -110,7 +110,7 @@ export function QnaCard({ item, index }: QnaCardProps) {
         </div>
 
         {/* Info rows */}
-        <div className="flex-1 flex flex-col gap-2 pt-1">
+        <div className="flex-1 min-w-0 flex flex-col gap-2 pt-1">
           <InfoRow label="성명" value={item.writer_name} />
           <InfoRow label="소속" value={character.label} />
           <InfoRow label="학번" value={formatStudentId(index)} mono />
