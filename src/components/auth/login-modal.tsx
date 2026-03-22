@@ -159,9 +159,12 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
     } else {
       setPassword("");
       setError("");
-      if (!saveId) setEmail("");
+      // localStorage 기준으로 초기화 — saveId 상태를 직접 참조하지 않아 stale closure 방지
+      const savedEmail = localStorage.getItem(SAVED_EMAIL_KEY) ?? "";
+      setEmail(savedEmail);
+      setSaveId(!!savedEmail);
     }
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -226,16 +229,6 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <div className="mt-4 flex items-center justify-center gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <button type="button" className="overflow-hidden rounded-full transition-opacity hover:opacity-80" onClick={() => {/* TODO: Discord OAuth */}} aria-label="Discord로 로그인">
-            <img src="/img/login/discord_i.jpg" alt="Discord" width={48} height={48} className="size-12 rounded-full object-cover" />
-          </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <button type="button" className="overflow-hidden rounded-full transition-opacity hover:opacity-80" onClick={() => {/* TODO: Discord OAuth */}} aria-label="Discord 간편 로그인">
-            <img src="/img/login/discord_i2.jpg" alt="Discord 간편" width={48} height={48} className="size-12 rounded-full object-cover" />
-          </button>
-        </div>
       </DialogContent>
     </Dialog>
   );
