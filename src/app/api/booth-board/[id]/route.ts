@@ -54,11 +54,12 @@ export async function GET(_request: Request, { params }: RouteContext) {
       .eq("post_id", id)
       .order("created_at", { ascending: true });
 
-    // Prev / Next navigation (based on created_at)
+    // Prev / Next navigation (based on created_at) — exclude secret posts
     const { data: prevPost } = await supabaseAdmin
       .from("board_posts")
       .select("id, title")
       .eq("board_type", "booth_private")
+      .eq("is_secret", false)
       .lt("created_at", post.created_at)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -68,6 +69,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
       .from("board_posts")
       .select("id, title")
       .eq("board_type", "booth_private")
+      .eq("is_secret", false)
       .gt("created_at", post.created_at)
       .order("created_at", { ascending: true })
       .limit(1)
@@ -190,12 +192,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       );
     }
 
-    // Delete comments first, then the post
-    await supabaseAdmin
-      .from("board_comments")
-      .delete()
-      .eq("post_id", id);
-
+    // FK CASCADE on board_comments.post_id handles comment cleanup
     const { error } = await supabaseAdmin
       .from("board_posts")
       .delete()

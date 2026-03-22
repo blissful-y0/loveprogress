@@ -21,6 +21,7 @@ const ITEMS_PER_PAGE = 10;
 interface PostsResponse {
   posts: BoardPostRow[];
   total: number;
+  pinnedCount: number;
   page: number;
   limit: number;
 }
@@ -29,6 +30,7 @@ export default function BoothBoardPage() {
   const { user, loading: userLoading } = useUser();
   const [posts, setPosts] = useState<BoardPostRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [pinnedCount, setPinnedCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,7 @@ export default function BoothBoardPage() {
 
       setPosts(data.posts);
       setTotal(data.total);
+      setPinnedCount(data.pinnedCount);
     } catch {
       setError("게시글을 불러오지 못했습니다.");
     } finally {
@@ -100,8 +103,8 @@ export default function BoothBoardPage() {
   const regularPosts = posts.filter((p) => !p.is_pinned);
   const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
 
-  // Calculate display numbers for regular posts
-  const regularTotal = total - pinnedPosts.length;
+  // Calculate display numbers for regular posts using server-side pinned count
+  const regularTotal = total - pinnedCount;
   const startNumber = regularTotal - (currentPage - 1) * ITEMS_PER_PAGE;
 
   return (

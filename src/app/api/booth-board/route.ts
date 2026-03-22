@@ -36,6 +36,12 @@ export async function GET(request: Request) {
       .select("id", { count: "exact", head: true })
       .eq("board_type", "booth_private");
 
+    const { count: pinnedCount } = await supabaseAdmin
+      .from("board_posts")
+      .select("id", { count: "exact", head: true })
+      .eq("board_type", "booth_private")
+      .eq("is_pinned", true);
+
     const { data: posts, error } = await supabaseAdmin
       .from("board_posts")
       .select("*")
@@ -54,6 +60,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       posts: posts ?? [],
       total: count ?? 0,
+      pinnedCount: pinnedCount ?? 0,
       page,
       limit,
     });

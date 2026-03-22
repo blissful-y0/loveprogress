@@ -42,7 +42,8 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     const { error } = await supabaseAdmin
       .from("board_comments")
       .delete()
-      .eq("id", commentId);
+      .eq("id", commentId)
+      .eq("post_id", id);
 
     if (error) {
       return NextResponse.json(
