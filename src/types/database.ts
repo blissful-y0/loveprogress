@@ -145,46 +145,55 @@ export interface Database {
         Row: UserRow;
         Insert: UserInsert;
         Update: Partial<UserInsert>;
+        Relationships: [];
       };
       board_posts: {
         Row: BoardPostRow;
         Insert: BoardPostInsert;
         Update: Partial<BoardPostInsert>;
+        Relationships: [];
       };
       board_comments: {
         Row: BoardCommentRow;
         Insert: BoardCommentInsert;
         Update: Partial<BoardCommentInsert>;
+        Relationships: [];
       };
       qna_posts: {
         Row: QnaPostRow;
         Insert: QnaPostInsert;
         Update: Partial<QnaPostInsert>;
+        Relationships: [];
       };
       qna_answers: {
         Row: QnaAnswerRow;
         Insert: QnaAnswerInsert;
         Update: Partial<QnaAnswerInsert>;
+        Relationships: [];
       };
       booths: {
         Row: BoothRow;
         Insert: BoothInsert;
         Update: Partial<BoothInsert>;
+        Relationships: [];
       };
       booth_keywords: {
         Row: BoothKeywordRow;
         Insert: BoothKeywordInsert;
         Update: Partial<BoothKeywordInsert>;
+        Relationships: [];
       };
       booth_participants: {
         Row: BoothParticipantRow;
         Insert: BoothParticipantInsert;
         Update: Partial<BoothParticipantInsert>;
+        Relationships: [];
       };
       main_banners: {
         Row: MainBannerRow;
         Insert: MainBannerInsert;
         Update: Partial<MainBannerInsert>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
