@@ -1,12 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import { fetchBoothsWithDetails } from "@/lib/queries/booth-queries";
 import BoothListClient from "@/components/booths/BoothListClient";
 import { toBoothCardData } from "@/types/booth";
 import type { BoothWithDetails } from "@/types/booth";
-import type {
-  BoothKeywordRow,
-  BoothParticipantRow,
-  BoothRow,
-} from "@/types/database";
 
 export const metadata = {
   title: "부스리스트 | 파이낙사 온리전 :: 사랑의 진도",
@@ -16,59 +12,8 @@ export const metadata = {
 async function fetchBooths(): Promise<BoothWithDetails[]> {
   const supabase = await createClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: booths, error: boothError } = (await (
-    supabase.from("booths") as any
-  )
-    .select("*")
-    .order("created_at", { ascending: false })) as {
-    data: BoothRow[] | null;
-    error: unknown;
-  };
-
-  if (boothError || !booths || booths.length === 0) {
-    return [];
-  }
-
-  const boothIds = booths.map((b) => b.id);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [keywordsResult, participantsResult] = (await Promise.all([
-    (supabase.from("booth_keywords") as any)
-      .select("*")
-      .in("booth_id", boothIds),
-    (supabase.from("booth_participants") as any)
-      .select("*")
-      .in("booth_id", boothIds)
-      .order("role_order", { ascending: true }),
-  ])) as [
-    { data: BoothKeywordRow[] | null; error: unknown },
-    { data: BoothParticipantRow[] | null; error: unknown },
-  ];
-
-  if (keywordsResult.error || participantsResult.error) {
-    return [];
-  }
-
-  const keywordsByBooth = new Map<string, BoothKeywordRow[]>();
-  for (const kw of keywordsResult.data ?? []) {
-    const list = keywordsByBooth.get(kw.booth_id) ?? [];
-    list.push(kw);
-    keywordsByBooth.set(kw.booth_id, list);
-  }
-
-  const participantsByBooth = new Map<string, BoothParticipantRow[]>();
-  for (const p of participantsResult.data ?? []) {
-    const list = participantsByBooth.get(p.booth_id) ?? [];
-    list.push(p);
-    participantsByBooth.set(p.booth_id, list);
-  }
-
-  return booths.map((booth) => ({
-    ...booth,
-    keywords: keywordsByBooth.get(booth.id) ?? [],
-    participants: participantsByBooth.get(booth.id) ?? [],
-  }));
+  const { data } = await fetchBoothsWithDetails(supabase);
+  return data ?? [];
 }
 
 export default async function BoothsPage() {

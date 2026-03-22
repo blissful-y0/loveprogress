@@ -12,6 +12,10 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
+/** Columns to select from booths table (excludes password_last4) */
+const BOOTH_PUBLIC_COLUMNS =
+  "id, name, thumbnail_image_key, hover_image_key, age_type, created_at, updated_at";
+
 export async function GET(_request: Request, { params }: RouteContext) {
   try {
     const { id } = await params;
@@ -22,7 +26,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
     const { data: booth, error: boothError } = (await (
       supabase.from("booths") as any
     )
-      .select("*")
+      .select(BOOTH_PUBLIC_COLUMNS)
       .eq("id", id)
       .single()) as { data: BoothRow | null; error: unknown };
 

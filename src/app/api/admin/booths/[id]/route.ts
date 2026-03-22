@@ -1,49 +1,13 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 import { isAdminError, verifyAdmin } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { BoothKeyword } from "@/types/database";
+import { boothBaseSchema } from "@/lib/schemas/booth-schema";
+import type { BoothKeywordRow, BoothParticipantRow } from "@/types/database";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-const VALID_KEYWORDS: readonly BoothKeyword[] = [
-  "그림회지",
-  "글회지",
-  "팬시굿즈",
-  "수공예품",
-  "무료나눔",
-];
-
-const participantSchema = z.object({
-  name: z.string().min(1, "참여자 이름을 입력해주세요.").max(20),
-  snsUrl: z.string().url("올바른 URL 형식을 입력해주세요.").optional(),
-});
-
-const updateBoothSchema = z.object({
-  name: z
-    .string()
-    .min(1, "부스 이름을 입력해주세요.")
-    .max(20, "부스 이름은 20자 이하여야 합니다."),
-  passwordLast4: z
-    .string()
-    .regex(/^\d{4}$/, "비밀번호는 숫자 4자리여야 합니다.")
-    .optional(),
-  thumbnailImageKey: z.string().min(1, "썸네일 이미지를 선택해주세요."),
-  hoverImageKey: z.string().optional(),
-  ageType: z.enum(["general", "adult"], {
-    error: "유효한 연령 타입을 선택해주세요.",
-  }),
-  keywords: z
-    .array(z.enum(VALID_KEYWORDS as unknown as [string, ...string[]]))
-    .min(1, "키워드를 최소 1개 선택해주세요."),
-  owner: participantSchema,
-  participants: z
-    .array(participantSchema)
-    .max(3, "참여자는 최대 3명까지 가능합니다."),
-});
 
 export async function PUT(request: Request, { params }: RouteContext) {
   try {
@@ -52,7 +16,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
     const { id } = await params;
     const body = await request.json();
-    const parsed = updateBoothSchema.safeParse(body);
+    const parsed = boothBaseSchema.safeParse(body);
 
     if (!parsed.success) {
       const firstError =
@@ -108,7 +72,14 @@ export async function PUT(request: Request, { params }: RouteContext) {
       );
     }
 
-    // 2. Delete + reinsert keywords
+    // 2. Save old keywords for rollback, then delete + reinsert
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: oldKeywords } = (await (
+      supabaseAdmin.from("booth_keywords") as any
+    )
+      .select("*")
+      .eq("booth_id", id)) as { data: BoothKeywordRow[] | null };
+
     await supabaseAdmin.from("booth_keywords").delete().eq("booth_id", id);
 
     const keywordRows = keywords.map((keyword) => ({
@@ -122,13 +93,29 @@ export async function PUT(request: Request, { params }: RouteContext) {
     ).insert(keywordRows);
 
     if (kwError) {
+      // Rollback: restore old keywords
+      if (oldKeywords && oldKeywords.length > 0) {
+        const restoreRows = oldKeywords.map((kw) => ({
+          booth_id: kw.booth_id,
+          keyword: kw.keyword,
+        }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabaseAdmin.from("booth_keywords") as any).insert(restoreRows);
+      }
       return NextResponse.json(
         { error: "키워드 수정에 실패했습니다." },
         { status: 500 },
       );
     }
 
-    // 3. Delete + reinsert participants
+    // 3. Save old participants for rollback, then delete + reinsert
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: oldParticipants } = (await (
+      supabaseAdmin.from("booth_participants") as any
+    )
+      .select("*")
+      .eq("booth_id", id)) as { data: BoothParticipantRow[] | null };
+
     await supabaseAdmin
       .from("booth_participants")
       .delete()
@@ -150,6 +137,17 @@ export async function PUT(request: Request, { params }: RouteContext) {
     ).insert(participantRows);
 
     if (partError) {
+      // Rollback: restore old participants
+      if (oldParticipants && oldParticipants.length > 0) {
+        const restoreRows = oldParticipants.map((p) => ({
+          booth_id: p.booth_id,
+          name: p.name,
+          sns_url: p.sns_url,
+          role_order: p.role_order,
+        }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabaseAdmin.from("booth_participants") as any).insert(restoreRows);
+      }
       return NextResponse.json(
         { error: "참여자 수정에 실패했습니다." },
         { status: 500 },
