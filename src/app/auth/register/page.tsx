@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
+type EmailCheckStatus = "idle" | "checking" | "available" | "taken";
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: "",
@@ -18,9 +20,49 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [emailCheckStatus, setEmailCheckStatus] =
+    useState<EmailCheckStatus>("idle");
+  const [checkedEmail, setCheckedEmail] = useState("");
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === "email") {
+      setEmailCheckStatus("idle");
+      setCheckedEmail("");
+    }
+  };
+
+  const handleCheckEmail = async () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    setError("");
+    setEmailCheckStatus("checking");
+
+    try {
+      const res = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "이메일 확인에 실패했습니다.");
+        setEmailCheckStatus("idle");
+        return;
+      }
+
+      setEmailCheckStatus(data.available ? "available" : "taken");
+      setCheckedEmail(formData.email);
+    } catch {
+      setError("서버 오류가 발생했습니다.");
+      setEmailCheckStatus("idle");
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -30,6 +72,11 @@ export default function RegisterPage() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    if (emailCheckStatus !== "available" || checkedEmail !== formData.email) {
+      setError("이메일 중복확인을 해주세요.");
       return;
     }
 
@@ -119,20 +166,43 @@ export default function RegisterPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Email */}
+          {/* Email with duplicate check */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email" className="text-sm text-text-sub">
               이메일 <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="이메일을 입력하세요"
-              required
-              value={formData.email}
-              onChange={(e) => updateField("email", e.target.value)}
-              className="h-10 rounded-lg border-border px-3 text-sm"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="email"
+                type="email"
+                placeholder="이메일을 입력하세요"
+                required
+                value={formData.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                className="h-10 flex-1 rounded-lg border-border px-3 text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCheckEmail}
+                disabled={
+                  emailCheckStatus === "checking" || !formData.email.trim()
+                }
+                className="h-10 shrink-0 rounded-lg border-border px-3 text-xs font-medium"
+              >
+                {emailCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+              </Button>
+            </div>
+            {emailCheckStatus === "available" && (
+              <p className="text-xs text-green-600">
+                사용 가능한 이메일입니다.
+              </p>
+            )}
+            {emailCheckStatus === "taken" && (
+              <p className="text-xs text-destructive">
+                이미 사용 중인 이메일입니다.
+              </p>
+            )}
           </div>
 
           {/* Nickname */}
