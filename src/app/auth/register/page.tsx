@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-type EmailCheckStatus = "idle" | "checking" | "available" | "taken";
+type CheckStatus = "idle" | "checking" | "available" | "taken";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -20,15 +20,57 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
-  const [emailCheckStatus, setEmailCheckStatus] =
-    useState<EmailCheckStatus>("idle");
+  const [emailCheckStatus, setEmailCheckStatus] = useState<CheckStatus>("idle");
   const [checkedEmail, setCheckedEmail] = useState("");
+  const [nicknameCheckStatus, setNicknameCheckStatus] = useState<CheckStatus>("idle");
+  const [checkedNickname, setCheckedNickname] = useState("");
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (field === "email") {
       setEmailCheckStatus("idle");
       setCheckedEmail("");
+    }
+    if (field === "nickname") {
+      setNicknameCheckStatus("idle");
+      setCheckedNickname("");
+    }
+  };
+
+  const handleCheckNickname = async () => {
+    const trimmed = formData.nickname.trim();
+    if (!trimmed) {
+      setError("닉네임을 입력해주세요.");
+      return;
+    }
+    if (trimmed.length > 20) {
+      setError("닉네임은 20자 이하여야 합니다.");
+      return;
+    }
+
+    setError("");
+    setNicknameCheckStatus("checking");
+
+    try {
+      const res = await fetch("/api/auth/check-nickname", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: trimmed }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "닉네임 확인에 실패했습니다.");
+        setNicknameCheckStatus("idle");
+        return;
+      }
+
+      setNicknameCheckStatus(data.available ? "available" : "taken");
+      setCheckedNickname(trimmed);
+    } catch {
+      setError("서버 오류가 발생했습니다.");
+      setNicknameCheckStatus("idle");
     }
   };
 
@@ -87,6 +129,11 @@ export default function RegisterPage() {
 
     if (formData.nickname.trim().length > 20) {
       setError("닉네임은 20자 이하여야 합니다.");
+      return;
+    }
+
+    if (nicknameCheckStatus !== "available" || checkedNickname !== formData.nickname.trim()) {
+      setError("닉네임 중복확인을 해주세요.");
       return;
     }
 
@@ -205,20 +252,43 @@ export default function RegisterPage() {
             )}
           </div>
 
-          {/* Nickname */}
+          {/* Nickname with duplicate check */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="nickname" className="text-sm text-text-sub">
               닉네임 <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="nickname"
-              type="text"
-              placeholder="닉네임을 입력하세요"
-              required
-              value={formData.nickname}
-              onChange={(e) => updateField("nickname", e.target.value)}
-              className="h-10 rounded-lg border-border px-3 text-sm"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="nickname"
+                type="text"
+                placeholder="닉네임을 입력하세요"
+                required
+                value={formData.nickname}
+                onChange={(e) => updateField("nickname", e.target.value)}
+                className="h-10 flex-1 rounded-lg border-border px-3 text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCheckNickname}
+                disabled={
+                  nicknameCheckStatus === "checking" || !formData.nickname.trim()
+                }
+                className="h-10 shrink-0 rounded-lg border-border px-3 text-xs font-medium"
+              >
+                {nicknameCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+              </Button>
+            </div>
+            {nicknameCheckStatus === "available" && (
+              <p className="text-xs text-green-600">
+                사용 가능한 닉네임입니다.
+              </p>
+            )}
+            {nicknameCheckStatus === "taken" && (
+              <p className="text-xs text-destructive">
+                이미 사용 중인 닉네임입니다.
+              </p>
+            )}
           </div>
 
           {/* Password */}
