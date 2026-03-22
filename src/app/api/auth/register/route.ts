@@ -51,6 +51,9 @@ export async function POST(request: Request) {
     const { data: authData, error: authError } = await anonClient.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://loveprogress.vercel.app"}/`,
+      },
     });
 
     if (authError || !authData.user) {
