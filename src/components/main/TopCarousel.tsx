@@ -58,18 +58,19 @@ export default function TopCarousel() {
             slidesPerView={1}
             centeredSlides={true}
             loop={true}
-            loopAdditionalSlides={3}
             autoplay={{ delay: 4000, disableOnInteraction: false }}
             onSwiper={() => setReady(true)}
             onSlideChange={handleSlideChange}
             breakpoints={{
               768: {
-                slidesPerView: 1.1,
+                slidesPerView: 1,
                 spaceBetween: 24,
+                centeredSlides: false,
               },
               1280: {
-                slidesPerView: 1.15,
+                slidesPerView: 1,
                 spaceBetween: 30,
+                centeredSlides: false,
               },
             }}
             className="top-carousel"
