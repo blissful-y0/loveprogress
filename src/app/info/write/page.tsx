@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ const BOARD_TYPE_PATHS: Record<string, string> = {
   event: "/info/events",
 };
 
-export default function WritePage() {
+function WritePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useUser();
@@ -206,5 +206,21 @@ export default function WritePage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function WritePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-[1280px] px-6 lg:px-8 py-10">
+          <div className="flex items-center justify-center py-20 text-[#909090] text-sm">
+            로딩 중...
+          </div>
+        </div>
+      }
+    >
+      <WritePageContent />
+    </Suspense>
   );
 }

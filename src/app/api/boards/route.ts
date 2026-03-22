@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { BoardType } from "@/types/database";
+import type { BoardPostInsert, BoardType } from "@/types/database";
 
 const createPostSchema = z.object({
   boardType: z.enum(["notice", "event"]),
@@ -115,17 +115,20 @@ export async function POST(request: Request) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    const { data: post, error } = await supabaseAdmin
-      .from("board_posts")
-      .insert({
-        board_type: boardType,
-        title,
-        content,
-        author_user_id: authUser.id,
-        author_display_name: profile.nickname,
-        is_pinned: false,
-        is_secret: false,
-      })
+    const insertData: BoardPostInsert = {
+      board_type: boardType,
+      title,
+      content,
+      author_user_id: authUser.id,
+      author_display_name: profile.nickname,
+      is_pinned: false,
+      is_secret: false,
+    };
+
+    // Supabase insert typing collapses to never here; keep the validated payload shape.
+    const { data: post, error } = await (supabaseAdmin
+      .from("board_posts") as any)
+      .insert(insertData)
       .select()
       .single();
 

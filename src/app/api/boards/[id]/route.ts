@@ -146,8 +146,9 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    const { data: post, error } = await supabaseAdmin
-      .from("board_posts")
+    // Supabase update typing collapses to never here; keep the validated payload shape.
+    const { data: post, error } = await (supabaseAdmin
+      .from("board_posts") as any)
       .update(updateData)
       .eq("id", id)
       .select()
