@@ -1,14 +1,28 @@
 import Link from "next/link";
-import { formatDate, type BoardPost } from "@/lib/mock-board-data";
+import { formatDate } from "@/lib/utils";
+import type { BoardPostRow } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeftIcon, ChevronRightIcon, ListIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ListIcon,
+  PenLineIcon,
+  SquarePenIcon,
+} from "lucide-react";
+
+interface AdjacentPost {
+  id: string;
+  title: string;
+}
 
 interface BoardDetailPageProps {
   basePath: string;
-  post: BoardPost;
-  prevPost: BoardPost | null;
-  nextPost: BoardPost | null;
+  post: BoardPostRow;
+  prevPost: AdjacentPost | null;
+  nextPost: AdjacentPost | null;
+  isAdmin: boolean;
+  isAuthor: boolean;
 }
 
 export default function BoardDetailPage({
@@ -16,7 +30,11 @@ export default function BoardDetailPage({
   post,
   prevPost,
   nextPost,
+  isAdmin,
+  isAuthor,
 }: BoardDetailPageProps) {
+  const boardType = basePath === "/info/notices" ? "notice" : "event";
+
   return (
     <div className="mx-auto w-full max-w-[1280px] px-6 lg:px-8 py-10">
       {/* Title area */}
@@ -25,10 +43,10 @@ export default function BoardDetailPage({
       </h1>
       <div className="flex items-center gap-3 mt-3 text-sm text-[#909090]">
         <span className="text-[#505050] font-medium">
-          {post.authorDisplayName}
+          {post.author_display_name}
         </span>
         <span>·</span>
-        <span>{formatDate(post.createdAt)}</span>
+        <span>{formatDate(post.created_at)}</span>
       </div>
       <Separator className="mt-4 mb-0 bg-[#e5e5e5]" />
 
@@ -50,7 +68,9 @@ export default function BoardDetailPage({
               <ChevronRightIcon className="size-3" />
               다음글
             </span>
-            <span className="text-sm text-[#212121] truncate">{nextPost.title}</span>
+            <span className="text-sm text-[#212121] truncate">
+              {nextPost.title}
+            </span>
           </Link>
         )}
         {prevPost && (
@@ -62,7 +82,9 @@ export default function BoardDetailPage({
               <ChevronLeftIcon className="size-3" />
               이전글
             </span>
-            <span className="text-sm text-[#212121] truncate">{prevPost.title}</span>
+            <span className="text-sm text-[#212121] truncate">
+              {prevPost.title}
+            </span>
           </Link>
         )}
       </div>
@@ -76,10 +98,35 @@ export default function BoardDetailPage({
           render={
             <Link href={basePath}>
               <ListIcon className="size-4 mr-1.5" />
-              목록으로
+              목록
             </Link>
           }
         />
+        {isAdmin && (
+          <Button
+            className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f]"
+            nativeButton={false}
+            render={
+              <Link href={`/info/write?type=${boardType}`}>
+                <PenLineIcon className="size-4 mr-1.5" />
+                글쓰기
+              </Link>
+            }
+          />
+        )}
+        {isAuthor && (
+          <Button
+            variant="outline"
+            className="border-[#34aa8f] text-[#34aa8f] hover:bg-[#f0f9f6]"
+            nativeButton={false}
+            render={
+              <Link href={`/info/write?type=${boardType}&edit=${post.id}`}>
+                <SquarePenIcon className="size-4 mr-1.5" />
+                수정
+              </Link>
+            }
+          />
+        )}
       </div>
     </div>
   );
