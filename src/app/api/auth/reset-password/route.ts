@@ -9,14 +9,20 @@ const resetPasswordSchema = z.object({
   phoneLast4: z.string().length(4, "전화번호 뒷자리 4자리를 입력해주세요."),
 });
 
-const DEFAULT_RESET_PASSWORD = process.env.ADMIN_DEFAULT_PASSWORD ?? "702430";
-
 export async function POST(request: Request) {
   const rateLimitResponse = rateLimit(request, "reset-password", {
     maxRequests: 3,
     windowMs: 60 * 1000,
   });
   if (rateLimitResponse) return rateLimitResponse;
+
+  const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (!defaultPassword) {
+    return NextResponse.json(
+      { error: "서버 설정 오류" },
+      { status: 503 },
+    );
+  }
 
   try {
     const body = await request.json();
@@ -73,7 +79,7 @@ export async function POST(request: Request) {
     // 3. auth user 비밀번호를 기본값으로 재설정
     const { error: updateError } =
       await supabaseAdmin.auth.admin.updateUserById(user.id, {
-        password: DEFAULT_RESET_PASSWORD,
+        password: defaultPassword,
       });
 
     if (updateError) {
