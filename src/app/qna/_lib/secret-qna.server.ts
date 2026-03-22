@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createHash, timingSafeEqual } from "node:crypto";
+
 import bcrypt from "bcryptjs";
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -9,6 +11,10 @@ import type { SecretQnaPayload } from "./types";
 
 const BCRYPT_ROUNDS = 10;
 
+function isSha256Hex(hash: string): boolean {
+  return /^[a-f0-9]{64}$/.test(hash);
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
@@ -17,6 +23,14 @@ export async function verifyPasswordHash(
   storedHash: string,
   password: string,
 ): Promise<boolean> {
+  // Legacy SHA-256 path for pre-existing records
+  if (isSha256Hex(storedHash)) {
+    const stored = Buffer.from(storedHash, "hex");
+    const incoming = createHash("sha256").update(password).digest();
+    if (stored.length !== incoming.length) return false;
+    return timingSafeEqual(stored, incoming);
+  }
+  // bcrypt path for new records
   return bcrypt.compare(password, storedHash);
 }
 
