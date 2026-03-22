@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { QnaAnswerRow } from "@/types/database";
@@ -143,6 +144,32 @@ export async function POST(request: Request, { params }: RouteContext) {
     }
 
     return NextResponse.json({ answer }, { status: existing ? 200 : 201 });
+  } catch {
+    return NextResponse.json(
+      { error: "서버 오류가 발생했습니다." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: Request, { params }: RouteContext) {
+  try {
+    const adminCheck = await requireAdmin(request);
+    if (adminCheck.error) return adminCheck.error;
+
+    const { id: qnaPostId } = await params;
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabaseAdmin.from("qna_answers") as any)
+      .delete()
+      .eq("qna_post_id", qnaPostId);
+
+    if (error) {
+      return NextResponse.json({ error: "답변 삭제에 실패했습니다." }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },

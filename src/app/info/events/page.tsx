@@ -61,6 +61,11 @@ export default async function EventsPage({ searchParams }: Props) {
     <BoardListPage
       title="학내 행사 안내"
       basePath="/info/events"
+      pageHeader={{
+        label: "깨달음의 나무 정원",
+        title: "학사 안내",
+        subtitle: "학내 행사 및 학사 일정을 안내드립니다.",
+      }}
       emptyMessage="등록된 행사 안내가 없습니다."
       pinnedPosts={pinnedPosts ?? []}
       regularPosts={regularPosts ?? []}

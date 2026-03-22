@@ -6,8 +6,8 @@ import { formatDate, isNewPost } from "@/lib/utils";
 import type { BoardPostRow } from "@/types/database";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { ChevronLeftIcon, ChevronRightIcon, PenLineIcon } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 interface BoardListPageProps {
   title: string;
@@ -20,6 +20,7 @@ interface BoardListPageProps {
   totalPages: number;
   itemsPerPage: number;
   isAdmin: boolean;
+  pageHeader?: { label: string; title: string; subtitle: string };
 }
 
 export default function BoardListPage({
@@ -33,6 +34,7 @@ export default function BoardListPage({
   totalPages,
   itemsPerPage,
   isAdmin,
+  pageHeader,
 }: BoardListPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -53,34 +55,46 @@ export default function BoardListPage({
   const regularStartIndex = totalRegular - (page - 1) * itemsPerPage;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-6 lg:px-8 py-10">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#212121] md:text-3xl">
-          {title}
-        </h1>
-        {isAdmin && (
+    <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+      {/* Decorator header */}
+      {pageHeader ? (
+        <div className="mb-6">
+          <PageHeader {...pageHeader} />
+        </div>
+      ) : (
+        /* Fallback: original header when no decorator */
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-[#212121] md:text-3xl">{title}</h1>
+          <div className="mt-4 h-px bg-[#212121]" />
+        </div>
+      )}
+
+      {/* Admin write button */}
+      {isAdmin && (
+        <div className="flex justify-end mb-3">
           <Button
-            className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f]"
+            className="bg-primary text-white hover:bg-primary/90 text-[13px] h-8 px-3"
             nativeButton={false}
             render={
               <Link href={`/info/write?type=${boardType}`}>
-                <PenLineIcon className="size-4 mr-1.5" />
+                <PenLineIcon className="size-3.5 mr-1.5" />
                 글쓰기
               </Link>
             }
           />
-        )}
-      </div>
-      <Separator className="mt-4 mb-0 bg-[#212121]" />
+        </div>
+      )}
 
       {/* Table Header - Desktop */}
-      <div className="hidden md:grid md:grid-cols-[60px_1fr_100px_120px] items-center py-3 text-sm font-semibold text-[#505050] border-b border-[#e5e5e5]">
+      <div className="hidden md:grid md:grid-cols-[60px_1fr_100px_120px] items-center py-3 text-[12px] font-bold text-primary tracking-wide border-y border-[#e0f0ea] bg-[#f7fbf9]">
         <span className="text-center">번호</span>
         <span className="pl-4">제목</span>
         <span className="text-center">글쓴이</span>
-        <span className="text-center">작성시간</span>
+        <span className="text-center">작성일</span>
       </div>
+
+      {/* Mobile table label */}
+      <div className="md:hidden border-t border-[#e0f0ea]" />
 
       {/* Pinned Posts */}
       {pinnedPosts.map((pinnedPost) => (
@@ -90,24 +104,18 @@ export default function BoardListPage({
           className="grid grid-cols-1 md:grid-cols-[60px_1fr_100px_120px] items-center py-3.5 border-b border-[#e5e5e5] bg-[#f9fdfb] hover:bg-[#f0f9f6] transition-colors"
         >
           <span className="hidden md:flex justify-center">
-            <span className="text-lg" role="img" aria-label="공지">
-              📢
-            </span>
+            <span className="text-base" role="img" aria-label="공지">📢</span>
           </span>
-          <span className="flex items-center gap-2 pl-4 pr-4 md:pr-0">
-            <span className="md:hidden text-lg" role="img" aria-label="공지">
-              📢
-            </span>
-            <Badge className="shrink-0 bg-[#34aa8f] text-white text-[11px] px-1.5 py-0 hover:bg-[#34aa8f]">
+          <span className="flex items-center gap-2 px-4 md:pl-4 md:pr-0">
+            <span className="md:hidden text-base" role="img" aria-label="공지">📢</span>
+            <Badge className="shrink-0 bg-primary text-white text-[11px] px-1.5 py-0 hover:bg-primary">
               공지
             </Badge>
-            <span className="text-[#212121] font-medium truncate text-sm md:text-base">
+            <span className="text-[#212121] font-medium truncate text-sm md:text-[15px]">
               {pinnedPost.title}
             </span>
             {isNewPost(pinnedPost.created_at) && (
-              <Badge className="shrink-0 bg-red-500 text-white text-[10px] px-1 py-0 hover:bg-red-500">
-                N
-              </Badge>
+              <Badge className="shrink-0 bg-red-500 text-white text-[10px] px-1 py-0 hover:bg-red-500">N</Badge>
             )}
           </span>
           <span className="hidden md:block text-center text-sm text-[#505050]">
@@ -117,7 +125,7 @@ export default function BoardListPage({
             {formatDate(pinnedPost.created_at)}
           </span>
           {/* Mobile meta */}
-          <span className="flex md:hidden items-center gap-2 pl-4 mt-1 text-xs text-[#909090]">
+          <span className="flex md:hidden items-center gap-1.5 px-4 mt-1 text-[11px] text-[#aaa]">
             <span>{pinnedPost.author_display_name}</span>
             <span>·</span>
             <span>{formatDate(pinnedPost.created_at)}</span>
@@ -132,22 +140,20 @@ export default function BoardListPage({
           <Link
             key={post.id}
             href={`${basePath}/${post.id}`}
-            className="grid grid-cols-1 md:grid-cols-[60px_1fr_100px_120px] items-center py-3.5 border-b border-[#e5e5e5] hover:bg-[#fafafa] transition-colors"
+            className="grid grid-cols-1 md:grid-cols-[60px_1fr_100px_120px] items-center py-3.5 border-b border-[#e5e5e5] hover:bg-[#f9fdfb] transition-colors"
           >
-            <span className="hidden md:block text-center text-sm text-[#909090]">
+            <span className="hidden md:block text-center text-sm text-[#aaa]">
               {displayNumber}
             </span>
-            <span className="flex items-center gap-2 pl-4 pr-4 md:pr-0">
-              <span className="md:hidden text-xs text-[#909090] min-w-[24px]">
+            <span className="flex items-center gap-2 px-4 md:pl-4 md:pr-0">
+              <span className="md:hidden text-[11px] text-[#ccc] min-w-[20px]">
                 {displayNumber}
               </span>
-              <span className="text-[#212121] truncate text-sm md:text-base">
+              <span className="text-[#212121] truncate text-sm md:text-[15px]">
                 {post.title}
               </span>
               {isNewPost(post.created_at) && (
-                <Badge className="shrink-0 bg-red-500 text-white text-[10px] px-1 py-0 hover:bg-red-500">
-                  N
-                </Badge>
+                <Badge className="shrink-0 bg-red-500 text-white text-[10px] px-1 py-0 hover:bg-red-500">N</Badge>
               )}
             </span>
             <span className="hidden md:block text-center text-sm text-[#505050]">
@@ -157,7 +163,7 @@ export default function BoardListPage({
               {formatDate(post.created_at)}
             </span>
             {/* Mobile meta */}
-            <span className="flex md:hidden items-center gap-2 pl-4 mt-1 text-xs text-[#909090]">
+            <span className="flex md:hidden items-center gap-1.5 px-4 mt-1 text-[11px] text-[#aaa]">
               <span>{post.author_display_name}</span>
               <span>·</span>
               <span>{formatDate(post.created_at)}</span>
@@ -168,7 +174,7 @@ export default function BoardListPage({
 
       {/* Empty state */}
       {regularPosts.length === 0 && pinnedPosts.length === 0 && (
-        <div className="flex min-h-[300px] items-center justify-center text-[#909090] text-sm">
+        <div className="flex min-h-[240px] items-center justify-center text-[#bbb] text-sm">
           {emptyMessage}
         </div>
       )}
@@ -186,23 +192,21 @@ export default function BoardListPage({
             <ChevronLeftIcon className="size-4" />
           </Button>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-            (pageNum) => (
-              <Button
-                key={pageNum}
-                variant={pageNum === page ? "default" : "ghost"}
-                size="icon"
-                onClick={() => goToPage(pageNum)}
-                className={
-                  pageNum === page
-                    ? "bg-[#34aa8f] text-white hover:bg-[#2d9a7f]"
-                    : "text-[#505050]"
-                }
-              >
-                {pageNum}
-              </Button>
-            ),
-          )}
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+            <Button
+              key={pageNum}
+              variant={pageNum === page ? "default" : "ghost"}
+              size="icon"
+              onClick={() => goToPage(pageNum)}
+              className={
+                pageNum === page
+                  ? "bg-primary text-white hover:bg-primary/90"
+                  : "text-[#505050]"
+              }
+            >
+              {pageNum}
+            </Button>
+          ))}
 
           <Button
             variant="ghost"
