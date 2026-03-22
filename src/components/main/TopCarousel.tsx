@@ -47,9 +47,9 @@ export default function TopCarousel() {
         className="absolute top-0 left-0 w-full h-[85%] transition-colors duration-500"
         style={{ backgroundColor: currentBg }}
       />
-      <div className="relative z-10 mx-auto w-full md:h-[350px] lg:h-[450px]">
+      <div className="relative z-10 mx-auto w-full max-w-[1280px] px-4 md:px-6 lg:px-8">
         <div
-          className="w-full h-full transition-opacity duration-300"
+          className="w-full transition-opacity duration-300"
           style={{ opacity: ready ? 1 : 0 }}
         >
           <Swiper
@@ -61,7 +61,6 @@ export default function TopCarousel() {
             autoplay={{ delay: 4000, disableOnInteraction: false }}
             onSwiper={() => setReady(true)}
             onSlideChange={handleSlideChange}
-            style={{ height: "100%" }}
             breakpoints={{
               768: {
                 slidesPerView: 1.1,
@@ -75,14 +74,14 @@ export default function TopCarousel() {
             className="top-carousel"
           >
             {BANNER_SLIDES.map((slide) => (
-              <SwiperSlide key={slide.id} style={{ height: "100%" }}>
-                <div className="relative h-full overflow-hidden rounded-2xl md:rounded-[30px]">
+              <SwiperSlide key={slide.id}>
+                <div className="relative overflow-hidden rounded-2xl md:rounded-[30px]">
                   <img
                     src={slide.image}
                     alt={slide.alt}
                     width={1280}
                     height={450}
-                    className="w-full h-auto md:h-full md:object-cover"
+                    className="w-full h-auto"
                   />
                   {/* Pagination indicator - overlay on image */}
                   <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4">
