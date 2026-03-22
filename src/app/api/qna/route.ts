@@ -153,7 +153,7 @@ export async function POST(request: Request) {
 
     const clientIp = getClientIp(request);
     const passwordHash =
-      isSecret && password ? hashPassword(password) : null;
+      isSecret && password ? await hashPassword(password) : null;
 
     const supabase = getSupabaseAdmin();
 

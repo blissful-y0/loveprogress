@@ -1,28 +1,23 @@
 import "server-only";
 
-import { createHash, timingSafeEqual } from "node:crypto";
+import bcrypt from "bcryptjs";
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { QnaPostRow, QnaAnswerRow } from "@/types/database";
 
 import type { SecretQnaPayload } from "./types";
 
-export function hashPassword(password: string): string {
-  return createHash("sha256").update(password).digest("hex");
+const BCRYPT_ROUNDS = 10;
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
-export function verifyPasswordHash(
-  storedHex: string,
+export async function verifyPasswordHash(
+  storedHash: string,
   password: string,
-): boolean {
-  const storedHash = Buffer.from(storedHex, "hex");
-  const incomingHash = createHash("sha256").update(password).digest();
-
-  if (storedHash.length !== incomingHash.length) {
-    return false;
-  }
-
-  return timingSafeEqual(storedHash, incomingHash);
+): Promise<boolean> {
+  return bcrypt.compare(password, storedHash);
 }
 
 export async function verifySecretQnaPassword(
@@ -46,7 +41,7 @@ export async function verifySecretQnaPassword(
     return null;
   }
 
-  if (!verifyPasswordHash(post.password_hash, password)) {
+  if (!(await verifyPasswordHash(post.password_hash, password))) {
     return null;
   }
 
