@@ -114,7 +114,7 @@ export default function BoardDetailPage({
             }
           />
         )}
-        {isAuthor && (
+        {(isAdmin || isAuthor) && (
           <Button
             variant="outline"
             className="border-[#34aa8f] text-[#34aa8f] hover:bg-[#f0f9f6]"

@@ -12,7 +12,6 @@ export default async function NoticesPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const rawPage = Number(pageParam ?? "1");
   const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
-  const offset = (page - 1) * ITEMS_PER_PAGE;
 
   const supabase = await createClient();
 
@@ -30,6 +29,10 @@ export default async function NoticesPage({ searchParams }: Props) {
     .eq("board_type", "notice");
 
   const total = count ?? 0;
+  const totalRegular = total - (pinnedPosts?.length ?? 0);
+  const totalPages = Math.max(1, Math.ceil(totalRegular / ITEMS_PER_PAGE));
+  const clampedPage = Math.min(page, totalPages);
+  const offset = (clampedPage - 1) * ITEMS_PER_PAGE;
 
   const { data: regularPosts } = await supabase
     .from("board_posts")
@@ -54,9 +57,6 @@ export default async function NoticesPage({ searchParams }: Props) {
     isAdmin = profile?.role === "admin";
   }
 
-  const totalRegular = total - (pinnedPosts?.length ?? 0);
-  const totalPages = Math.max(1, Math.ceil(totalRegular / ITEMS_PER_PAGE));
-
   return (
     <BoardListPage
       title="입학처 공지사항"
@@ -65,7 +65,7 @@ export default async function NoticesPage({ searchParams }: Props) {
       pinnedPosts={pinnedPosts ?? []}
       regularPosts={regularPosts ?? []}
       totalRegular={totalRegular}
-      page={page}
+      page={clampedPage}
       totalPages={totalPages}
       itemsPerPage={ITEMS_PER_PAGE}
       isAdmin={isAdmin}
