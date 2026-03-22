@@ -3,7 +3,7 @@
 import { useState } from "react";
 /* eslint-disable @next/next/no-img-element */
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 
 import "swiper/css";
@@ -53,11 +53,12 @@ export default function TopCarousel() {
           style={{ opacity: ready ? 1 : 0 }}
         >
           <Swiper
-            modules={[Pagination]}
+            modules={[Pagination, Autoplay]}
             spaceBetween={20}
             slidesPerView={1}
             centeredSlides={true}
             loop={true}
+            autoplay={{ delay: 4000, disableOnInteraction: false }}
             onSwiper={() => setReady(true)}
             onSlideChange={handleSlideChange}
             style={{ height: "100%" }}
