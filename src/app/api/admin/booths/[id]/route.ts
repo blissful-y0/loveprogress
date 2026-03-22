@@ -37,19 +37,63 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // Verify booth exists
-    const { data: existing } = await supabaseAdmin
-      .from("booths")
-      .select("id")
+    // Verify booth exists and save old data for rollback
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: oldBooth } = (await (
+      supabaseAdmin.from("booths") as any
+    )
+      .select("name, password_last4, thumbnail_image_key, hover_image_key, age_type")
       .eq("id", id)
-      .single();
+      .single()) as {
+      data: {
+        name: string;
+        password_last4: string | null;
+        thumbnail_image_key: string;
+        hover_image_key: string | null;
+        age_type: string;
+      } | null;
+    };
 
-    if (!existing) {
+    if (!oldBooth) {
       return NextResponse.json(
         { error: "부스를 찾을 수 없습니다." },
         { status: 404 },
       );
     }
+
+    // Save old keywords and participants for rollback
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: oldKeywords } = (await (
+      supabaseAdmin.from("booth_keywords") as any
+    )
+      .select("*")
+      .eq("booth_id", id)) as { data: BoothKeywordRow[] | null };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: oldParticipants } = (await (
+      supabaseAdmin.from("booth_participants") as any
+    )
+      .select("*")
+      .eq("booth_id", id)) as { data: BoothParticipantRow[] | null };
+
+    // Helper: restore booth row to old values
+    const rollbackBooth = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabaseAdmin.from("booths") as any).update(oldBooth).eq("id", id);
+    };
+
+    // Helper: restore old keywords
+    const rollbackKeywords = async () => {
+      await supabaseAdmin.from("booth_keywords").delete().eq("booth_id", id);
+      if (oldKeywords && oldKeywords.length > 0) {
+        const restoreRows = oldKeywords.map((kw) => ({
+          booth_id: kw.booth_id,
+          keyword: kw.keyword,
+        }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabaseAdmin.from("booth_keywords") as any).insert(restoreRows);
+      }
+    };
 
     // 1. Update booth
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,14 +116,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
       );
     }
 
-    // 2. Save old keywords for rollback, then delete + reinsert
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: oldKeywords } = (await (
-      supabaseAdmin.from("booth_keywords") as any
-    )
-      .select("*")
-      .eq("booth_id", id)) as { data: BoothKeywordRow[] | null };
-
+    // 2. Delete old keywords + reinsert
     await supabaseAdmin.from("booth_keywords").delete().eq("booth_id", id);
 
     const keywordRows = keywords.map((keyword) => ({
@@ -93,29 +130,16 @@ export async function PUT(request: Request, { params }: RouteContext) {
     ).insert(keywordRows);
 
     if (kwError) {
-      // Rollback: restore old keywords
-      if (oldKeywords && oldKeywords.length > 0) {
-        const restoreRows = oldKeywords.map((kw) => ({
-          booth_id: kw.booth_id,
-          keyword: kw.keyword,
-        }));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabaseAdmin.from("booth_keywords") as any).insert(restoreRows);
-      }
+      // Rollback: restore old keywords + booth
+      await rollbackKeywords();
+      await rollbackBooth();
       return NextResponse.json(
         { error: "키워드 수정에 실패했습니다." },
         { status: 500 },
       );
     }
 
-    // 3. Save old participants for rollback, then delete + reinsert
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: oldParticipants } = (await (
-      supabaseAdmin.from("booth_participants") as any
-    )
-      .select("*")
-      .eq("booth_id", id)) as { data: BoothParticipantRow[] | null };
-
+    // 3. Delete old participants + reinsert
     await supabaseAdmin
       .from("booth_participants")
       .delete()
@@ -137,7 +161,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
     ).insert(participantRows);
 
     if (partError) {
-      // Rollback: restore old participants
+      // Rollback: restore old participants + keywords + booth
       if (oldParticipants && oldParticipants.length > 0) {
         const restoreRows = oldParticipants.map((p) => ({
           booth_id: p.booth_id,
@@ -145,9 +169,12 @@ export async function PUT(request: Request, { params }: RouteContext) {
           sns_url: p.sns_url,
           role_order: p.role_order,
         }));
+        await supabaseAdmin.from("booth_participants").delete().eq("booth_id", id);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabaseAdmin.from("booth_participants") as any).insert(restoreRows);
       }
+      await rollbackKeywords();
+      await rollbackBooth();
       return NextResponse.json(
         { error: "참여자 수정에 실패했습니다." },
         { status: 500 },
