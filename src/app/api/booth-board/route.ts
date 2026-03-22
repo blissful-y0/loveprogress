@@ -57,8 +57,15 @@ export async function GET(request: Request) {
       );
     }
 
+    const safePosts = (posts ?? []).map((post) => {
+      if (post.is_secret && post.author_user_id !== auth.userId && auth.role !== "admin") {
+        return { ...post, title: "비밀글입니다.", content: "" };
+      }
+      return post;
+    });
+
     return NextResponse.json({
-      posts: posts ?? [],
+      posts: safePosts,
       total: count ?? 0,
       pinnedCount: pinnedCount ?? 0,
       page,

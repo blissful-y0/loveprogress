@@ -29,15 +29,22 @@ export async function GET(_request: Request, { params }: RouteContext) {
     // Verify the post exists and belongs to booth_private
     const { data: post } = await supabaseAdmin
       .from("board_posts")
-      .select("id")
+      .select("id, is_secret, author_user_id")
       .eq("id", id)
       .eq("board_type", "booth_private")
-      .single<{ id: string }>();
+      .single<{ id: string; is_secret: boolean; author_user_id: string }>();
 
     if (!post) {
       return NextResponse.json(
         { error: "게시글을 찾을 수 없습니다." },
         { status: 404 },
+      );
+    }
+
+    if (post.is_secret && post.author_user_id !== auth.userId && auth.role !== "admin") {
+      return NextResponse.json(
+        { error: "접근 권한이 없습니다." },
+        { status: 403 },
       );
     }
 
@@ -83,15 +90,22 @@ export async function POST(request: Request, { params }: RouteContext) {
     // Verify the post exists
     const { data: post } = await supabaseAdmin
       .from("board_posts")
-      .select("id")
+      .select("id, is_secret, author_user_id")
       .eq("id", id)
       .eq("board_type", "booth_private")
-      .single<{ id: string }>();
+      .single<{ id: string; is_secret: boolean; author_user_id: string }>();
 
     if (!post) {
       return NextResponse.json(
         { error: "게시글을 찾을 수 없습니다." },
         { status: 404 },
+      );
+    }
+
+    if (post.is_secret && post.author_user_id !== auth.userId && auth.role !== "admin") {
+      return NextResponse.json(
+        { error: "접근 권한이 없습니다." },
+        { status: 403 },
       );
     }
 
