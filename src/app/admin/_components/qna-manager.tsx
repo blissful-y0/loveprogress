@@ -65,6 +65,7 @@ function PostCard({ post, onAnswerSaved }: { post: QnaAdminPost; onAnswerSaved: 
 
   const handleDelete = async () => {
     if (!post.hasAnswer) return;
+    if (!window.confirm("답변을 삭제하시겠습니까?")) return;
     setDeleting(true);
     setStatus(null);
     try {

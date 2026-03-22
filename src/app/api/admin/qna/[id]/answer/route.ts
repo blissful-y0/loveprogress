@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { QnaAnswerRow } from "@/types/database";
@@ -153,28 +154,11 @@ export async function POST(request: Request, { params }: RouteContext) {
 
 export async function DELETE(request: Request, { params }: RouteContext) {
   try {
-    const supabaseAuth = await createClient();
-    const {
-      data: { user },
-    } = await supabaseAuth.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
-    }
-
-    const supabaseAdmin = getSupabaseAdmin();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profile } = (await (supabaseAdmin.from("users") as any)
-      .select("role")
-      .eq("id", user.id)
-      .single()) as { data: { role: string } | null };
-
-    if (!profile || profile.role !== "admin") {
-      return NextResponse.json({ error: "관리자만 삭제할 수 있습니다." }, { status: 403 });
-    }
+    const adminCheck = await requireAdmin(request);
+    if (adminCheck.error) return adminCheck.error;
 
     const { id: qnaPostId } = await params;
+    const supabaseAdmin = getSupabaseAdmin();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabaseAdmin.from("qna_answers") as any)
