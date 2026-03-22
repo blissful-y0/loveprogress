@@ -38,7 +38,8 @@ export default function Header() {
   const { user, loading, signOut } = useUser();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const loginRef = useRef<HTMLDivElement>(null);
+  const desktopLoginRef = useRef<HTMLDivElement>(null);
+  const mobileLoginRef = useRef<HTMLDivElement>(null);
 
   const closeLogin = useCallback(() => setIsLoginOpen(false), []);
 
@@ -61,7 +62,10 @@ export default function Header() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (loginRef.current && !loginRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inDesktop = desktopLoginRef.current?.contains(target) ?? false;
+      const inMobile = mobileLoginRef.current?.contains(target) ?? false;
+      if (!inDesktop && !inMobile) {
         closeLogin();
       }
     }
@@ -180,7 +184,7 @@ export default function Header() {
           })}
         </nav>
 
-        <div className="relative w-9" ref={loginRef}>
+        <div className="relative w-9" ref={desktopLoginRef}>
           {!loading && (
             <button
               type="button"
@@ -219,7 +223,7 @@ export default function Header() {
             />
           </Link>
 
-          <div className="relative w-9" ref={loginRef}>
+          <div className="relative w-9" ref={mobileLoginRef}>
             {!loading && (
               <button
                 type="button"
