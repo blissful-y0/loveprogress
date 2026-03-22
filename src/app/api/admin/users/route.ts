@@ -12,13 +12,23 @@ export async function GET(request: Request) {
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? "20")));
   const offset = (page - 1) * limit;
 
+  const search = searchParams.get("search")?.trim() ?? "";
+
   const supabaseAdmin = getSupabaseAdmin();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error, count } = await (supabaseAdmin.from("users") as any)
-    .select("id, nickname, email, booth_name, role, created_at", {
-      count: "exact",
-    })
+  let query = (supabaseAdmin.from("users") as any).select(
+    "id, nickname, email, booth_name, role, created_at",
+    { count: "exact" },
+  );
+
+  if (search) {
+    query = query.or(
+      `nickname.ilike.%${search}%,email.ilike.%${search}%`,
+    );
+  }
+
+  const { data, error, count } = await query
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 

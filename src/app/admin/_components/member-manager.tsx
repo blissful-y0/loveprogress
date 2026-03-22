@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,27 +56,49 @@ export default function MemberManager() {
   );
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
 
-  const fetchUsers = useCallback(async (targetPage: number = 1) => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/admin/users?page=${targetPage}&limit=20`);
-      if (!res.ok) throw new Error("회원 목록 로드 실패");
-      const json = await res.json();
-      setUsers(json.users ?? []);
-      setTotal(json.total ?? 0);
-      setPage(json.page ?? 1);
-      setTotalPages(json.totalPages ?? 1);
-    } catch {
-      setError("회원 목록을 불러오는데 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchUsers = useCallback(
+    async (targetPage: number = 1, searchTerm: string = "") => {
+      setLoading(true);
+      setError("");
+      try {
+        const params = new URLSearchParams({
+          page: String(targetPage),
+          limit: "20",
+        });
+        if (searchTerm) {
+          params.set("search", searchTerm);
+        }
+        const res = await fetch(`/api/admin/users?${params.toString()}`);
+        if (!res.ok) throw new Error("회원 목록 로드 실패");
+        const json = await res.json();
+        setUsers(json.users ?? []);
+        setTotal(json.total ?? 0);
+        setPage(json.page ?? 1);
+        setTotalPages(json.totalPages ?? 1);
+      } catch {
+        setError("회원 목록을 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    fetchUsers(1);
-  }, [fetchUsers]);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      fetchUsers(1, search);
+    }, 300);
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [search, fetchUsers]);
 
   const handleRoleChange = (userId: string, role: UserRole) => {
     setPendingRoles({ ...pendingRoles, [userId]: role });
@@ -102,7 +124,7 @@ export default function MemberManager() {
 
       const { [userId]: _, ...rest } = pendingRoles;
       setPendingRoles(rest);
-      await fetchUsers(page);
+      await fetchUsers(page, search);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "역할 변경에 실패했습니다.",
@@ -151,13 +173,6 @@ export default function MemberManager() {
     }
   };
 
-  const searchLower = search.toLowerCase();
-  const filteredUsers = users.filter(
-    (u) =>
-      u.nickname.toLowerCase().includes(searchLower) ||
-      u.email.toLowerCase().includes(searchLower),
-  );
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-text-muted">
@@ -188,7 +203,7 @@ export default function MemberManager() {
         <p className="text-sm text-destructive">{error}</p>
       )}
 
-      {filteredUsers.length === 0 ? (
+      {users.length === 0 ? (
         <p className="py-8 text-center text-sm text-text-muted">
           {search ? "검색 결과가 없습니다." : "등록된 회원이 없습니다."}
         </p>
@@ -206,7 +221,7 @@ export default function MemberManager() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => {
+              {users.map((user) => {
                 const pendingRole = pendingRoles[user.id];
                 const isSaving = savingIds.has(user.id);
                 const currentDisplayRole = pendingRole ?? user.role;
@@ -286,7 +301,7 @@ export default function MemberManager() {
             variant="outline"
             size="sm"
             disabled={page <= 1 || loading}
-            onClick={() => fetchUsers(page - 1)}
+            onClick={() => fetchUsers(page - 1, search)}
           >
             이전
           </Button>
@@ -297,7 +312,7 @@ export default function MemberManager() {
             variant="outline"
             size="sm"
             disabled={page >= totalPages || loading}
-            onClick={() => fetchUsers(page + 1)}
+            onClick={() => fetchUsers(page + 1, search)}
           >
             다음
           </Button>
