@@ -14,7 +14,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
-  { label: "대학소개", href: "/" },
+  { label: "대학소개", href: "/about" },
   { label: "입학·교육", href: "/info/notices" },
   { label: "학사안내", href: "/info/events" },
   { label: "대학생활", href: "/booths" },
