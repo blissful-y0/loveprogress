@@ -7,9 +7,244 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 
 const SAVED_EMAIL_KEY = "loveprogress_saved_email";
+
+function FindIdDialog() {
+  const [nickname, setNickname] = useState("");
+  const [boothName, setBoothName] = useState("");
+  const [result, setResult] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleFindId = async () => {
+    setError("");
+    setResult("");
+
+    if (!nickname.trim()) {
+      setError("닉네임을 입력해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/find-id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: nickname.trim(),
+          boothName: boothName.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "아이디 찾기에 실패했습니다.");
+        return;
+      }
+
+      setResult(data.maskedEmail);
+    } catch {
+      setError("서버 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog
+      onOpenChange={() => {
+        setNickname("");
+        setBoothName("");
+        setResult("");
+        setError("");
+      }}
+    >
+      <DialogTrigger
+        className="px-2 transition-colors hover:text-text-dark cursor-pointer"
+      >
+        ID찾기
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>ID 찾기</DialogTitle>
+          <DialogDescription>
+            가입 시 등록한 닉네임으로 이메일(ID)을 찾을 수 있습니다.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4 pt-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="find-nickname" className="text-sm text-text-sub">
+              닉네임 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="find-nickname"
+              type="text"
+              placeholder="닉네임을 입력하세요"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="find-booth" className="text-sm text-text-sub">
+              부스이름{" "}
+              <span className="text-xs font-normal text-text-light">
+                (선택)
+              </span>
+            </Label>
+            <Input
+              id="find-booth"
+              type="text"
+              placeholder="부스이름을 입력하세요"
+              value={boothName}
+              onChange={(e) => setBoothName(e.target.value)}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          {result && (
+            <div className="rounded-lg bg-muted/50 p-3 text-center">
+              <p className="text-sm text-text-sub">가입된 이메일</p>
+              <p className="mt-1 text-base font-semibold text-text-dark">
+                {result}
+              </p>
+            </div>
+          )}
+
+          <Button
+            type="button"
+            onClick={handleFindId}
+            disabled={isLoading}
+            className="h-10 w-full rounded-[10px] bg-primary text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+          >
+            {isLoading ? "찾는 중..." : "ID 찾기"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ResetPasswordDialog() {
+  const [email, setEmail] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleResetPassword = async () => {
+    setError("");
+    setSuccess(false);
+
+    if (!email.trim()) {
+      setError("이메일을 입력해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "비밀번호 재설정에 실패했습니다.");
+        return;
+      }
+
+      setSuccess(true);
+    } catch {
+      setError("서버 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog
+      onOpenChange={() => {
+        setEmail("");
+        setSuccess(false);
+        setError("");
+      }}
+    >
+      <DialogTrigger
+        className="px-2 transition-colors hover:text-text-dark cursor-pointer"
+      >
+        비밀번호 재설정
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>비밀번호 재설정</DialogTitle>
+          <DialogDescription>
+            가입한 이메일을 입력하면 비밀번호가 초기화됩니다.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4 pt-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="reset-email" className="text-sm text-text-sub">
+              이메일 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="reset-email"
+              type="email"
+              placeholder="이메일을 입력하세요"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          {success && (
+            <div className="rounded-lg bg-muted/50 p-3 text-center">
+              <p className="text-sm text-text-dark">
+                비밀번호가 초기화되었습니다.
+              </p>
+              <p className="mt-1 text-xs text-text-sub">
+                초기 비밀번호: <span className="font-semibold">702430</span>
+              </p>
+              <p className="mt-1 text-xs text-text-light">
+                로그인 후 비밀번호를 변경해주세요.
+              </p>
+            </div>
+          )}
+
+          <Button
+            type="button"
+            onClick={handleResetPassword}
+            disabled={isLoading || success}
+            className="h-10 w-full rounded-[10px] bg-primary text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+          >
+            {isLoading ? "처리 중..." : "비밀번호 재설정"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -134,21 +369,9 @@ export default function LoginPage() {
 
         {/* Links */}
         <div className="mt-6 flex items-center justify-center gap-1 text-sm text-text-muted">
-          <span
-            className="relative px-2 opacity-50 cursor-not-allowed"
-            title="준비중"
-            onClick={(e) => e.preventDefault()}
-          >
-            ID찾기
-          </span>
+          <FindIdDialog />
           <span className="text-border-light">|</span>
-          <span
-            className="relative px-2 opacity-50 cursor-not-allowed"
-            title="준비중"
-            onClick={(e) => e.preventDefault()}
-          >
-            비밀번호 재설정
-          </span>
+          <ResetPasswordDialog />
           <span className="text-border-light">|</span>
           <Link
             href="/auth/register"
