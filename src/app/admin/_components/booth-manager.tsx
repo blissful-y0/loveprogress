@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { VALID_KEYWORDS } from "@/lib/schemas/booth-schema";
 import type { BoothKeyword } from "@/types/database";
+import { ImageUpload } from "./image-upload";
 
 interface AdminBooth {
   id: string;
@@ -343,20 +344,22 @@ export default function BoothManager() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>썸네일 이미지 키 *</Label>
-              <Input
+              <Label>썸네일 이미지 *</Label>
+              <ImageUpload
                 value={form.thumbnailImageKey}
-                onChange={(e) => setForm((f) => ({ ...f, thumbnailImageKey: e.target.value }))}
-                placeholder="이미지 키"
+                onChange={(url) => setForm((f) => ({ ...f, thumbnailImageKey: url }))}
+                folder="booths"
+                placeholder="썸네일 이미지 선택"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label>호버 이미지 키</Label>
-              <Input
+              <Label>호버 이미지</Label>
+              <ImageUpload
                 value={form.hoverImageKey}
-                onChange={(e) => setForm((f) => ({ ...f, hoverImageKey: e.target.value }))}
-                placeholder="이미지 키 (선택)"
+                onChange={(url) => setForm((f) => ({ ...f, hoverImageKey: url }))}
+                folder="booths"
+                placeholder="호버 이미지 선택 (선택)"
               />
             </div>
 
