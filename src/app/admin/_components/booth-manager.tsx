@@ -29,6 +29,7 @@ interface AdminBooth {
   hover_image_key: string | null;
   age_type: "general" | "adult";
   created_at: string;
+  updated_at: string;
   keywords: { keyword: BoothKeyword }[];
   participants: { name: string; sns_url: string | null; role_order: number }[];
 }

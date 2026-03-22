@@ -3,13 +3,7 @@ import { NextResponse } from "next/server";
 import { isAdminError, verifyAdmin } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { boothBaseSchema } from "@/lib/schemas/booth-schema";
-import type { BoothKeywordRow, BoothParticipantRow, BoothRow } from "@/types/database";
-
-interface AdminBoothRow extends BoothRow {
-  password_last4: string | null;
-  keywords: BoothKeywordRow[];
-  participants: BoothParticipantRow[];
-}
+import { fetchBoothsWithDetails } from "@/lib/queries/booth-queries";
 
 export async function GET() {
   try {
@@ -17,55 +11,16 @@ export async function GET() {
     if (isAdminError(adminResult)) return adminResult;
 
     const supabaseAdmin = getSupabaseAdmin();
+    const { data: booths, error } = await fetchBoothsWithDetails(supabaseAdmin, {
+      ascending: true,
+      includePasswordLast4: true,
+    });
 
-    const { data: booths, error: boothError } = (await supabaseAdmin
-      .from("booths")
-      .select("id, name, password_last4, thumbnail_image_key, hover_image_key, age_type, created_at, updated_at")
-      .order("created_at", { ascending: true })) as { data: BoothRow[] | null; error: unknown };
-
-    if (boothError || !booths) {
+    if (error || !booths) {
       return NextResponse.json({ error: "부스 목록을 불러올 수 없습니다." }, { status: 500 });
     }
 
-    if (booths.length === 0) {
-      return NextResponse.json({ booths: [] });
-    }
-
-    const boothIds = booths.map((b) => b.id);
-
-    const [keywordsResult, participantsResult] = (await Promise.all([
-      supabaseAdmin.from("booth_keywords").select("*").in("booth_id", boothIds),
-      supabaseAdmin.from("booth_participants").select("*").in("booth_id", boothIds).order("role_order", { ascending: true }),
-    ])) as [
-      { data: BoothKeywordRow[] | null; error: unknown },
-      { data: BoothParticipantRow[] | null; error: unknown },
-    ];
-
-    if (keywordsResult.error || participantsResult.error) {
-      return NextResponse.json({ error: "부스 상세 정보를 불러올 수 없습니다." }, { status: 500 });
-    }
-
-    const keywordsByBooth = new Map<string, BoothKeywordRow[]>();
-    for (const kw of keywordsResult.data ?? []) {
-      const list = keywordsByBooth.get(kw.booth_id) ?? [];
-      list.push(kw);
-      keywordsByBooth.set(kw.booth_id, list);
-    }
-
-    const participantsByBooth = new Map<string, BoothParticipantRow[]>();
-    for (const p of participantsResult.data ?? []) {
-      const list = participantsByBooth.get(p.booth_id) ?? [];
-      list.push(p);
-      participantsByBooth.set(p.booth_id, list);
-    }
-
-    const result: AdminBoothRow[] = booths.map((booth) => ({
-      ...booth,
-      keywords: keywordsByBooth.get(booth.id) ?? [],
-      participants: participantsByBooth.get(booth.id) ?? [],
-    }));
-
-    return NextResponse.json({ booths: result });
+    return NextResponse.json({ booths });
   } catch {
     return NextResponse.json({ error: "부스 목록을 불러올 수 없습니다." }, { status: 500 });
   }
