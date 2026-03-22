@@ -1,12 +1,25 @@
-import { MOCK_BOOTHS } from "@/lib/mock-booth-data";
+import { createClient } from "@/lib/supabase/server";
+import { fetchBoothsWithDetails } from "@/lib/queries/booth-queries";
 import BoothListClient from "@/components/booths/BoothListClient";
+import { toBoothCardData } from "@/types/booth";
+import type { BoothWithDetails } from "@/types/booth";
 
 export const metadata = {
   title: "부스리스트 | 파이낙사 온리전 :: 사랑의 진도",
   description: "파이낙사 온리전 참가 부스 목록을 확인하세요.",
 };
 
-export default function BoothsPage() {
+async function fetchBooths(): Promise<BoothWithDetails[]> {
+  const supabase = await createClient();
+
+  const { data } = await fetchBoothsWithDetails(supabase);
+  return data ?? [];
+}
+
+export default async function BoothsPage() {
+  const boothsWithDetails = await fetchBooths();
+  const booths = boothsWithDetails.map(toBoothCardData);
+
   return (
     <section className="min-h-[60vh]">
       {/* Page Header */}
@@ -18,7 +31,7 @@ export default function BoothsPage() {
       </div>
 
       {/* Client-side filter + grid */}
-      <BoothListClient booths={MOCK_BOOTHS} />
+      <BoothListClient booths={booths} />
     </section>
   );
 }
