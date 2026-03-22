@@ -1,8 +1,35 @@
+"use client";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import BannerManager from "./_components/banner-manager";
+import PinManager from "./_components/pin-manager";
+import MemberManager from "./_components/member-manager";
+
 export default function AdminPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <h1 className="text-2xl font-bold text-[#212121]">관리자</h1>
-      <p className="text-[#909090]">준비 중입니다</p>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-text-dark">관리자 패널</h1>
+
+      <Tabs defaultValue="banners" className="w-full">
+        <TabsList>
+          <TabsTrigger value="banners">배너관리</TabsTrigger>
+          <TabsTrigger value="pins">공지관리</TabsTrigger>
+          <TabsTrigger value="members">회원관리</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="banners" className="mt-6">
+          <BannerManager />
+        </TabsContent>
+
+        <TabsContent value="pins" className="mt-6">
+          <PinManager />
+        </TabsContent>
+
+        <TabsContent value="members" className="mt-6">
+          <MemberManager />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

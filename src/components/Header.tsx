@@ -2,8 +2,10 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+
+import { useUser } from "@/hooks/useUser";
 
 interface NavItem {
   readonly label: string;
@@ -19,12 +21,13 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: "우애의관", href: "/booth-board" },
 ] as const;
 
-interface LoginMenuItem {
+interface MenuItem {
   readonly label: string;
-  readonly href: string;
+  readonly href?: string;
+  readonly onClick?: () => void;
 }
 
-const LOGIN_MENU_ITEMS: readonly LoginMenuItem[] = [
+const GUEST_MENU_ITEMS: readonly MenuItem[] = [
   { label: "회원가입", href: "/auth/register" },
   { label: "로그인", href: "/auth/login" },
 ] as const;
@@ -36,10 +39,28 @@ function isActiveRoute(pathname: string, href: string): boolean {
 
 export default function Header() {
   const pathname = usePathname();
+  const { user, loading, signOut } = useUser();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const loginRef = useRef<HTMLDivElement>(null);
 
   const closeLogin = useCallback(() => setIsLoginOpen(false), []);
+
+  const handleSignOut = useCallback(async () => {
+    closeLogin();
+    await signOut();
+    window.location.href = "/";
+  }, [signOut, closeLogin]);
+
+  const userMenuItems: readonly MenuItem[] = useMemo(() => {
+    const items: MenuItem[] = [];
+    if (user?.role === "admin") {
+      items.push({ label: "관리자", href: "/admin" });
+    }
+    items.push({ label: "로그아웃", onClick: handleSignOut });
+    return items;
+  }, [user?.role, handleSignOut]);
+
+  const menuItems = user ? userMenuItems : GUEST_MENU_ITEMS;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -54,6 +75,77 @@ export default function Header() {
   useEffect(() => {
     closeLogin();
   }, [pathname, closeLogin]);
+
+  const menuHeight = menuItems.length * 45;
+
+  const renderDesktopDropdown = () => {
+    if (!isLoginOpen) return null;
+
+    return (
+      <div
+        className="absolute right-0 top-full mt-1.5 w-[100px] rounded-lg border border-text-light bg-white shadow-lg shadow-black/5 overflow-hidden"
+        style={{ height: `${menuHeight}px` }}
+      >
+        {menuItems.map((item) =>
+          item.href ? (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="flex items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors"
+            >
+              <span className="rounded-[5px] px-2 py-1 hover:bg-bg-light">
+                {item.label}
+              </span>
+            </Link>
+          ) : (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.onClick}
+              className="flex w-full items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors cursor-pointer"
+            >
+              <span className="rounded-[5px] px-2 py-1 hover:bg-bg-light">
+                {item.label}
+              </span>
+            </button>
+          ),
+        )}
+      </div>
+    );
+  };
+
+  const renderMobileDropdown = () => {
+    if (!isLoginOpen) return null;
+
+    return (
+      <div className="absolute right-0 top-full mt-1.5 w-[120px] rounded-xl border border-gray-200 bg-white shadow-lg shadow-black/5 overflow-hidden z-50">
+        {menuItems.map((item, i) =>
+          item.href ? (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`block px-4 py-2.5 text-[13px] text-text-sub hover:bg-gray-50 transition-colors ${
+                i > 0 ? "border-t border-gray-100" : ""
+              }`}
+            >
+              {item.label}
+            </Link>
+          ) : (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.onClick}
+              className={`block w-full px-4 py-2.5 text-left text-[13px] text-text-sub hover:bg-gray-50 transition-colors cursor-pointer ${
+                i > 0 ? "border-t border-gray-100" : ""
+              }`}
+            >
+              {item.label}
+            </button>
+          ),
+        )}
+      </div>
+    );
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-border-light">
@@ -92,41 +184,24 @@ export default function Header() {
         </nav>
 
         <div className="relative" ref={loginRef}>
-          <button
-            type="button"
-            onClick={() => setIsLoginOpen((prev) => !prev)}
-            className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-            aria-label="로그인 메뉴"
-          >
-            <img
-              src="/img/main/login.png"
-              alt="로그인"
-              width={20}
-              height={20}
-              className="opacity-70"
-            />
-          </button>
-
-          {isLoginOpen && (
-            <div
-              className="absolute right-0 top-full mt-1.5 w-[100px] rounded-lg border border-text-light bg-white shadow-lg shadow-black/5 overflow-hidden"
-              style={{ height: "90px" }}
+          {!loading && (
+            <button
+              type="button"
+              onClick={() => setIsLoginOpen((prev) => !prev)}
+              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+              aria-label={user ? "사용자 메뉴" : "로그인 메뉴"}
             >
-              {LOGIN_MENU_ITEMS.map((item, i) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors ${
-                    i > 0 ? "" : ""
-                  }`}
-                >
-                  <span className="rounded-[5px] px-2 py-1 hover:bg-bg-light">
-                    {item.label}
-                  </span>
-                </Link>
-              ))}
-            </div>
+              <img
+                src="/img/main/login.png"
+                alt={user ? "사용자 메뉴" : "로그인"}
+                width={20}
+                height={20}
+                className="opacity-70"
+              />
+            </button>
           )}
+
+          {renderDesktopDropdown()}
         </div>
       </div>
 
@@ -148,36 +223,24 @@ export default function Header() {
           </Link>
 
           <div className="relative" ref={loginRef}>
-            <button
-              type="button"
-              onClick={() => setIsLoginOpen((prev) => !prev)}
-              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-              aria-label="로그인 메뉴"
-            >
-              <img
-                src="/img/main/login.png"
-                alt="로그인"
-                width={20}
-                height={20}
-                className="opacity-70"
-              />
-            </button>
-
-            {isLoginOpen && (
-              <div className="absolute right-0 top-full mt-1.5 w-[120px] rounded-xl border border-gray-200 bg-white shadow-lg shadow-black/5 overflow-hidden z-50">
-                {LOGIN_MENU_ITEMS.map((item, i) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`block px-4 py-2.5 text-[13px] text-text-sub hover:bg-gray-50 transition-colors ${
-                      i > 0 ? "border-t border-gray-100" : ""
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
+            {!loading && (
+              <button
+                type="button"
+                onClick={() => setIsLoginOpen((prev) => !prev)}
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                aria-label={user ? "사용자 메뉴" : "로그인 메뉴"}
+              >
+                <img
+                  src="/img/main/login.png"
+                  alt={user ? "사용자 메뉴" : "로그인"}
+                  width={20}
+                  height={20}
+                  className="opacity-70"
+                />
+              </button>
             )}
+
+            {renderMobileDropdown()}
           </div>
         </div>
 
