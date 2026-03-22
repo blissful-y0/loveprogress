@@ -2,12 +2,19 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { rateLimit } from "@/lib/rate-limit";
 
 const checkEmailSchema = z.object({
   email: z.string().email("올바른 이메일 형식을 입력해주세요."),
 });
 
 export async function POST(request: Request) {
+  const rateLimitResponse = rateLimit(request, "check-email", {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await request.json();
 

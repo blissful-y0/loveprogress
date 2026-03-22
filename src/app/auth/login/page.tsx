@@ -143,6 +143,7 @@ function FindIdDialog() {
 
 function ResetPasswordDialog() {
   const [email, setEmail] = useState("");
+  const [phoneLast4, setPhoneLast4] = useState("");
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -156,13 +157,21 @@ function ResetPasswordDialog() {
       return;
     }
 
+    if (!phoneLast4.trim() || phoneLast4.trim().length !== 4) {
+      setError("전화번호 뒷자리 4자리를 입력해주세요.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({
+          email: email.trim(),
+          phoneLast4: phoneLast4.trim(),
+        }),
       });
 
       const data = await res.json();
@@ -184,6 +193,7 @@ function ResetPasswordDialog() {
     <Dialog
       onOpenChange={() => {
         setEmail("");
+        setPhoneLast4("");
         setSuccess(false);
         setError("");
       }}
@@ -197,7 +207,7 @@ function ResetPasswordDialog() {
         <DialogHeader>
           <DialogTitle>비밀번호 재설정</DialogTitle>
           <DialogDescription>
-            가입한 이메일을 입력하면 비밀번호가 초기화됩니다.
+            가입한 이메일과 전화번호 뒷자리를 입력하면 비밀번호가 초기화됩니다.
           </DialogDescription>
         </DialogHeader>
 
@@ -216,15 +226,31 @@ function ResetPasswordDialog() {
             />
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="reset-phone" className="text-sm text-text-sub">
+              전화번호 뒷자리 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="reset-phone"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              placeholder="뒷자리 4자리를 입력하세요"
+              value={phoneLast4}
+              onChange={(e) =>
+                setPhoneLast4(e.target.value.replace(/\D/g, "").slice(0, 4))
+              }
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
+          </div>
+
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           {success && (
             <div className="rounded-lg bg-muted/50 p-3 text-center">
               <p className="text-sm text-text-dark">
-                비밀번호가 초기화되었습니다.
-              </p>
-              <p className="mt-1 text-xs text-text-sub">
-                초기 비밀번호: <span className="font-semibold">702430</span>
+                비밀번호가 초기화되었습니다. 관리자에게 초기 비밀번호를
+                문의하세요.
               </p>
               <p className="mt-1 text-xs text-text-light">
                 로그인 후 비밀번호를 변경해주세요.

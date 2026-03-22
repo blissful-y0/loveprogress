@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { rateLimit } from "@/lib/rate-limit";
 
 const findIdSchema = z.object({
   nickname: z.string().min(1, "닉네임을 입력해주세요."),
@@ -20,6 +21,12 @@ function maskEmail(email: string): string {
 }
 
 export async function POST(request: Request) {
+  const rateLimitResponse = rateLimit(request, "find-id", {
+    maxRequests: 5,
+    windowMs: 60 * 1000,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await request.json();
 
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
       query = query.eq("booth_name", boothName);
     }
 
-    const { data, error: queryError } = await query.maybeSingle();
+    const { data, error: queryError } = await query.limit(1).maybeSingle();
 
     if (queryError) {
       return NextResponse.json(
