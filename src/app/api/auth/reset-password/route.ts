@@ -9,7 +9,7 @@ const resetPasswordSchema = z.object({
   phoneLast4: z.string().length(4, "전화번호 뒷자리 4자리를 입력해주세요."),
 });
 
-const DEFAULT_RESET_PASSWORD = "702430";
+const DEFAULT_RESET_PASSWORD = process.env.ADMIN_DEFAULT_PASSWORD ?? "702430";
 
 export async function POST(request: Request) {
   const rateLimitResponse = rateLimit(request, "reset-password", {
@@ -55,8 +55,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. phone_last4가 DB에 존재하면 2차 인증 검증
-    if (user.phone_last4 && user.phone_last4 !== phoneLast4) {
+    // 2. phone_last4가 DB에 없으면 재설정 거부
+    if (!user.phone_last4) {
+      return NextResponse.json(
+        { error: "휴대폰 뒷자리가 등록되지 않은 계정입니다. 관리자에게 문의하세요." },
+        { status: 400 },
+      );
+    }
+
+    if (user.phone_last4 !== phoneLast4) {
       return NextResponse.json(
         { error: "전화번호 뒷자리가 일치하지 않습니다." },
         { status: 400 },

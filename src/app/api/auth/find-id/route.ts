@@ -50,7 +50,8 @@ export async function POST(request: Request) {
       query = query.eq("booth_name", boothName);
     }
 
-    const { data, error: queryError } = await query.limit(1).maybeSingle();
+    // 동명이인 처리: boothName 없이 2건 이상이면 거부
+    const { data: rows, error: queryError } = await query;
 
     if (queryError) {
       return NextResponse.json(
@@ -59,14 +60,21 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!data) {
+    if (!rows || rows.length === 0) {
       return NextResponse.json(
         { error: "일치하는 회원 정보를 찾을 수 없습니다." },
         { status: 404 },
       );
     }
 
-    return NextResponse.json({ maskedEmail: maskEmail(data.email) });
+    if (rows.length > 1) {
+      return NextResponse.json(
+        { error: "동일한 닉네임이 여러 개 있습니다. 부스이름을 함께 입력해주세요." },
+        { status: 409 },
+      );
+    }
+
+    return NextResponse.json({ maskedEmail: maskEmail(rows[0].email) });
   } catch {
     return NextResponse.json(
       { error: "아이디 찾기에 실패했습니다." },
