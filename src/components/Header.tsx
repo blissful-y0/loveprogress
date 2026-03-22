@@ -180,7 +180,7 @@ export default function Header() {
           })}
         </nav>
 
-        <div className="relative" ref={loginRef}>
+        <div className="relative w-9" ref={loginRef}>
           {!loading && (
             <button
               type="button"
@@ -219,7 +219,7 @@ export default function Header() {
             />
           </Link>
 
-          <div className="relative" ref={loginRef}>
+          <div className="relative w-9" ref={loginRef}>
             {!loading && (
               <button
                 type="button"
