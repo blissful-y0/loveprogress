@@ -22,7 +22,7 @@ const registerSchema = z.object({
 
 export async function POST(request: Request) {
   // Rate limiting: 5 requests per 10 minutes per IP
-  const rateLimitResponse = rateLimit(request, "auth-register", {
+  const rateLimitResponse = await rateLimit(request, "auth-register", {
     maxRequests: 5,
     windowMs: 10 * 60 * 1000,
   });
