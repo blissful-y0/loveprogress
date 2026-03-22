@@ -132,7 +132,7 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
 
         {/* Form fields */}
         <div className="flex-1 flex flex-col gap-3.5">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex flex-col gap-1.5 flex-1">
               <label className="text-[12px] font-bold text-primary tracking-wide pl-3.5">성명</label>
               <input
