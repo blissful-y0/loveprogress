@@ -26,7 +26,20 @@ export async function POST(request: Request) {
     const { boardType, postId } = parsed.data;
     const supabaseAdmin = getSupabaseAdmin();
 
-    // 1. Unpin all existing pinned posts of this board type
+    // 1. Save currently pinned post IDs for rollback
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: previouslyPinned } = await (
+      supabaseAdmin.from("board_posts") as any
+    )
+      .select("id")
+      .eq("board_type", boardType)
+      .eq("is_pinned", true);
+
+    const previousPinnedIds: string[] = (previouslyPinned ?? []).map(
+      (p: { id: string }) => p.id,
+    );
+
+    // 2. Unpin all existing pinned posts of this board type
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: unpinError } = await (
       supabaseAdmin.from("board_posts") as any
@@ -42,7 +55,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Pin the selected post
+    // 3. Pin the selected post
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: pinError } = await (
       supabaseAdmin.from("board_posts") as any
@@ -52,8 +65,16 @@ export async function POST(request: Request) {
       .eq("board_type", boardType);
 
     if (pinError) {
+      // Rollback: restore previously pinned posts
+      for (const prevId of previousPinnedIds) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabaseAdmin.from("board_posts") as any)
+          .update({ is_pinned: true })
+          .eq("id", prevId);
+      }
+
       return NextResponse.json(
-        { error: "게시글 고정에 실패했습니다." },
+        { error: "게시글 고정에 실패했습니다. 이전 상태로 복원되었습니다." },
         { status: 500 },
       );
     }

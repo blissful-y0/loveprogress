@@ -86,14 +86,12 @@ export default function Header() {
         className="absolute right-0 top-full mt-1.5 w-[100px] rounded-lg border border-text-light bg-white shadow-lg shadow-black/5 overflow-hidden"
         style={{ height: `${menuHeight}px` }}
       >
-        {menuItems.map((item, i) =>
+        {menuItems.map((item) =>
           item.href ? (
             <Link
               key={item.label}
               href={item.href}
-              className={`flex items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors ${
-                i > 0 ? "" : ""
-              }`}
+              className="flex items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors"
             >
               <span className="rounded-[5px] px-2 py-1 hover:bg-bg-light">
                 {item.label}
@@ -104,9 +102,7 @@ export default function Header() {
               key={item.label}
               type="button"
               onClick={item.onClick}
-              className={`flex w-full items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors cursor-pointer ${
-                i > 0 ? "" : ""
-              }`}
+              className="flex w-full items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors cursor-pointer"
             >
               <span className="rounded-[5px] px-2 py-1 hover:bg-bg-light">
                 {item.label}

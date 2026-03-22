@@ -4,6 +4,8 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const updateBannerSchema = z.object({
   group_type: z
     .enum(["top_carousel", "middle_carousel", "fixed_banner"])
@@ -23,6 +25,13 @@ export async function PUT(
   if (adminCheck.error) return adminCheck.error;
 
   const { id } = await params;
+
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json(
+      { error: "올바른 배너 ID가 아닙니다." },
+      { status: 400 },
+    );
+  }
 
   try {
     const body = await request.json();
@@ -67,6 +76,13 @@ export async function DELETE(
   if (adminCheck.error) return adminCheck.error;
 
   const { id } = await params;
+
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json(
+      { error: "올바른 배너 ID가 아닙니다." },
+      { status: 400 },
+    );
+  }
 
   const supabaseAdmin = getSupabaseAdmin();
 

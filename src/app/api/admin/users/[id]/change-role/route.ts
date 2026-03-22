@@ -4,6 +4,8 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const changeRoleSchema = z.object({
   role: z.enum(["member", "booth_member", "admin"]),
 });
@@ -16,6 +18,20 @@ export async function POST(
   if (adminCheck.error) return adminCheck.error;
 
   const { id } = await params;
+
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json(
+      { error: "올바른 사용자 ID가 아닙니다." },
+      { status: 400 },
+    );
+  }
+
+  if (id === adminCheck.userId) {
+    return NextResponse.json(
+      { error: "자신의 역할은 변경할 수 없습니다." },
+      { status: 400 },
+    );
+  }
 
   try {
     const body = await request.json();

@@ -48,19 +48,25 @@ export default function MemberManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [pendingRoles, setPendingRoles] = useState<Record<string, UserRole>>(
     {},
   );
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async (targetPage: number = 1) => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/users");
+      const res = await fetch(`/api/admin/users?page=${targetPage}&limit=20`);
       if (!res.ok) throw new Error("회원 목록 로드 실패");
       const json = await res.json();
-      setUsers(json.data ?? []);
+      setUsers(json.users ?? []);
+      setTotal(json.total ?? 0);
+      setPage(json.page ?? 1);
+      setTotalPages(json.totalPages ?? 1);
     } catch {
       setError("회원 목록을 불러오는데 실패했습니다.");
     } finally {
@@ -69,7 +75,7 @@ export default function MemberManager() {
   }, []);
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(1);
   }, [fetchUsers]);
 
   const handleRoleChange = (userId: string, role: UserRole) => {
@@ -96,7 +102,7 @@ export default function MemberManager() {
 
       const { [userId]: _, ...rest } = pendingRoles;
       setPendingRoles(rest);
-      await fetchUsers();
+      await fetchUsers(page);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "역할 변경에 실패했습니다.",
@@ -112,7 +118,7 @@ export default function MemberManager() {
 
   const handleResetPassword = async (userId: string, nickname: string) => {
     if (
-      !confirm(`${nickname}님의 비밀번호를 초기화하시겠습니까?\n(초기 비밀번호: 702430)`)
+      !confirm(`${nickname}님의 비밀번호를 초기화하시겠습니까?`)
     ) {
       return;
     }
@@ -129,7 +135,7 @@ export default function MemberManager() {
         throw new Error(json.error ?? "비밀번호 초기화 실패");
       }
 
-      alert(`${nickname}님의 비밀번호가 초기화되었습니다.`);
+      alert("비밀번호가 초기화되었습니다.");
     } catch (err) {
       setError(
         err instanceof Error
@@ -166,7 +172,7 @@ export default function MemberManager() {
         <h2 className="text-lg font-bold text-text-dark">
           회원 관리
           <Badge variant="secondary" className="ml-2">
-            {users.length}명
+            {total}명
           </Badge>
         </h2>
       </div>
@@ -271,6 +277,30 @@ export default function MemberManager() {
               })}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1 || loading}
+            onClick={() => fetchUsers(page - 1)}
+          >
+            이전
+          </Button>
+          <span className="text-sm text-text-muted">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages || loading}
+            onClick={() => fetchUsers(page + 1)}
+          >
+            다음
+          </Button>
         </div>
       )}
     </div>

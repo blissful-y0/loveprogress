@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-const DEFAULT_PASSWORD = "702430";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(
   request: Request,
@@ -14,10 +14,18 @@ export async function POST(
 
   const { id } = await params;
 
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json(
+      { error: "올바른 사용자 ID가 아닙니다." },
+      { status: 400 },
+    );
+  }
+
+  const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD ?? "702430";
   const supabaseAdmin = getSupabaseAdmin();
 
   const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
-    password: DEFAULT_PASSWORD,
+    password: defaultPassword,
   });
 
   if (error) {
