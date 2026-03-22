@@ -58,6 +58,7 @@ export default function TopCarousel() {
             slidesPerView={1}
             centeredSlides={true}
             loop={true}
+            loopAdditionalSlides={3}
             autoplay={{ delay: 4000, disableOnInteraction: false }}
             onSwiper={() => setReady(true)}
             onSlideChange={handleSlideChange}
