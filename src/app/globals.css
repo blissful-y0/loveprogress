@@ -78,6 +78,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 body {
