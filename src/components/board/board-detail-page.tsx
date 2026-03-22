@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import type { BoardPostRow } from "@/types/database";
@@ -58,7 +58,18 @@ export default function BoardDetailPage({
         <div
           className="py-8 min-h-[240px] overflow-x-auto [&_img]:max-w-full [&_table]:w-full [&_a]:text-[#34aa8f] [&_a]:underline"
           dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(post.content.slice(HTML_MARKER.length)),
+            __html: sanitizeHtml(post.content.slice(HTML_MARKER.length), {
+              allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+                "img", "figure", "figcaption", "details", "summary",
+                "h1", "h2", "h3", "h4", "h5", "h6",
+              ]),
+              allowedAttributes: {
+                ...sanitizeHtml.defaults.allowedAttributes,
+                "*": ["class", "style", "id"],
+                a: ["href", "name", "target", "rel"],
+                img: ["src", "alt", "width", "height"],
+              },
+            }),
           }}
         />
       ) : (

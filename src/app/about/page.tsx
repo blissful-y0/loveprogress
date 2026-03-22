@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 import { createClient } from "@/lib/supabase/server";
 import { HTML_CONTENT_MARKER } from "@/lib/constants";
 
@@ -20,7 +20,18 @@ export default async function AboutPage() {
   const content = await getAboutContent();
   const isHtml = content.startsWith(HTML_CONTENT_MARKER);
   const sanitizedHtml = isHtml
-    ? DOMPurify.sanitize(content.slice(HTML_CONTENT_MARKER.length))
+    ? sanitizeHtml(content.slice(HTML_CONTENT_MARKER.length), {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+          "img", "figure", "figcaption", "details", "summary",
+          "h1", "h2", "h3", "h4", "h5", "h6",
+        ]),
+        allowedAttributes: {
+          ...sanitizeHtml.defaults.allowedAttributes,
+          "*": ["class", "style", "id"],
+          a: ["href", "name", "target", "rel"],
+          img: ["src", "alt", "width", "height"],
+        },
+      })
     : null;
 
   if (!content) {
