@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Lock, CheckCircle2 } from "lucide-react";
 import type { QnaPost, SecretQnaPayload } from "../_lib/types";
 import { getCharacterByKey } from "../_lib/constants";
 
@@ -12,52 +10,59 @@ interface QnaCardProps {
 }
 
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}.${month}.${day}`;
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}.${m}.${day}`;
+}
+
+function formatStudentId(index: number): string {
+  const year = new Date().getFullYear();
+  return `${year}-${String(index).padStart(3, "0")}`;
+}
+
+/** 레이블 | 값 한 줄 */
+function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-baseline gap-2.5">
+      <span className="text-[11px] font-bold text-primary tracking-wide w-9 text-right shrink-0">
+        {label}
+      </span>
+      <span className="text-[12px] text-[#cce8e0] shrink-0">|</span>
+      <span className={mono
+        ? "text-[14px] text-[#505050] font-mono tracking-wide"
+        : "text-[15px] text-[#212121] font-medium"
+      }>
+        {value}
+      </span>
+    </div>
+  );
 }
 
 export function QnaCard({ item, index }: QnaCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
-  const [secretPayload, setSecretPayload] = useState<SecretQnaPayload | null>(
-    null,
-  );
+  const [secretPayload, setSecretPayload] = useState<SecretQnaPayload | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
   const character = getCharacterByKey(item.image_key);
 
   const handleVerify = async () => {
-    if (!passwordInput.trim()) {
-      setVerifyError("비밀번호를 입력해주세요");
-      return;
-    }
-
+    if (!passwordInput.trim()) { setVerifyError("비밀번호를 입력해주세요"); return; }
     setIsVerifying(true);
-
     try {
-      const response = await fetch(`/api/qna/${item.id}/verify-password`, {
+      const res = await fetch(`/api/qna/${item.id}/verify-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: passwordInput }),
       });
-
-      const data = (await response.json()) as
-        | SecretQnaPayload
-        | { error?: string };
-
-      if (!response.ok) {
-        setVerifyError(
-          "error" in data && data.error
-            ? data.error
-            : "비밀번호를 다시 확인해주세요",
-        );
+      const data = (await res.json()) as SecretQnaPayload | { error?: string };
+      if (!res.ok) {
+        setVerifyError("error" in data && data.error ? data.error : "비밀번호를 다시 확인해주세요");
         return;
       }
-
       setSecretPayload(data as SecretQnaPayload);
       setPasswordInput("");
       setVerifyError("");
@@ -69,150 +74,133 @@ export function QnaCard({ item, index }: QnaCardProps) {
     }
   };
 
-  const handleHeaderClick = () => {
-    if (item.is_secret && !secretPayload) {
-      return;
-    }
-    setExpanded((prev) => !prev);
-  };
-
-  const showContent =
-    expanded && (!item.is_secret || secretPayload !== null);
-  const displayContent = item.is_secret
-    ? secretPayload?.content ?? ""
-    : item.content;
-  const displayAnswer = item.is_secret
-    ? secretPayload?.answer ?? null
-    : item.answer ?? null;
+  const canExpand = !item.is_secret || secretPayload !== null;
+  const showContent = expanded && canExpand;
+  const displayContent = item.is_secret ? secretPayload?.content ?? "" : item.content;
+  const displayAnswer = item.is_secret ? secretPayload?.answer ?? null : item.answer ?? null;
 
   return (
-    <div className="border border-[#d0d0d0] rounded-[10px] overflow-hidden">
-      {/* Header */}
-      <div
-        className="flex flex-wrap items-center gap-3 px-4 py-3 bg-white border-b border-[#e5e5e5] cursor-pointer"
-        onClick={handleHeaderClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleHeaderClick();
-          }
-        }}
-      >
-        <span className="font-semibold text-sm text-foreground shrink-0">
-          No. {index}
-        </span>
-        {item.is_secret && (
-          <Lock size={14} className="text-muted-foreground shrink-0" />
-        )}
-        {item.hasAnswer && (
-          <CheckCircle2
-            size={14}
-            className="text-primary shrink-0"
-            aria-label="답변 완료"
-          />
-        )}
-
-        <span className="text-sm text-muted-foreground">{item.writer_name}</span>
-
-        <span className="text-xs text-muted-foreground ml-auto">
-          {formatDate(item.created_at)}
-        </span>
+    <div className="rounded-[18px] overflow-hidden border border-[#e0f0ea] shadow-sm">
+      {/* ── Top bar ── */}
+      <div className="bg-primary px-5 py-2.5 flex items-center justify-between">
+        <span className="text-[12px] font-bold text-white/90 tracking-wide">깨달음의 나무 정원</span>
+        <div className="flex items-center gap-2">
+          {item.hasAnswer && (
+            <span className="text-[11px] font-bold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
+              답변완료
+            </span>
+          )}
+          {item.is_secret && (
+            <span className="text-[11px] font-bold text-white bg-black/15 px-2.5 py-0.5 rounded-full">
+              비밀글
+            </span>
+          )}
+          <span className="text-[12px] font-semibold text-white/80">No. {index}</span>
+        </div>
       </div>
 
-      {/* Secret post password prompt */}
-      {item.is_secret && !secretPayload && (
-        <div className="px-4 py-3 bg-[#fafafa] border-b border-[#e5e5e5]">
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="password"
-              placeholder="비밀번호"
-              value={passwordInput}
-              onChange={(e) => {
-                setPasswordInput(e.target.value);
-                setVerifyError("");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleVerify();
-                }
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="border border-[#d0d0d0] rounded-md px-2 py-1 text-sm w-28"
-            />
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleVerify();
-              }}
-              disabled={isVerifying}
-            >
-              {isVerifying ? "확인 중..." : "게시물 보기"}
-            </Button>
-            {verifyError && (
-              <span className="text-sm text-red-500">{verifyError}</span>
-            )}
+      {/* ── ID card body ── */}
+      <div className="bg-white px-5 py-4 flex gap-5 items-start">
+        {/* Photo */}
+        <div className="flex flex-col items-center gap-1.5 shrink-0">
+          <div className="w-[100px] h-[120px] rounded-[10px] overflow-hidden border-[2.5px] border-primary">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={character.src} alt={character.label} className="w-full h-full object-cover" />
           </div>
-          {!expanded && (
-            <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
-              <Lock size={16} className="mr-2" />
-              비밀글입니다. 등록한 비밀번호를 입력하여 확인하세요.
-            </div>
-          )}
+          <span className="text-[10px] text-[#aaa] tracking-wide">증명사진</span>
+        </div>
+
+        {/* Info rows */}
+        <div className="flex-1 flex flex-col gap-2 pt-1">
+          <InfoRow label="성명" value={item.writer_name} />
+          <InfoRow label="소속" value={character.label} />
+          <InfoRow label="학번" value={formatStudentId(index)} mono />
+          <InfoRow label="접수일" value={formatDate(item.created_at)} mono />
+        </div>
+
+        {/* Stamp */}
+        <div className="shrink-0 flex items-center justify-center pt-1">
+          <div className="w-[60px] h-[60px] rounded-full border-2 border-primary flex items-center justify-center relative">
+            <div className="absolute inset-[4px] rounded-full border border-primary/25" />
+            <span className="text-[10px] font-bold text-primary leading-snug text-center tracking-wide z-10">
+              나무<br />정원
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Content band ── */}
+      <div className="bg-[#f5fbf8] border-t-[1.5px] border-[#dff0e9] px-5 py-3 flex items-start gap-2.5">
+        <span className="text-[11px] font-bold text-primary tracking-wide w-7 text-right shrink-0 mt-0.5">문의</span>
+        <div className="w-[1.5px] self-stretch bg-[#cce9e0] rounded shrink-0 mx-0.5" />
+        {item.is_secret && !secretPayload ? (
+          <span className="text-[14px] text-[#bbb] italic">비밀번호를 입력하면 내용을 볼 수 있습니다</span>
+        ) : (
+          <p className="text-[14px] text-[#505050] leading-relaxed line-clamp-2">{item.content}</p>
+        )}
+      </div>
+
+      {/* ── Secret password input ── */}
+      {item.is_secret && !secretPayload && (
+        <div className="bg-white border-t border-[#f0f0f0] px-5 py-3 flex flex-wrap items-center gap-2">
+          <input
+            type="password"
+            placeholder="비밀번호 입력"
+            value={passwordInput}
+            onChange={(e) => { setPasswordInput(e.target.value); setVerifyError(""); }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleVerify(); }}
+            onClick={(e) => e.stopPropagation()}
+            className="h-[36px] border border-[#e0e0e0] rounded-[8px] px-3 text-[14px] w-32 focus:outline-none focus:border-primary"
+          />
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleVerify(); }}
+            disabled={isVerifying}
+            className="h-[36px] bg-primary text-white rounded-[8px] px-4 text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-50"
+          >
+            {isVerifying ? "확인 중..." : "확인"}
+          </button>
+          {verifyError && <span className="text-[13px] text-red-500">{verifyError}</span>}
         </div>
       )}
 
-      {/* Body */}
+      {/* ── Footer ── */}
+      <div className="bg-white border-t border-[#f0f0f0] px-5 py-3 flex items-center justify-between">
+        <span className="text-[13px] text-[#bbb]">{formatDate(item.created_at)}</span>
+        {canExpand && (
+          <button
+            type="button"
+            onClick={() => setExpanded((p) => !p)}
+            className="text-[13px] font-semibold text-primary border-[1.5px] border-primary rounded-[8px] px-4 py-1.5 hover:bg-primary hover:text-white transition-colors"
+          >
+            {expanded ? "접기" : "펼치기"}
+          </button>
+        )}
+      </div>
+
+      {/* ── Expanded Q/A ── */}
       {showContent && (
-        <div className="flex flex-col md:flex-row">
-          {/* Character image */}
-          <div className="flex items-center justify-center p-4 md:w-[140px] shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={character.src}
-              alt={character.label}
-              className="w-[100px] h-[120px] md:w-[120px] md:h-[150px] object-contain"
-            />
-          </div>
-
-          {/* Content area */}
-          <div className="flex-1 flex flex-col gap-0">
-            {/* Question */}
-            <div
-              className="p-4 text-sm text-foreground leading-relaxed min-h-[80px]"
-              style={{ backgroundColor: "#eaf6f4" }}
-            >
-              <p className="font-semibold text-xs text-primary mb-1">Q.</p>
-              <p className="whitespace-pre-wrap">{displayContent}</p>
+        <div className="bg-white border-t-[1.5px] border-dashed border-[#dff0e9] px-5 pb-5">
+          {/* Q */}
+          <div className="mt-4">
+            <p className="text-[12px] font-bold text-primary mb-2">Q. 문의 내용</p>
+            <div className="bg-[#f0f9f6] rounded-[10px] px-4 py-3.5 text-[14px] text-[#333] leading-relaxed whitespace-pre-wrap">
+              {displayContent}
             </div>
-
-            {/* Answer */}
+          </div>
+          {/* A */}
+          <div className="mt-4">
+            <p className="text-[12px] font-bold text-[#888] mb-2">A. 답변</p>
             {displayAnswer ? (
-              <div
-                className="p-4 text-sm text-muted-foreground leading-relaxed min-h-[60px]"
-                style={{ backgroundColor: "#f0f0f0" }}
-              >
-                <p className="font-semibold text-xs text-muted-foreground mb-1">
-                  A.
-                </p>
-                <p className="whitespace-pre-wrap">{displayAnswer}</p>
+              <div className="bg-[#f8f8f8] rounded-[10px] px-4 py-3.5 text-[14px] text-[#505050] leading-relaxed whitespace-pre-wrap">
+                {displayAnswer}
               </div>
             ) : (
-              <div className="bg-[#f9f9f9] p-4 text-sm text-muted-foreground italic min-h-[60px] flex items-center">
+              <div className="bg-[#f8f8f8] rounded-[10px] px-4 py-3.5 text-[14px] text-[#bbb] italic">
                 아직 답변이 등록되지 않았습니다.
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Non-secret collapsed state */}
-      {!item.is_secret && !expanded && (
-        <div className="px-4 py-3 text-sm text-muted-foreground bg-[#fafafa]">
-          클릭하여 내용을 확인하세요.
         </div>
       )}
     </div>
