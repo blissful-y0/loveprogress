@@ -61,6 +61,7 @@ export default function Header() {
   const menuItems = user ? userMenuItems : [];
 
   useEffect(() => {
+    if (!isLoginOpen) return;
     function handleClickOutside(e: MouseEvent) {
       const target = e.target as Node;
       const inDesktop = desktopLoginRef.current?.contains(target) ?? false;
@@ -71,7 +72,7 @@ export default function Header() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [closeLogin]);
+  }, [isLoginOpen, closeLogin]);
 
   useEffect(() => {
     closeLogin();
