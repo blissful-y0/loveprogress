@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { isErrorResponse, requireRole } from "@/lib/auth-guard";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { BoardPostInsert } from "@/types/database";
+import type { BoardPostInsert, BoardPostRow } from "@/types/database";
 
 const BOOTH_ROLES = ["booth_member", "admin"] as const;
 
@@ -42,13 +42,17 @@ export async function GET(request: Request) {
       .eq("board_type", "booth_private")
       .eq("is_pinned", true);
 
-    const { data: posts, error } = await supabaseAdmin
-      .from("board_posts")
+    // Supabase select typing collapses to never here, so cast the query result explicitly.
+    const { data: posts, error } = (await (supabaseAdmin
+      .from("board_posts") as any)
       .select("*")
       .eq("board_type", "booth_private")
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .range(offset, offset + limit - 1)) as {
+      data: BoardPostRow[] | null;
+      error: unknown;
+    };
 
     if (error) {
       return NextResponse.json(
