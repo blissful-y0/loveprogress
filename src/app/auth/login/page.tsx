@@ -419,7 +419,13 @@ export default function LoginPage() {
           <button
             type="button"
             className="flex size-12 items-center justify-center rounded-full bg-[#5865F2] transition-opacity hover:opacity-80"
-            onClick={() => { /* TODO: Discord OAuth 연동 */ }}
+            onClick={async () => {
+              const supabase = createClient();
+              await supabase.auth.signInWithOAuth({
+                provider: "discord",
+                options: { redirectTo: `${window.location.origin}/auth/callback` },
+              });
+            }}
             aria-label="Discord로 로그인"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" className="size-7 fill-white">
