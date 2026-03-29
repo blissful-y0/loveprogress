@@ -183,13 +183,8 @@ export default function MemberManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-text-dark">
-          회원 관리
-          <Badge variant="secondary" className="ml-2">
-            {total}명
-          </Badge>
-        </h2>
+      <div className="flex items-center gap-3">
+        <Badge variant="secondary">{total}명</Badge>
       </div>
 
       <Input

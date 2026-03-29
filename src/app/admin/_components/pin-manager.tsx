@@ -107,8 +107,6 @@ export default function PinManager() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-bold text-text-dark">공지 고정 관리</h2>
-
       <div className="flex items-end gap-4">
         <div className="flex flex-col gap-1.5">
           <Label>게시판 선택</Label>

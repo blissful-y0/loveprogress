@@ -168,7 +168,7 @@ export default function QnaManager() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [filter, setFilter] = useState<"all" | "answered" | "unanswered">("all");
+  const [filter, setFilter] = useState<"all" | "answered" | "unanswered">("unanswered");
 
   const fetchPosts = useCallback(async (p: number) => {
     setLoading(true);
@@ -203,12 +203,9 @@ export default function QnaManager() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-text-dark">QnA 답변 관리</h2>
-          <p className="text-sm text-text-muted mt-0.5">
-            전체 {total}건 · 미답변 {unansweredCount}건
-          </p>
-        </div>
+        <p className="text-sm text-text-muted">
+          전체 {total}건 · 미답변 <span className="font-bold text-red-500">{unansweredCount}건</span>
+        </p>
         <div className="flex gap-1.5">
           {(["all", "unanswered", "answered"] as const).map((f) => (
             <button
