@@ -4,6 +4,7 @@ import { useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { PrivacyModal } from "./privacy-modal";
 import { CHARACTERS, PLACEHOLDER_TEXT } from "../_lib/constants";
+import { useUser } from "@/hooks/useUser";
 
 interface WriteFormProps {
   onPostCreated: () => void;
@@ -11,6 +12,8 @@ interface WriteFormProps {
 }
 
 export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
+  const { user } = useUser();
+  const isLoggedIn = !!user;
   const [selectedCharKey, setSelectedCharKey] = useState<string>(CHARACTERS[0].key);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +28,7 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
 
   const handleSubmit = async () => {
     if (!name.trim()) { setFormError("이름을 입력해주세요."); return; }
-    if (!password.trim()) { setFormError("비밀번호를 입력해주세요."); return; }
+    if (!isLoggedIn && !password.trim()) { setFormError("비밀번호를 입력해주세요."); return; }
     if (!content.trim()) { setFormError("내용을 입력해주세요."); return; }
     if (!privacyAgreed) { setFormError("개인정보 수집 및 이용에 동의해주세요."); return; }
 
@@ -38,7 +41,7 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           writerName: name.trim(),
-          password,
+          password: isLoggedIn ? undefined : password,
           isSecret,
           imageKey: selectedCharKey,
           content: content.trim(),
@@ -67,7 +70,7 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
     <div className="rounded-[18px] overflow-hidden border border-[#e0f0ea] shadow-sm mb-6">
       {/* Header bar */}
       <div className="bg-primary px-5 py-3 text-[13px] font-bold text-white tracking-wide">
-        깨달음의 나무 정원 · 상담 접수
+        나무광장 · 상담 접수
       </div>
 
       {/* Body */}
@@ -144,17 +147,19 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
                 className="h-[42px] border-[1.5px] border-[#e0e0e0] rounded-[9px] px-3.5 text-[15px] text-[#909090] bg-transparent focus:outline-none focus:border-primary placeholder:text-[12px] placeholder:font-light placeholder:text-[#bbb]"
               />
             </div>
-            <div className="flex flex-col gap-1.5 flex-1">
-              <label className="text-[12px] font-bold text-primary tracking-wide pl-3.5">비밀번호</label>
-              <input
-                type="password"
-                placeholder="4~10자리"
-                maxLength={10}
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setFormError(""); }}
-                className="h-[42px] border-[1.5px] border-[#e0e0e0] rounded-[9px] px-3.5 text-[15px] text-[#909090] bg-transparent focus:outline-none focus:border-primary placeholder:text-[12px] placeholder:font-light placeholder:text-[#bbb]"
-              />
-            </div>
+            {!isLoggedIn && (
+              <div className="flex flex-col gap-1.5 flex-1">
+                <label className="text-[12px] font-bold text-primary tracking-wide pl-3.5">비밀번호</label>
+                <input
+                  type="password"
+                  placeholder="4~10자리"
+                  maxLength={10}
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setFormError(""); }}
+                  className="h-[42px] border-[1.5px] border-[#e0e0e0] rounded-[9px] px-3.5 text-[15px] text-[#909090] bg-transparent focus:outline-none focus:border-primary placeholder:text-[12px] placeholder:font-light placeholder:text-[#bbb]"
+                />
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[12px] font-bold text-primary tracking-wide pl-3.5">문의 내용</label>

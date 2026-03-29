@@ -2,6 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import BoardListPage from "@/components/board/board-list-page";
 import type { BoardPostRow } from "@/types/database";
 
+export const metadata = {
+  title: "공지사항 | 파이낙사 온리전 :: 사랑의 진도",
+};
+
+export const revalidate = 30;
+
 const ITEMS_PER_PAGE = 10;
 
 interface Props {
@@ -62,7 +68,6 @@ export default async function NoticesPage({ searchParams }: Props) {
       title="입학처 공지사항"
       basePath="/info/notices"
       pageHeader={{
-        label: "깨달음의 나무 정원",
         title: "입학 · 교육",
         subtitle: "입학 안내 및 교육 공지사항을 확인하세요.",
       }}

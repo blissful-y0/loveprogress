@@ -55,6 +55,7 @@ export interface QnaPostRow {
   id: string;
   writer_name: string;
   password_hash: string | null;
+  user_id: string | null;
   is_secret: boolean;
   image_key: string | null;
   content: string;

@@ -76,7 +76,7 @@ export default function Footer() {
                   '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
               }}
             >
-              Copyright &copy; 2026 깨달음의 나무 정원 총장 All right reserved.
+              Copyright &copy; 2026 파이낙사 온리전 총장 All right reserved.
             </p>
           </div>
         </div>

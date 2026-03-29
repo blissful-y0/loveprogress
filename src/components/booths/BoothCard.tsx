@@ -3,124 +3,91 @@
 
 import { useState } from "react";
 import type { BoothCardData } from "@/types/booth";
+import { BOOTH_KEYWORD_COLORS } from "@/lib/booth-keyword-colors";
 
 interface BoothCardProps {
   readonly booth: BoothCardData;
+  readonly onClick: () => void;
 }
 
-function TwitterIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="shrink-0"
-    >
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
-
-function AgeBadge({ ageType }: { readonly ageType: "general" | "adult" }) {
-  const isAdult = ageType === "adult";
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-tight ${
-        isAdult
-          ? "bg-red-50 text-red-600 border border-red-200"
-          : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-      }`}
-    >
-      {isAdult ? "성인" : "일반"}
-    </span>
-  );
-}
-
-function KeywordBadge({ keyword }: { readonly keyword: string }) {
-  return (
-    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-medium text-text-sub leading-tight">
-      #{keyword}
-    </span>
-  );
-}
-
-function ParticipantItem({
-  participant,
-}: {
-  readonly participant: {
-    readonly name: string;
-    readonly snsUrl: string | null;
-  };
-}) {
-  return (
-    <span className="inline-flex items-center gap-1 text-[13px] text-text-sub">
-      {participant.name}
-      {participant.snsUrl && (
-        <a
-          href={participant.snsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-text-light hover:text-text-dark transition-colors"
-          aria-label={`${participant.name} 트위터`}
-        >
-          <TwitterIcon />
-        </a>
-      )}
-    </span>
-  );
-}
-
-export default function BoothCard({ booth }: BoothCardProps) {
+export default function BoothCard({ booth, onClick }: BoothCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-
-  const displayImage =
-    isHovered && booth.hoverImageKey
-      ? booth.hoverImageKey
-      : booth.thumbnailImageKey;
-
+  const isAdult = booth.ageType === "adult";
   const allParticipants = [booth.owner, ...booth.participants.slice(0, 3)];
 
+  const displayImage =
+    isHovered && booth.hoverImageKey ? booth.hoverImageKey : booth.thumbnailImageKey;
+
   return (
-    <article className="group overflow-hidden rounded-[15px] bg-white shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100">
-      {/* Thumbnail */}
-      <div
-        className="relative aspect-[4/3] overflow-hidden bg-gray-100"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
+    <div
+      className="group w-full cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+    >
+      {/* Booth cut — 550x300 */}
+      <div className="relative aspect-[550/300] overflow-hidden rounded-md bg-[#eee]">
         <img
           src={displayImage}
           alt={booth.name}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-[1.03] group-hover:brightness-[0.97]"
           loading="lazy"
         />
+
+        {/* Hover overlay — subtle gradient at bottom */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-3">
-        {/* Booth name + age badge */}
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-[15px] font-bold text-text-dark leading-snug line-clamp-1">
-            {booth.name}
-          </h3>
-          <AgeBadge ageType={booth.ageType} />
-        </div>
+      {/* Text area */}
+      <div className="mt-4 text-center">
+        {/* Booth name */}
+        <h3 className="text-[17px] font-bold text-[#1a1a1a] leading-tight tracking-[-0.02em] line-clamp-1">
+          {booth.name}
+        </h3>
 
-        {/* Participants */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        {/* Participants — linked names get underline */}
+        <p className="mt-1.5 text-[13px] font-medium text-[#707070] tracking-[-0.01em]">
           {allParticipants.map((p, i) => (
-            <ParticipantItem key={`${p.name}-${i}`} participant={p} />
+            <span key={`${p.name}-${i}`}>
+              {i > 0 && <span className="text-[#d0d0d0] mx-[5px]">&middot;</span>}
+              {p.snsUrl ? (
+                <a
+                  href={p.snsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="underline underline-offset-2 decoration-[#ccc] hover:decoration-[#666] hover:text-[#333] transition-colors duration-200"
+                >
+                  {p.name}
+                </a>
+              ) : (
+                p.name
+              )}
+            </span>
           ))}
-        </div>
+        </p>
 
-        {/* Keyword badges */}
-        <div className="flex flex-wrap gap-1.5">
+        {/* Tags row */}
+        <div className="flex flex-wrap justify-center gap-[6px] mt-2.5">
+          <span
+            className={`rounded-full px-[10px] py-[3px] text-[10.5px] font-semibold tracking-wide ${
+              isAdult
+                ? "text-[#dc4a4a] bg-[#fef2f2] ring-1 ring-inset ring-[#fecaca]"
+                : "text-[#0d9373] bg-[#ecfdf5] ring-1 ring-inset ring-[#a7f3d0]"
+            }`}
+          >
+            #{isAdult ? "성인" : "일반"}
+          </span>
           {booth.keywords.map((kw) => (
-            <KeywordBadge key={kw} keyword={kw} />
+            <span
+              key={kw}
+              className={`rounded-full px-[10px] py-[3px] text-[10.5px] font-semibold ring-1 ring-inset ${BOOTH_KEYWORD_COLORS[kw] ?? "text-[#999] ring-[#e5e5e5]"}`}
+            >
+              #{kw}
+            </span>
           ))}
         </div>
       </div>
-    </article>
+    </div>
   );
 }

@@ -56,7 +56,7 @@ export default function BoardDetailPage({
       {/* Content */}
       {post.content.startsWith(HTML_MARKER) ? (
         <div
-          className="py-8 min-h-[240px] overflow-x-auto [&_img]:max-w-full [&_table]:w-full [&_a]:text-[#34aa8f] [&_a]:underline"
+          className="prose py-8 min-h-[240px] overflow-x-auto max-w-none"
           dangerouslySetInnerHTML={{
             __html: sanitizeHtml(post.content.slice(HTML_MARKER.length), {
               allowedTags: sanitizeHtml.defaults.allowedTags.concat([
@@ -65,7 +65,7 @@ export default function BoardDetailPage({
               ]),
               allowedAttributes: {
                 ...sanitizeHtml.defaults.allowedAttributes,
-                "*": ["class", "style", "id"],
+                "*": ["class", "id"],
                 a: ["href", "name", "target", "rel"],
                 img: ["src", "alt", "width", "height"],
               },

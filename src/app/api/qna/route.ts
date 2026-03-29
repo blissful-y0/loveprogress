@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { hashPassword } from "@/app/qna/_lib/secret-qna.server";
 import { QNA_PAGE_LIMIT } from "@/app/qna/_lib/constants";
+import { rateLimit } from "@/lib/rate-limit";
 import type { QnaPostPublic } from "@/types/database";
 
 const createQnaSchema = z.object({
@@ -51,6 +53,10 @@ export async function GET(request: Request) {
     const offset = (page - 1) * limit;
 
     const supabase = getSupabaseAdmin();
+
+    // 현재 로그인 유저 확인
+    const sessionClient = await createClient();
+    const { data: { user: currentUser } } = await sessionClient.auth.getUser();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { count, error: countError } = await (
@@ -107,13 +113,33 @@ export async function GET(request: Request) {
       }
     }
 
+    // user_id 조회 (마이그레이션 적용 전에는 빈 맵)
+    let postUserIds: Record<string, string> = {};
+    if (currentUser && postIds.length > 0) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: userIdData } = (await (supabase.from("qna_posts") as any)
+          .select("id, user_id")
+          .in("id", postIds)
+          .not("user_id", "is", null)) as { data: Array<{ id: string; user_id: string }> | null };
+        if (userIdData) {
+          postUserIds = Object.fromEntries(userIdData.map((r) => [r.id, r.user_id]));
+        }
+      } catch {
+        // user_id 컬럼이 없으면 무시
+      }
+    }
+
     const publicPosts = posts.map((post) => {
       const answer = answers[post.id] ?? null;
+      const isOwner = currentUser && postUserIds[post.id] === currentUser.id;
+      const canView = !post.is_secret || isOwner;
       return {
         ...post,
-        content: post.is_secret ? "" : post.content,
-        answer: post.is_secret ? null : answer?.content ?? null,
+        content: canView ? post.content : "",
+        answer: canView ? (answer?.content ?? null) : null,
         hasAnswer: answer !== null,
+        isOwner: !!isOwner,
       };
     });
 
@@ -133,6 +159,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const rateLimitResponse = await rateLimit(request, "qna-create", { maxRequests: 5, windowMs: 60_000 });
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
 
     const parsed = createQnaSchema.safeParse(body);
@@ -144,7 +173,12 @@ export async function POST(request: Request) {
 
     const { writerName, password, isSecret, imageKey, content } = parsed.data;
 
-    if (isSecret && (!password || password.length === 0)) {
+    // 로그인 유저 확인
+    const sessionClient = await createClient();
+    const { data: { user: authUser } } = await sessionClient.auth.getUser();
+
+    // 비로그인 + 비밀글이면 비밀번호 필수
+    if (isSecret && !authUser && (!password || password.length === 0)) {
       return NextResponse.json(
         { error: "비밀글에는 비밀번호가 필요합니다." },
         { status: 400 },
@@ -164,6 +198,7 @@ export async function POST(request: Request) {
       .insert({
         writer_name: writerName,
         password_hash: passwordHash,
+        user_id: authUser?.id ?? null,
         is_secret: isSecret,
         image_key: imageKey ?? null,
         content,

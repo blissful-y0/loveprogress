@@ -25,8 +25,8 @@ export async function verifyPasswordHash(
 ): Promise<boolean> {
   // Legacy SHA-256 path for pre-existing records
   if (isSha256Hex(storedHash)) {
-    const stored = Buffer.from(storedHash, "hex");
-    const incoming = createHash("sha256").update(password).digest();
+    const stored = new Uint8Array(Buffer.from(storedHash, "hex"));
+    const incoming = new Uint8Array(createHash("sha256").update(password).digest());
     if (stored.length !== incoming.length) return false;
     return timingSafeEqual(stored, incoming);
   }

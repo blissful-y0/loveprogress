@@ -12,9 +12,16 @@ export async function POST(request: Request) {
     const adminResult = await verifyAdmin();
     if (isAdminError(adminResult)) return adminResult;
 
+    const ALLOWED_FOLDERS = new Set(["banners", "booths", "posts", "qna", "misc"]);
+    const MIME_TO_EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string | null) ?? "misc";
+    const rawFolder = (formData.get("folder") as string | null) ?? "misc";
+    if (!ALLOWED_FOLDERS.has(rawFolder)) {
+      return NextResponse.json({ error: "허용되지 않는 폴더입니다." }, { status: 400 });
+    }
+    const folder = rawFolder;
 
     if (!file) {
       return NextResponse.json({ error: "파일을 선택해주세요." }, { status: 400 });
@@ -32,7 +39,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const ext = file.name.split(".").pop() ?? "jpg";
+    const ext = MIME_TO_EXT[file.type] ?? "jpg";
     const randomId = Math.random().toString(36).slice(2, 10);
     const storagePath = `${folder}/${Date.now()}-${randomId}.${ext}`;
 

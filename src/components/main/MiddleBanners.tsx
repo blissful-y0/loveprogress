@@ -28,9 +28,9 @@ export default function MiddleBanners() {
     <section className="mx-auto max-w-[1280px] px-6 lg:px-8 py-6 md:py-8">
       {/* Mobile: 3-col grid with carousel spanning 2 cols */}
       <div className="lg:hidden">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 place-items-center">
           {/* Mini carousel - spans 2 columns, 1 row */}
-          <div className="col-span-2 flex items-center">
+          <div className="col-span-2 row-span-1 w-full flex items-center justify-center">
             <Swiper
               modules={[Pagination]}
               spaceBetween={10}
@@ -40,11 +40,11 @@ export default function MiddleBanners() {
                 bulletActiveClass: "mini-bullet-active",
                 bulletClass: "mini-bullet",
               }}
-              className="mini-carousel"
+              className="mini-carousel-mobile"
             >
               {MINI_CAROUSEL_SLIDES.map((slide) => (
                 <SwiperSlide key={slide.id}>
-                  <div className="w-full aspect-[26/10] rounded-lg overflow-hidden">
+                  <div className="w-full h-full rounded-lg overflow-hidden">
                     <img
                       src={slide.image}
                       alt={slide.alt}
@@ -60,7 +60,7 @@ export default function MiddleBanners() {
           {ICON_CARDS.map((card) => (
             <div key={card.id} className="flex flex-col items-center gap-1">
               <button
-                className="group flex items-center justify-center aspect-square w-full bg-bg-light rounded-[10px] hover:brightness-95 transition-all duration-200 cursor-pointer"
+                className="group flex items-center justify-center w-[72px] h-[72px] bg-bg-light rounded-[10px] hover:brightness-95 transition-all duration-200 cursor-pointer"
               >
                 <div className="w-[32px] h-[32px] transition-transform duration-200 group-hover:scale-105">
                   <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
@@ -73,7 +73,7 @@ export default function MiddleBanners() {
       </div>
 
       {/* Desktop: horizontal layout */}
-      <div className="hidden lg:flex gap-10 items-center">
+      <div className="hidden lg:flex gap-10 items-center justify-center">
         {/* Mini carousel */}
         <div className="w-[260px] shrink-0">
           <Swiper
@@ -124,6 +124,18 @@ export default function MiddleBanners() {
       </div>
 
       <style jsx global>{`
+        /* Mobile: dots inside carousel, smaller */
+        .mini-carousel-mobile { position: relative; width: 100%; }
+        .mini-carousel-mobile .swiper-wrapper { padding-bottom: 0; }
+        .mini-carousel-mobile .swiper-pagination {
+          bottom: 4px !important;
+          z-index: 10;
+        }
+        .mini-carousel-mobile .mini-bullet,
+        .mini-carousel-mobile .mini-bullet-active {
+          width: 4px; height: 4px; margin: 0 2px;
+        }
+        /* Desktop: dots below carousel */
         .mini-carousel .swiper-wrapper { padding-bottom: 20px; }
         .mini-carousel .swiper-pagination { bottom: 0 !important; }
         .mini-bullet {

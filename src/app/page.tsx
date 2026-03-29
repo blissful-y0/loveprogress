@@ -2,6 +2,8 @@ import TopCarousel from "@/components/main/TopCarousel";
 import MiddleBanners from "@/components/main/MiddleBanners";
 import BoardSections from "@/components/main/BoardSections";
 
+export const revalidate = 60;
+
 export default function Home() {
   return (
     <main>

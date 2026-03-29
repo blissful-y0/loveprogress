@@ -17,19 +17,18 @@ function formatDate(dateStr: string): string {
   return `${y}.${m}.${day}`;
 }
 
-function formatStudentId(index: number): string {
-  const year = new Date().getFullYear();
-  return `${year}-${String(index).padStart(3, "0")}`;
+function formatReceptionId(index: number): string {
+  return `3355-0338-${String(index).padStart(3, "0")}`;
 }
 
 /** 레이블 | 값 한 줄 */
 function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex items-baseline gap-2.5">
-      <span className="text-[11px] font-bold text-primary tracking-wide w-[44px] text-right shrink-0">
+      <span className="text-[11px] font-bold text-[#909090] tracking-wide w-[44px] text-right shrink-0">
         {label}
       </span>
-      <span className="text-[12px] text-[#cce8e0] shrink-0">|</span>
+      <span className="text-[12px] text-[#d0d0d0] shrink-0">|</span>
       <span className={`overflow-hidden truncate ${mono
         ? "text-[14px] text-[#505050] font-mono tracking-wide"
         : "text-[15px] text-[#505050] font-medium"
@@ -41,7 +40,6 @@ function InfoRow({ label, value, mono = false }: { label: string; value: string;
 }
 
 export function QnaCard({ item, index }: QnaCardProps) {
-  const [expanded, setExpanded] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [secretPayload, setSecretPayload] = useState<SecretQnaPayload | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -66,7 +64,6 @@ export function QnaCard({ item, index }: QnaCardProps) {
       setSecretPayload(data as SecretQnaPayload);
       setPasswordInput("");
       setVerifyError("");
-      setExpanded(true);
     } catch {
       setVerifyError("잠시 후 다시 시도해주세요");
     } finally {
@@ -74,16 +71,16 @@ export function QnaCard({ item, index }: QnaCardProps) {
     }
   };
 
-  const canExpand = !item.is_secret || secretPayload !== null;
-  const showContent = expanded && canExpand;
-  const displayContent = item.is_secret ? secretPayload?.content ?? "" : item.content;
-  const displayAnswer = item.is_secret ? secretPayload?.answer ?? null : item.answer ?? null;
+  const isOwnerOrPublic = !item.is_secret || item.isOwner;
+  const contentVisible = isOwnerOrPublic || secretPayload !== null;
+  const displayContent = contentVisible ? (item.content || secretPayload?.content || "") : "";
+  const displayAnswer = contentVisible ? (item.answer ?? secretPayload?.answer ?? null) : null;
 
   return (
     <div className="rounded-[18px] overflow-hidden border border-[#e0f0ea] shadow-sm">
       {/* ── Top bar ── */}
       <div className="bg-primary px-5 py-2.5 flex items-center justify-between">
-        <span className="text-[12px] font-bold text-white/90 tracking-wide">깨달음의 나무 정원</span>
+        <span className="text-[12px] font-semibold text-white/80">No. {index}</span>
         <div className="flex items-center gap-2">
           {item.hasAnswer && (
             <span className="text-[11px] font-bold text-white bg-white/20 px-2.5 py-0.5 rounded-full">
@@ -95,7 +92,6 @@ export function QnaCard({ item, index }: QnaCardProps) {
               비밀글
             </span>
           )}
-          <span className="text-[12px] font-semibold text-white/80">No. {index}</span>
         </div>
       </div>
 
@@ -113,7 +109,7 @@ export function QnaCard({ item, index }: QnaCardProps) {
         <div className="flex-1 min-w-0 flex flex-col gap-2 pt-1">
           <InfoRow label="성명" value={item.writer_name} />
           <InfoRow label="소속" value={character.label} />
-          <InfoRow label="학번" value={formatStudentId(index)} mono />
+          <InfoRow label="학번" value={formatReceptionId(index)} mono />
           <InfoRow label="접수일" value={formatDate(item.created_at)} mono />
         </div>
 
@@ -128,19 +124,19 @@ export function QnaCard({ item, index }: QnaCardProps) {
         </div>
       </div>
 
-      {/* ── Content band ── */}
+      {/* ── Content band (문의) ── */}
       <div className="bg-[#f5fbf8] border-t-[1.5px] border-[#dff0e9] px-5 py-3 flex items-start gap-2.5">
         <span className="text-[11px] font-bold text-primary tracking-wide w-7 text-right shrink-0 mt-0.5">문의</span>
         <div className="w-[1.5px] self-stretch bg-[#cce9e0] rounded shrink-0 mx-0.5" />
-        {item.is_secret && !secretPayload ? (
+        {item.is_secret && !contentVisible ? (
           <span className="text-[14px] text-[#bbb] italic">비밀번호를 입력하면 내용을 볼 수 있습니다</span>
         ) : (
-          <p className="text-[14px] text-[#505050] leading-relaxed line-clamp-2">{item.content}</p>
+          <p className="text-[14px] text-[#505050] leading-relaxed whitespace-pre-wrap">{displayContent}</p>
         )}
       </div>
 
-      {/* ── Secret password input ── */}
-      {item.is_secret && !secretPayload && (
+      {/* ── Secret password input (비로그인 작성 글만) ── */}
+      {item.is_secret && !contentVisible && (
         <div className="bg-white border-t border-[#f0f0f0] px-5 py-3 flex flex-wrap items-center gap-2">
           <input
             type="password"
@@ -149,13 +145,13 @@ export function QnaCard({ item, index }: QnaCardProps) {
             onChange={(e) => { setPasswordInput(e.target.value); setVerifyError(""); }}
             onKeyDown={(e) => { if (e.key === "Enter") handleVerify(); }}
             onClick={(e) => e.stopPropagation()}
-            className="h-[36px] border border-[#e0e0e0] rounded-[8px] px-3 text-[14px] w-32 focus:outline-none focus:border-primary"
+            className="h-[30px] border border-[#e0e0e0] rounded-[8px] px-3 text-[13px] w-32 focus:outline-none focus:border-primary"
           />
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); handleVerify(); }}
             disabled={isVerifying}
-            className="h-[36px] bg-primary text-white rounded-[8px] px-4 text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-50"
+            className="h-[30px] bg-primary text-white rounded-[8px] px-4 text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-50"
           >
             {isVerifying ? "확인 중..." : "확인"}
           </button>
@@ -163,43 +159,19 @@ export function QnaCard({ item, index }: QnaCardProps) {
         </div>
       )}
 
-      {/* ── Footer ── */}
-      <div className="bg-white border-t border-[#f0f0f0] px-5 py-3 flex items-center justify-between">
-        <span className="text-[13px] text-[#bbb]">{formatDate(item.created_at)}</span>
-        {canExpand && (
-          <button
-            type="button"
-            onClick={() => setExpanded((p) => !p)}
-            className="text-[13px] font-semibold text-primary border-[1.5px] border-primary rounded-[8px] px-4 py-1.5 hover:bg-primary hover:text-white transition-colors"
-          >
-            {expanded ? "접기" : "펼치기"}
-          </button>
-        )}
-      </div>
-
-      {/* ── Expanded Q/A ── */}
-      {showContent && (
-        <div className="bg-white border-t-[1.5px] border-dashed border-[#dff0e9] px-5 pb-5">
-          {/* Q */}
-          <div className="mt-4">
-            <p className="text-[12px] font-bold text-primary mb-2">Q. 문의 내용</p>
-            <div className="bg-[#f0f9f6] rounded-[10px] px-4 py-3.5 text-[14px] text-[#333] leading-relaxed whitespace-pre-wrap">
-              {displayContent}
+      {/* ── Answer (항상 표시) ── */}
+      {contentVisible && (
+        <div className="bg-white border-t-[1.5px] border-dashed border-[#dff0e9] px-5 py-4">
+          <p className="text-[12px] font-bold text-[#888] mb-2">A. 답변</p>
+          {displayAnswer ? (
+            <div className="bg-[#f8f8f8] rounded-[10px] px-4 py-3.5 text-[14px] text-[#505050] leading-relaxed whitespace-pre-wrap">
+              {displayAnswer}
             </div>
-          </div>
-          {/* A */}
-          <div className="mt-4">
-            <p className="text-[12px] font-bold text-[#888] mb-2">A. 답변</p>
-            {displayAnswer ? (
-              <div className="bg-[#f8f8f8] rounded-[10px] px-4 py-3.5 text-[14px] text-[#505050] leading-relaxed whitespace-pre-wrap">
-                {displayAnswer}
-              </div>
-            ) : (
-              <div className="bg-[#f8f8f8] rounded-[10px] px-4 py-3.5 text-[14px] text-[#bbb] italic">
-                아직 답변이 등록되지 않았습니다.
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="bg-[#f8f8f8] rounded-[10px] px-4 py-3.5 text-[14px] text-[#bbb] italic">
+              아직 답변이 등록되지 않았습니다.
+            </div>
+          )}
         </div>
       )}
     </div>

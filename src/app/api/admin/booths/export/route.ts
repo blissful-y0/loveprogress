@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 import { isAdminError, verifyAdmin } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -24,49 +24,28 @@ export async function GET() {
       );
     }
 
-    if (booths.length === 0) {
-      // Return empty Excel
-      const worksheet = XLSX.utils.json_to_sheet([]);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "부스목록");
-      const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("부스목록");
 
-      return new NextResponse(buffer, {
-        status: 200,
-        headers: {
-          "Content-Type":
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": 'attachment; filename="booths_export.xlsx"',
-        },
+    // Define columns
+    worksheet.columns = [
+      { header: "순번", key: "index", width: 6 },
+      { header: "이름", key: "name", width: 20 },
+      { header: "참여자", key: "participants", width: 30 },
+      { header: "키워드", key: "keywords", width: 30 },
+    ];
+
+    // Add rows
+    for (const [idx, booth] of booths.entries()) {
+      worksheet.addRow({
+        index: idx + 1,
+        name: booth.name,
+        participants: booth.participants.map((p) => p.name).join(", "),
+        keywords: booth.keywords.map((kw) => kw.keyword).join(", "),
       });
     }
 
-    // Build Excel rows
-    const excelRows = booths.map((booth, idx) => ({
-      순번: idx + 1,
-      이름: booth.name,
-      참여자: booth.participants
-        .map((p) => p.name)
-        .join(", "),
-      키워드: booth.keywords
-        .map((kw) => kw.keyword)
-        .join(", "),
-    }));
-
-    // Generate workbook
-    const worksheet = XLSX.utils.json_to_sheet(excelRows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "부스목록");
-
-    // Set column widths
-    worksheet["!cols"] = [
-      { wch: 6 },  // 순번
-      { wch: 20 }, // 이름
-      { wch: 30 }, // 참여자
-      { wch: 30 }, // 키워드
-    ];
-
-    const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+    const buffer = await workbook.xlsx.writeBuffer();
 
     return new NextResponse(buffer, {
       status: 200,

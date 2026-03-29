@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
@@ -8,6 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import type { BoardType } from "@/types/database";
+
+const TiptapEditor = dynamic(() => import("@/components/editor/tiptap-editor"), { ssr: false });
+
+const HTML_MARKER = "<!--LOVEPROGRESS:HTML-->";
 
 const BOARD_TYPE_LABELS: Record<string, string> = {
   notice: "공지사항",
@@ -54,7 +59,8 @@ function WritePageContent() {
         }
         const data = await res.json();
         setTitle(data.post.title);
-        setContent(data.post.content);
+        const raw = data.post.content as string;
+        setContent(raw.startsWith(HTML_MARKER) ? raw.slice(HTML_MARKER.length) : raw);
         setBoardType(data.post.board_type);
       } catch {
         setError("게시글을 불러오는데 실패했습니다.");
@@ -74,9 +80,10 @@ function WritePageContent() {
     try {
       const url = editId ? `/api/boards/${editId}` : "/api/boards";
       const method = editId ? "PUT" : "POST";
+      const htmlContent = HTML_MARKER + content;
       const body = editId
-        ? { title, content }
-        : { boardType, title, content };
+        ? { title, content: htmlContent }
+        : { boardType, title, content: htmlContent };
 
       const res = await fetch(url, {
         method,
@@ -164,16 +171,11 @@ function WritePageContent() {
 
         {/* Content */}
         <div className="space-y-2">
-          <Label htmlFor="content">내용</Label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="내용을 입력하세요"
-            maxLength={10000}
-            required
-            rows={15}
-            className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-y min-h-[200px]"
+          <Label>내용</Label>
+          <TiptapEditor
+            content={content}
+            onChange={setContent}
+            placeholder="내용을 입력하세요..."
           />
         </div>
 
