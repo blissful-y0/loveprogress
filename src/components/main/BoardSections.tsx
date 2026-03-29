@@ -48,7 +48,6 @@ export default async function BoardSections() {
           {/* Header */}
           <div className="flex items-end justify-between mb-4">
             <div>
-              <p className="text-[11px] font-bold text-primary tracking-[0.18em] uppercase mb-1">깨달음의 나무 정원</p>
               <h2 className="text-[20px] font-bold text-[#1a1a1a] leading-none">공지사항</h2>
             </div>
             <Link
@@ -60,7 +59,7 @@ export default async function BoardSections() {
           </div>
 
           {/* Top border */}
-          <div className="h-[1.5px] bg-[#e0f0ea] mb-0" />
+          <div className="h-[1.5px] bg-[#E0E0E0] mb-0" />
 
           {/* List */}
           <ul className="flex-1">
@@ -77,7 +76,7 @@ export default async function BoardSections() {
                     i < noticeList.length - 1 ? "border-b border-[#f0f0f0]" : ""
                   }`}
                 >
-                  <span className="w-[5px] h-[5px] rounded-full bg-primary/40 shrink-0" />
+                  <span className="w-[5px] h-[5px] rounded-full bg-[#ccc] shrink-0" />
                   <span className="flex-1 text-[14px] text-[#333] truncate group-hover:text-primary transition-colors">
                     {notice.title}
                   </span>
@@ -95,7 +94,7 @@ export default async function BoardSections() {
           </ul>
 
           {/* Bottom border */}
-          <div className="h-[1.5px] bg-[#e0f0ea] mt-auto" />
+          <div className="h-[1.5px] bg-[#E0E0E0] mt-auto" />
         </div>
 
         {/* ── Academic Info ── */}
@@ -103,7 +102,6 @@ export default async function BoardSections() {
           {/* Header */}
           <div className="flex items-end justify-between mb-4">
             <div>
-              <p className="text-[11px] font-bold text-primary tracking-[0.18em] uppercase mb-1">깨달음의 나무 정원</p>
               <h2 className="text-[20px] font-bold text-[#1a1a1a] leading-none">학사 안내</h2>
             </div>
             <Link
@@ -115,7 +113,7 @@ export default async function BoardSections() {
           </div>
 
           {/* Top border */}
-          <div className="h-[1.5px] bg-[#e0f0ea]" />
+          <div className="h-[1.5px] bg-[#E0E0E0]" />
 
           {/* Featured event */}
           <div className="flex-1 pt-4">
@@ -143,8 +141,7 @@ export default async function BoardSections() {
                       {formatDate(featuredEvent.created_at)}
                     </p>
                     <p className="text-[13px] text-[#777] leading-relaxed line-clamp-3 break-all">
-                      {featuredEvent.content.replace(/\s+/g, " ").trim().slice(0, 120)}
-                      {featuredEvent.content.length > 120 ? "..." : ""}
+                      &nbsp;
                     </p>
                   </div>
                 </div>
@@ -157,7 +154,7 @@ export default async function BoardSections() {
           </div>
 
           {/* Bottom border */}
-          <div className="h-[1.5px] bg-[#e0f0ea] mt-4" />
+          <div className="h-[1.5px] bg-[#E0E0E0] mt-4" />
         </div>
 
       </div>

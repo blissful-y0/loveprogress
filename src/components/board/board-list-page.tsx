@@ -86,7 +86,7 @@ export default function BoardListPage({
       )}
 
       {/* Table Header - Desktop */}
-      <div className="hidden md:grid md:grid-cols-[60px_1fr_100px_120px] items-center py-3 text-[12px] font-bold text-primary tracking-wide border-y border-[#e0f0ea] bg-[#f7fbf9]">
+      <div className="hidden md:grid md:grid-cols-[60px_1fr_100px_120px] items-center py-3 text-[12px] font-bold text-[#505050] tracking-wide border-y border-[#E0E0E0] bg-[#F0F0F0]">
         <span className="text-center">번호</span>
         <span className="pl-4">제목</span>
         <span className="text-center">글쓴이</span>
@@ -94,7 +94,7 @@ export default function BoardListPage({
       </div>
 
       {/* Mobile table label */}
-      <div className="md:hidden border-t border-[#e0f0ea]" />
+      <div className="md:hidden border-t border-[#E0E0E0]" />
 
       {/* Pinned Posts */}
       {pinnedPosts.map((pinnedPost) => (

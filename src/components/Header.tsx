@@ -160,7 +160,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-border-light">
       {/* Desktop Header */}
       <div className="hidden lg:flex mx-auto max-w-[1280px] items-center justify-between h-20 px-8">
-        <Link href="/" className="shrink-0 transition-opacity hover:opacity-80">
+        <Link href="/" className="shrink-0 transition-opacity hover:opacity-80 mt-1">
           <img
             src="/img/main/logo.png"
             alt="깨달음의 나무 정원"
@@ -177,14 +177,14 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative px-4 pb-[15px] pt-5 text-[15px] font-bold transition-colors hover:text-text-dark ${
+                className={`group relative px-4 pb-[15px] pt-5 text-[15px] font-bold transition-colors hover:text-text-dark ${
                   active ? "text-text-dark" : "text-text-muted"
                 }`}
               >
                 {item.label}
                 <span
                   className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[3px] bg-text-dark rounded-full transition-all duration-200 ${
-                    active ? "w-5/6 opacity-100" : "w-0 opacity-0"
+                    active ? "w-5/6 opacity-100" : "w-0 opacity-0 group-hover:w-5/6 group-hover:opacity-100"
                   }`}
                 />
               </Link>
