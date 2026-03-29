@@ -60,7 +60,7 @@ export default function MiddleBanners() {
           {ICON_CARDS.map((card) => (
             <div key={card.id} className="flex flex-col items-center gap-1">
               <button
-                className="group flex items-center justify-center aspect-square w-full bg-bg-light rounded-[10px] hover:brightness-95 transition-all duration-200 cursor-pointer"
+                className="group flex items-center justify-center w-[72px] h-[72px] bg-bg-light rounded-[10px] hover:brightness-95 transition-all duration-200 cursor-pointer"
               >
                 <div className="w-[32px] h-[32px] transition-transform duration-200 group-hover:scale-105">
                   <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
@@ -112,7 +112,7 @@ export default function MiddleBanners() {
                 <button
                   className="group flex items-center justify-center w-[100px] h-[100px] bg-bg-light rounded-[15px] hover:brightness-95 transition-all duration-200 cursor-pointer"
                 >
-                  <div className="w-[52px] h-[52px] transition-transform duration-200 group-hover:scale-105">
+                  <div style={{ width: card.desktopSize, height: card.desktopSize }} className="transition-transform duration-200 group-hover:scale-105">
                     <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
                   </div>
                 </button>

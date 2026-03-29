@@ -27,7 +27,7 @@ export default async function AboutPage() {
         ]),
         allowedAttributes: {
           ...sanitizeHtml.defaults.allowedAttributes,
-          "*": ["class", "style", "id"],
+          "*": ["class", "id"],
           a: ["href", "name", "target", "rel"],
           img: ["src", "alt", "width", "height"],
         },

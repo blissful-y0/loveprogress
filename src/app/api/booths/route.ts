@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     });
 
     if (error || !booths) {
-      return NextResponse.json({ error }, { status: 500 });
+      return NextResponse.json({ error: "부스 목록을 불러올 수 없습니다." }, { status: 500 });
     }
 
     let result: BoothWithDetails[] = booths;

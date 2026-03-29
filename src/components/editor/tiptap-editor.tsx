@@ -26,12 +26,14 @@ import {
   SeparatorHorizontalIcon,
   Undo2Icon,
   Redo2Icon,
+  UploadIcon,
 } from "lucide-react";
 
 interface TiptapEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  uploadEndpoint?: string;
 }
 
 function ToolbarButton({
@@ -68,8 +70,9 @@ function ToolbarDivider() {
   return <div className="w-px h-5 bg-[#e0e0e0] mx-0.5" />;
 }
 
-export default function TiptapEditor({ content, onChange, placeholder = "내용을 입력하세요..." }: TiptapEditorProps) {
+export default function TiptapEditor({ content, onChange, placeholder = "내용을 입력하세요...", uploadEndpoint }: TiptapEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
@@ -100,11 +103,36 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
 
   if (!editor) return null;
 
-  const addImage = () => {
+  const addImageByUrl = () => {
     const url = window.prompt("이미지 URL을 입력하세요");
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
+  };
+
+  const addImageByUpload = () => {
+    if (!uploadEndpoint) { addImageByUrl(); return; }
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/jpeg,image/png,image/webp,image/gif";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await fetch(uploadEndpoint, { method: "POST", body: formData });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          editor.chain().focus().setImage({ src: data.url }).run();
+        } else {
+          alert(data.error ?? "이미지 업로드에 실패했습니다.");
+        }
+      } catch {
+        alert("이미지 업로드에 실패했습니다.");
+      }
+    };
+    input.click();
   };
 
   const addLink = () => {
@@ -190,9 +218,14 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
         <ToolbarButton onClick={addLink} active={editor.isActive("link")} title="링크">
           <LinkIcon className={iconSize} />
         </ToolbarButton>
-        <ToolbarButton onClick={addImage} title="이미지">
+        <ToolbarButton onClick={addImageByUrl} title="이미지 URL">
           <ImageIcon className={iconSize} />
         </ToolbarButton>
+        {uploadEndpoint && (
+          <ToolbarButton onClick={addImageByUpload} title="이미지 업로드">
+            <UploadIcon className={iconSize} />
+          </ToolbarButton>
+        )}
       </div>
 
       {/* Editor */}

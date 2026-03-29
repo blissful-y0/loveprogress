@@ -4,12 +4,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+import sanitizeHtml from "sanitize-html";
 import CommentSection from "@/components/board/comment-section";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/useUser";
 import { formatDate } from "@/lib/format-date";
 import type { BoardCommentRow, BoardPostRow } from "@/types/database";
+
+const HTML_MARKER = "<!--LOVEPROGRESS:HTML-->";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -170,9 +173,28 @@ export default function BoothBoardDetailPage({
       <Separator className="mt-4 mb-0 bg-[#e5e5e5]" />
 
       {/* Content */}
-      <div className="py-8 min-h-[240px] text-[#505050] text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-        {post.content}
-      </div>
+      {post.content.startsWith(HTML_MARKER) ? (
+        <div
+          className="prose py-8 min-h-[240px] overflow-x-auto max-w-none"
+          dangerouslySetInnerHTML={{
+            __html: sanitizeHtml(post.content.slice(HTML_MARKER.length), {
+              allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+                "img", "figure", "figcaption", "h1", "h2", "h3", "h4", "h5", "h6",
+              ]),
+              allowedAttributes: {
+                ...sanitizeHtml.defaults.allowedAttributes,
+                "*": ["class", "id"],
+                a: ["href", "name", "target", "rel"],
+                img: ["src", "alt", "width", "height"],
+              },
+            }),
+          }}
+        />
+      ) : (
+        <div className="py-8 min-h-[240px] text-[#505050] text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+          {post.content}
+        </div>
+      )}
 
       <Separator className="bg-[#e5e5e5]" />
 

@@ -3,6 +3,7 @@ import type { QnaPostPublic } from "@/types/database";
 export interface QnaPost extends QnaPostPublic {
   answer: string | null;
   hasAnswer: boolean;
+  isOwner?: boolean;
 }
 
 export interface SecretQnaPayload {

@@ -1,6 +1,10 @@
 import { QnaList } from "./_components/qna-list";
 import { PageHeader } from "@/components/page-header";
 
+export const metadata = {
+  title: "나무광장 | 파이낙사 온리전 :: 사랑의 진도",
+};
+
 export default function QnaPage() {
   return (
     <div className="max-w-[820px] mx-auto px-4 md:px-6 py-10 space-y-6">

@@ -71,9 +71,10 @@ export function QnaCard({ item, index }: QnaCardProps) {
     }
   };
 
-  const contentVisible = !item.is_secret || secretPayload !== null;
-  const displayContent = item.is_secret ? secretPayload?.content ?? "" : item.content;
-  const displayAnswer = item.is_secret ? secretPayload?.answer ?? null : item.answer ?? null;
+  const isOwnerOrPublic = !item.is_secret || item.isOwner;
+  const contentVisible = isOwnerOrPublic || secretPayload !== null;
+  const displayContent = contentVisible ? (item.content || secretPayload?.content || "") : "";
+  const displayAnswer = contentVisible ? (item.answer ?? secretPayload?.answer ?? null) : null;
 
   return (
     <div className="rounded-[18px] overflow-hidden border border-[#e0f0ea] shadow-sm">
@@ -127,15 +128,15 @@ export function QnaCard({ item, index }: QnaCardProps) {
       <div className="bg-[#f5fbf8] border-t-[1.5px] border-[#dff0e9] px-5 py-3 flex items-start gap-2.5">
         <span className="text-[11px] font-bold text-primary tracking-wide w-7 text-right shrink-0 mt-0.5">문의</span>
         <div className="w-[1.5px] self-stretch bg-[#cce9e0] rounded shrink-0 mx-0.5" />
-        {item.is_secret && !secretPayload ? (
+        {item.is_secret && !contentVisible ? (
           <span className="text-[14px] text-[#bbb] italic">비밀번호를 입력하면 내용을 볼 수 있습니다</span>
         ) : (
           <p className="text-[14px] text-[#505050] leading-relaxed whitespace-pre-wrap">{displayContent}</p>
         )}
       </div>
 
-      {/* ── Secret password input ── */}
-      {item.is_secret && !secretPayload && (
+      {/* ── Secret password input (비로그인 작성 글만) ── */}
+      {item.is_secret && !contentVisible && (
         <div className="bg-white border-t border-[#f0f0f0] px-5 py-3 flex flex-wrap items-center gap-2">
           <input
             type="password"

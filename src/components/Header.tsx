@@ -163,7 +163,7 @@ export default function Header() {
         <Link href="/" className="shrink-0 transition-opacity hover:opacity-80 mt-1">
           <img
             src="/img/main/logo.png"
-            alt="깨달음의 나무 정원"
+            alt="파이낙사 온리전"
             width={160}
             height={36}
             className="h-8 w-auto"
@@ -224,7 +224,7 @@ export default function Header() {
           >
             <img
               src="/img/main/logo.png"
-              alt="깨달음의 나무 정원"
+              alt="파이낙사 온리전"
               width={140}
               height={32}
               className="h-7 w-auto"

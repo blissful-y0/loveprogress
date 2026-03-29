@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -9,6 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/useUser";
+
+const TiptapEditor = dynamic(() => import("@/components/editor/tiptap-editor"), { ssr: false });
+
+const HTML_MARKER = "<!--LOVEPROGRESS:HTML-->";
 
 export default function BoothBoardWritePage() {
   const router = useRouter();
@@ -28,14 +33,8 @@ export default function BoothBoardWritePage() {
       e.preventDefault();
       if (submitting) return;
 
-      if (!title.trim()) {
-        setError("제목을 입력해주세요.");
-        return;
-      }
-      if (!content.trim()) {
-        setError("내용을 입력해주세요.");
-        return;
-      }
+      if (!title.trim()) { setError("제목을 입력해주세요."); return; }
+      if (!content.trim() || content === "<p></p>") { setError("내용을 입력해주세요."); return; }
 
       setSubmitting(true);
       setError(null);
@@ -46,18 +45,13 @@ export default function BoothBoardWritePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title: title.trim(),
-            content: content.trim(),
+            content: HTML_MARKER + content,
             isSecret,
           }),
         });
 
         const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error ?? "게시글 작성에 실패했습니다.");
-          return;
-        }
-
+        if (!res.ok) { setError(data.error ?? "게시글 작성에 실패했습니다."); return; }
         router.push("/booth-board");
       } catch {
         setError("게시글 작성에 실패했습니다.");
@@ -81,11 +75,7 @@ export default function BoothBoardWritePage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <h1 className="text-2xl font-bold text-[#212121]">접근 제한</h1>
         <p className="text-[#909090]">부스어 인증이 필요합니다.</p>
-        <Button
-          variant="outline"
-          className="border-[#e5e5e5] text-[#505050]"
-          onClick={() => router.push("/booth-board")}
-        >
+        <Button variant="outline" className="border-[#e5e5e5] text-[#505050]" onClick={() => router.push("/booth-board")}>
           목록으로
         </Button>
       </div>
@@ -94,75 +84,30 @@ export default function BoothBoardWritePage() {
 
   return (
     <div className="mx-auto w-full max-w-[1280px] px-6 lg:px-8 py-10">
-      <h1 className="text-2xl font-bold text-[#212121] md:text-3xl">
-        글쓰기
-      </h1>
+      <h1 className="text-2xl font-bold text-[#212121] md:text-3xl">글쓰기</h1>
       <Separator className="mt-4 mb-6 bg-[#212121]" />
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-[#212121]">
-            제목
-          </Label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="제목을 입력해주세요"
-            maxLength={200}
-            className="h-10"
-          />
+          <Label htmlFor="title" className="text-[#212121]">제목</Label>
+          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="제목을 입력해주세요" maxLength={200} className="h-10" />
         </div>
 
-        {/* Content */}
         <div className="space-y-2">
-          <Label htmlFor="content" className="text-[#212121]">
-            내용
-          </Label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="내용을 입력해주세요"
-            maxLength={10000}
-            rows={12}
-            className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-[#212121] placeholder:text-[#909090] outline-none focus:border-[#34aa8f] resize-vertical min-h-[200px]"
-          />
+          <Label className="text-[#212121]">내용</Label>
+          <TiptapEditor content={content} onChange={setContent} placeholder="내용을 입력하세요..." uploadEndpoint="/api/booth-board/upload" />
         </div>
 
-        {/* Secret checkbox */}
         <div className="flex items-center gap-2">
-          <Checkbox
-            id="isSecret"
-            checked={isSecret}
-            onCheckedChange={(checked) => setIsSecret(checked === true)}
-          />
-          <Label htmlFor="isSecret" className="text-sm text-[#505050] cursor-pointer">
-            비밀글로 설정
-          </Label>
+          <Checkbox id="isSecret" checked={isSecret} onCheckedChange={(checked) => setIsSecret(checked === true)} />
+          <Label htmlFor="isSecret" className="text-sm text-[#505050] cursor-pointer">비밀글로 설정</Label>
         </div>
 
-        {/* Error */}
-        {error && (
-          <p className="text-sm text-red-500">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-500">{error}</p>}
 
-        {/* Actions */}
         <div className="flex items-center justify-center gap-3 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            className="border-[#e5e5e5] text-[#505050] hover:bg-[#fafafa]"
-            onClick={() => router.push("/booth-board")}
-          >
-            취소
-          </Button>
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f] disabled:opacity-50"
-          >
+          <Button type="button" variant="outline" className="border-[#e5e5e5] text-[#505050] hover:bg-[#fafafa]" onClick={() => router.push("/booth-board")}>취소</Button>
+          <Button type="submit" disabled={submitting} className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f] disabled:opacity-50">
             {submitting ? "작성 중..." : "작성하기"}
           </Button>
         </div>

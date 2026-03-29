@@ -23,8 +23,9 @@ export async function GET(request: Request) {
   );
 
   if (search) {
+    const safe = search.replace(/[%_\\]/g, "\\$&");
     query = query.or(
-      `nickname.ilike.%${search}%,email.ilike.%${search}%`,
+      `nickname.ilike.%${safe}%,email.ilike.%${safe}%`,
     );
   }
 

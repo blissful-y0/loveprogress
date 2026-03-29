@@ -20,7 +20,7 @@ interface BoardListPageProps {
   totalPages: number;
   itemsPerPage: number;
   isAdmin: boolean;
-  pageHeader?: { label: string; title: string; subtitle: string };
+  pageHeader?: { label?: string; title: string; subtitle: string };
 }
 
 export default function BoardListPage({
