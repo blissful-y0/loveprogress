@@ -112,7 +112,7 @@ export default function MiddleBanners() {
                 <button
                   className="group flex items-center justify-center w-[100px] h-[100px] bg-bg-light rounded-[15px] hover:brightness-95 transition-all duration-200 cursor-pointer"
                 >
-                  <div style={{ width: card.desktopSize, height: card.desktopSize }} className="transition-transform duration-200 group-hover:scale-105">
+                  <div className="w-[52px] h-[52px] transition-transform duration-200 group-hover:scale-105">
                     <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
                   </div>
                 </button>
