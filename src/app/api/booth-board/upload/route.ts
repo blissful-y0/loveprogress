@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 
 import { isErrorResponse, requireRole } from "@/lib/auth-guard";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { rateLimit } from "@/lib/rate-limit";
 
 const BOOTH_ROLES = ["booth_member", "admin"] as const;
 
@@ -16,6 +17,9 @@ const MIME_TO_EXT: Record<string, string> = {
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request: Request) {
+  const rateLimitResponse = await rateLimit(request, "booth-board-upload", { maxRequests: 20, windowMs: 60_000 });
+  if (rateLimitResponse) return rateLimitResponse;
+
   const auth = await requireRole(BOOTH_ROLES);
   if (isErrorResponse(auth)) return auth;
 

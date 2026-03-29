@@ -82,7 +82,7 @@ export async function GET(request: Request) {
       )
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1)) as {
-      data: (QnaPostPublic & { user_id?: string | null })[] | null;
+      data: QnaPostPublic[] | null;
       error: unknown;
     };
 

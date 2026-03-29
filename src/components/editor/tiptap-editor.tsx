@@ -105,8 +105,16 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
 
   const addImageByUrl = () => {
     const url = window.prompt("이미지 URL을 입력하세요");
-    if (url) {
+    if (!url) return;
+    try {
+      const parsed = new URL(url);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        alert("http 또는 https URL만 입력 가능합니다.");
+        return;
+      }
       editor.chain().focus().setImage({ src: url }).run();
+    } catch {
+      alert("올바른 URL을 입력해주세요.");
     }
   };
 
@@ -143,7 +151,16 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    try {
+      const parsed = new URL(url);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        alert("http 또는 https URL만 입력 가능합니다.");
+        return;
+      }
+      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    } catch {
+      alert("올바른 URL을 입력해주세요.");
+    }
   };
 
   const iconSize = "size-4";

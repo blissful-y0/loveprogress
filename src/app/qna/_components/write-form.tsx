@@ -41,7 +41,7 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           writerName: name.trim(),
-          password,
+          password: isLoggedIn ? undefined : password,
           isSecret,
           imageKey: selectedCharKey,
           content: content.trim(),
