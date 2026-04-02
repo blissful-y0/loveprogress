@@ -26,20 +26,7 @@ export async function POST(request: Request) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // users 테이블에서 삭제
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: profileError } = await (supabaseAdmin.from("users") as any)
-      .delete()
-      .eq("id", user.id);
-
-    if (profileError) {
-      return NextResponse.json(
-        { error: "회원 탈퇴에 실패했습니다." },
-        { status: 500 },
-      );
-    }
-
-    // Supabase Auth에서 사용자 삭제
+    // Auth 먼저 삭제 (실패 시 profile은 유지되어 재시도 가능)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
       user.id,
     );
@@ -50,6 +37,12 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    // Auth 삭제 성공 후 users 테이블 정리
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabaseAdmin.from("users") as any)
+      .delete()
+      .eq("id", user.id);
 
     return NextResponse.json({ success: true });
   } catch {
