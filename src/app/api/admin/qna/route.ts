@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   // Admin: select all fields including content of secret posts
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: posts, error: postsError } = await (supabase.from("qna_posts") as any)
-    .select("id, writer_name, is_secret, image_key, content, created_at")
+    .select("id, writer_name, is_secret, image_key, content, is_hidden, created_at")
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -59,6 +59,7 @@ export async function GET(request: Request) {
     is_secret: boolean;
     image_key: string | null;
     content: string;
+    is_hidden: boolean;
     created_at: string;
   }[]).map((post) => ({
     ...post,

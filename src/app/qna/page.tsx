@@ -1,5 +1,5 @@
-import { QnaList } from "./_components/qna-list";
 import { PageHeader } from "@/components/page-header";
+import { QnaList } from "./_components/qna-list";
 
 export const metadata = {
   title: "나무광장 | 파이낙사 온리전 :: 사랑의 진도",

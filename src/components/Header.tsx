@@ -3,10 +3,18 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import {
+  ShieldCheckIcon,
+  PenLineIcon,
+  LogOutIcon,
+  UserXIcon,
+} from "lucide-react";
 
 import { useUser } from "@/hooks/useUser";
 import LoginModal from "@/components/auth/login-modal";
+import NicknameChangeModal from "@/components/auth/nickname-change-modal";
+import WithdrawModal from "@/components/auth/withdraw-modal";
 
 interface NavItem {
   readonly label: string;
@@ -26,6 +34,8 @@ interface MenuItem {
   readonly label: string;
   readonly href?: string;
   readonly onClick?: () => void;
+  readonly icon?: React.ReactNode;
+  readonly variant?: "default" | "danger";
 }
 
 function isActiveRoute(pathname: string, href: string): boolean {
@@ -35,12 +45,27 @@ function isActiveRoute(pathname: string, href: string): boolean {
 
 export default function Header() {
   const pathname = usePathname();
-  const { user, loading, signOut } = useUser();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user, loading, signOut, refetch } = useUser();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const desktopLoginRef = useRef<HTMLDivElement>(null);
   const mobileLoginRef = useRef<HTMLDivElement>(null);
   const mobileNavRef = useRef<HTMLElement>(null);
+
+  // 소셜 로그인 최초 가입 시 닉네임 설정 모달 자동 오픈
+  useEffect(() => {
+    if (user && searchParams.get("nickname_setup") === "1") {
+      setIsNicknameModalOpen(true);
+      // URL에서 쿼리 파라미터 제거
+      const url = new URL(window.location.href);
+      url.searchParams.delete("nickname_setup");
+      router.replace(url.pathname + url.search, { scroll: false });
+    }
+  }, [user, searchParams, router]);
 
   const closeLogin = useCallback(() => setIsLoginOpen(false), []);
 
@@ -50,14 +75,26 @@ export default function Header() {
     window.location.href = "/";
   }, [signOut, closeLogin]);
 
+  const handleOpenNicknameModal = useCallback(() => {
+    closeLogin();
+    setIsNicknameModalOpen(true);
+  }, [closeLogin]);
+
+  const handleOpenWithdrawModal = useCallback(() => {
+    closeLogin();
+    setIsWithdrawModalOpen(true);
+  }, [closeLogin]);
+
   const userMenuItems: readonly MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [];
     if (user?.role === "admin") {
-      items.push({ label: "관리자", href: "/admin" });
+      items.push({ label: "관리자", href: "/admin", icon: <ShieldCheckIcon className="size-3.5" /> });
     }
-    items.push({ label: "로그아웃", onClick: handleSignOut });
+    items.push({ label: "닉네임 변경", onClick: handleOpenNicknameModal, icon: <PenLineIcon className="size-3.5" /> });
+    items.push({ label: "회원 탈퇴", onClick: handleOpenWithdrawModal, icon: <UserXIcon className="size-3.5" />, variant: "danger" });
+    items.push({ label: "로그아웃", onClick: handleSignOut, icon: <LogOutIcon className="size-3.5" /> });
     return items;
-  }, [user?.role, handleSignOut]);
+  }, [user?.role, handleSignOut, handleOpenNicknameModal, handleOpenWithdrawModal]);
 
   const menuItems = user ? userMenuItems : [];
 
@@ -85,73 +122,72 @@ export default function Header() {
     activeLink?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }, [pathname]);
 
-  const menuHeight = menuItems.length * 45;
+  const renderDropdownItem = (item: MenuItem, i: number, compact?: boolean) => {
+    const isDanger = item.variant === "danger";
+    const baseClass = compact
+      ? `flex w-full items-center gap-2 px-3.5 py-2.5 text-[13px] transition-colors cursor-pointer ${
+          i > 0 ? "border-t border-gray-100" : ""
+        }`
+      : `flex w-full items-center gap-2.5 px-4 py-3 text-[14px] transition-colors cursor-pointer ${
+          i > 0 ? "border-t border-gray-50" : ""
+        }`;
+    const colorClass = isDanger
+      ? "text-red-400 hover:text-red-500 hover:bg-red-50/60"
+      : "text-[#606060] hover:text-[#333] hover:bg-[#f5fbf8]";
+
+    const content = (
+      <>
+        <span className={isDanger ? "text-red-300" : "text-[#aaa]"}>{item.icon}</span>
+        <span className="font-medium">{item.label}</span>
+      </>
+    );
+
+    if (item.href) {
+      return (
+        <Link key={item.label} href={item.href} className={`${baseClass} ${colorClass}`}>
+          {content}
+        </Link>
+      );
+    }
+    return (
+      <button key={item.label} type="button" onClick={item.onClick} className={`${baseClass} ${colorClass}`}>
+        {content}
+      </button>
+    );
+  };
 
   const renderDesktopDropdown = () => {
-    if (!isLoginOpen) return null;
+    if (!isLoginOpen || !user) return null;
 
     return (
-      <div
-        className="absolute right-0 top-full mt-1.5 w-[100px] rounded-lg border border-text-light bg-white shadow-lg shadow-black/5 overflow-hidden"
-        style={{ height: `${menuHeight}px` }}
-      >
-        {menuItems.map((item) =>
-          item.href ? (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors"
-            >
-              <span className="rounded-[5px] px-2 py-1 hover:bg-bg-light">
-                {item.label}
-              </span>
-            </Link>
-          ) : (
-            <button
-              key={item.label}
-              type="button"
-              onClick={item.onClick}
-              className="flex w-full items-center justify-center h-[45px] text-[16px] font-medium text-text-light hover:bg-bg-light transition-colors cursor-pointer"
-            >
-              <span className="rounded-[5px] px-2 py-1 hover:bg-bg-light">
-                {item.label}
-              </span>
-            </button>
-          ),
-        )}
+      <div className="absolute right-0 top-full mt-2 w-[180px] rounded-xl border border-gray-200 bg-white shadow-xl shadow-black/8 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 z-50">
+        {/* User info header */}
+        <div className="px-4 py-3 bg-[#f7fbf9] border-b border-[#e0f0ea]">
+          <p className="text-[13px] font-semibold text-[#333] truncate">{user.nickname}</p>
+          <p className="text-[11px] text-[#999] mt-0.5 truncate">{user.authUser.email ?? ""}</p>
+        </div>
+        {/* Menu items */}
+        <div className="py-1">
+          {menuItems.map((item, i) => renderDropdownItem(item, i))}
+        </div>
       </div>
     );
   };
 
   const renderMobileDropdown = () => {
-    if (!isLoginOpen) return null;
+    if (!isLoginOpen || !user) return null;
 
     return (
-      <div className="absolute right-0 top-full mt-1.5 w-[120px] rounded-xl border border-gray-200 bg-white shadow-lg shadow-black/5 overflow-hidden z-50">
-        {menuItems.map((item, i) =>
-          item.href ? (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`block px-4 py-2.5 text-[13px] text-text-sub hover:bg-gray-50 transition-colors ${
-                i > 0 ? "border-t border-gray-100" : ""
-              }`}
-            >
-              {item.label}
-            </Link>
-          ) : (
-            <button
-              key={item.label}
-              type="button"
-              onClick={item.onClick}
-              className={`block w-full px-4 py-2.5 text-left text-[13px] text-text-sub hover:bg-gray-50 transition-colors cursor-pointer ${
-                i > 0 ? "border-t border-gray-100" : ""
-              }`}
-            >
-              {item.label}
-            </button>
-          ),
-        )}
+      <div className="absolute right-0 top-full mt-1.5 w-[170px] rounded-xl border border-gray-200 bg-white shadow-xl shadow-black/8 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 z-50">
+        {/* User info header */}
+        <div className="px-3.5 py-2.5 bg-[#f7fbf9] border-b border-[#e0f0ea]">
+          <p className="text-[12px] font-semibold text-[#333] truncate">{user.nickname}</p>
+          <p className="text-[10px] text-[#999] mt-0.5 truncate">{user.authUser.email ?? ""}</p>
+        </div>
+        {/* Menu items */}
+        <div className="py-0.5">
+          {menuItems.map((item, i) => renderDropdownItem(item, i, true))}
+        </div>
       </div>
     );
   };
@@ -278,6 +314,20 @@ export default function Header() {
         </nav>
       </div>
       <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
+      {user && (
+        <>
+          <NicknameChangeModal
+            open={isNicknameModalOpen}
+            onOpenChange={setIsNicknameModalOpen}
+            currentNickname={user.nickname}
+            onNicknameChanged={refetch}
+          />
+          <WithdrawModal
+            open={isWithdrawModalOpen}
+            onOpenChange={setIsWithdrawModalOpen}
+          />
+        </>
+      )}
     </header>
   );
 }

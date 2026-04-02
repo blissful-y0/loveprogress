@@ -6,7 +6,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const rawNext = searchParams.get("next") ?? "/";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
 
   if (!code) {
     return NextResponse.redirect(`${origin}/auth/login?error=oauth`);
@@ -48,6 +49,11 @@ export async function GET(request: Request) {
         phone_last4: null,
         role: "member",
       });
+
+      // 소셜 로그인 최초 가입 시 닉네임 설정 유도
+      const redirectUrl = new URL(next, origin);
+      redirectUrl.searchParams.set("nickname_setup", "1");
+      return NextResponse.redirect(redirectUrl.toString());
     }
   }
 

@@ -68,8 +68,8 @@ export default async function NoticesPage({ searchParams }: Props) {
       title="입학처 공지사항"
       basePath="/info/notices"
       pageHeader={{
-        title: "입학 · 교육",
-        subtitle: "입학 안내 및 교육 공지사항을 확인하세요.",
+        title: "입학처 공지",
+        subtitle: "신입생 및 재학생 대상의 공지사항을 안내합니다.",
       }}
       emptyMessage="등록된 공지사항이 없습니다."
       pinnedPosts={pinnedPosts ?? []}

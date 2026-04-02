@@ -69,6 +69,11 @@ export default function BoardDetailPage({
                 a: ["href", "name", "target", "rel"],
                 img: ["src", "alt", "width", "height"],
               },
+              allowedStyles: {
+                "*": {
+                  "text-align": [/^left$/, /^center$/, /^right$/, /^justify$/],
+                },
+              },
             }),
           }}
         />

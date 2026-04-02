@@ -68,8 +68,8 @@ export default async function EventsPage({ searchParams }: Props) {
       title="학내 행사 안내"
       basePath="/info/events"
       pageHeader={{
-        title: "학사 안내",
-        subtitle: "학내 행사 및 학사 일정을 안내드립니다.",
+        title: "교무처 공지",
+        subtitle: "학내 행사를 비롯한 교무 및 학사 일정을 안내합니다.",
       }}
       emptyMessage="등록된 행사 안내가 없습니다."
       pinnedPosts={pinnedPosts ?? []}

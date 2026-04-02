@@ -7,6 +7,7 @@ interface QnaAdminPost {
   id: string;
   writer_name: string;
   is_secret: boolean;
+  is_hidden: boolean;
   image_key: string | null;
   content: string;
   created_at: string;
@@ -33,6 +34,7 @@ function PostCard({ post, onAnswerSaved }: { post: QnaAdminPost; onAnswerSaved: 
   const [answerText, setAnswerText] = useState(post.answer ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [hiding, setHiding] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const character = getCharacterByKey(post.image_key ?? "");
 
@@ -85,14 +87,37 @@ function PostCard({ post, onAnswerSaved }: { post: QnaAdminPost; onAnswerSaved: 
     }
   };
 
+  const handleHide = async () => {
+    setHiding(true);
+    setStatus(null);
+    try {
+      const res = await fetch(`/api/admin/qna/${post.id}/hide`, { method: "PATCH" });
+      const data = await res.json() as { is_hidden?: boolean; error?: string };
+      if (!res.ok) {
+        setStatus({ type: "error", message: data.error ?? "숨김 처리에 실패했습니다." });
+        return;
+      }
+      const newHidden = data.is_hidden ?? !post.is_hidden;
+      setStatus({ type: "success", message: newHidden ? "숨김 처리되었습니다." : "숨김이 해제되었습니다." });
+      onAnswerSaved();
+    } catch {
+      setStatus({ type: "error", message: "잠시 후 다시 시도해주세요." });
+    } finally {
+      setHiding(false);
+    }
+  };
+
   return (
-    <div className="border border-[#e0f0ea] rounded-[14px] overflow-hidden">
+    <div className={`border border-[#e0f0ea] rounded-[14px] overflow-hidden ${post.is_hidden ? "opacity-50" : ""}`}>
       {/* Header */}
       <div className="bg-primary px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-bold text-white">{post.writer_name}</span>
           {post.is_secret && (
             <span className="text-[11px] text-white bg-black/15 px-2 py-0.5 rounded-full font-bold">비밀글</span>
+          )}
+          {post.is_hidden && (
+            <span className="text-[11px] text-white bg-red-500/50 px-2 py-0.5 rounded-full font-bold">숨김</span>
           )}
           {post.hasAnswer && (
             <span className="text-[11px] text-white bg-white/20 px-2 py-0.5 rounded-full font-bold">답변완료</span>
@@ -136,6 +161,18 @@ function PostCard({ post, onAnswerSaved }: { post: QnaAdminPost; onAnswerSaved: 
             )}
           </div>
           <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleHide}
+              disabled={hiding}
+              className={`text-[13px] border rounded-[8px] px-4 py-1.5 disabled:opacity-50 transition-colors ${
+                post.is_hidden
+                  ? "text-blue-500 border-blue-300 hover:border-blue-500"
+                  : "text-[#aaa] border-[#e0e0e0] hover:border-orange-300 hover:text-orange-500"
+              }`}
+            >
+              {hiding ? "처리 중..." : post.is_hidden ? "숨김 해제" : "숨김"}
+            </button>
             {post.hasAnswer && (
               <button
                 type="button"
@@ -168,7 +205,7 @@ export default function QnaManager() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [filter, setFilter] = useState<"all" | "answered" | "unanswered">("unanswered");
+  const [filter, setFilter] = useState<"all" | "answered" | "unanswered" | "hidden">("unanswered");
 
   const fetchPosts = useCallback(async (p: number) => {
     setLoading(true);
@@ -195,6 +232,7 @@ export default function QnaManager() {
   const filteredPosts = posts.filter((p) => {
     if (filter === "answered") return p.hasAnswer;
     if (filter === "unanswered") return !p.hasAnswer;
+    if (filter === "hidden") return p.is_hidden;
     return true;
   });
 
@@ -207,7 +245,7 @@ export default function QnaManager() {
           전체 {total}건 · 미답변 <span className="font-bold text-red-500">{unansweredCount}건</span>
         </p>
         <div className="flex gap-1.5">
-          {(["all", "unanswered", "answered"] as const).map((f) => (
+          {(["all", "unanswered", "answered", "hidden"] as const).map((f) => (
             <button
               key={f}
               type="button"
@@ -218,7 +256,7 @@ export default function QnaManager() {
                   : "border-[#e0e0e0] text-[#707070] hover:border-primary hover:text-primary"
               }`}
             >
-              {f === "all" ? "전체" : f === "unanswered" ? "미답변" : "답변완료"}
+              {f === "all" ? "전체" : f === "unanswered" ? "미답변" : f === "answered" ? "답변완료" : "숨김"}
             </button>
           ))}
         </div>
@@ -230,7 +268,7 @@ export default function QnaManager() {
         <div className="flex items-center justify-center py-16 text-text-muted">불러오는 중...</div>
       ) : filteredPosts.length === 0 ? (
         <div className="flex items-center justify-center py-16 text-text-muted text-sm">
-          {filter === "unanswered" ? "미답변 문의가 없습니다." : filter === "answered" ? "답변 완료된 문의가 없습니다." : "등록된 문의가 없습니다."}
+          {filter === "unanswered" ? "미답변 문의가 없습니다." : filter === "answered" ? "답변 완료된 문의가 없습니다." : filter === "hidden" ? "숨김 처리된 문의가 없습니다." : "등록된 문의가 없습니다."}
         </div>
       ) : (
         <div className="space-y-4">

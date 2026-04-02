@@ -15,6 +15,7 @@ import {
   LockIcon,
   PenLineIcon,
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -110,18 +111,21 @@ export default function BoothBoardPage() {
   return (
     <div className="mx-auto w-full max-w-[1280px] px-6 lg:px-8 py-10">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#212121] md:text-3xl">
-          부스어 전용 게시판
-        </h1>
+      <div className="mb-6">
+        <PageHeader
+          label="깨달음의 나무 정원"
+          title="부스어 전용 게시판"
+          subtitle="부스 참가자 전용 게시판입니다."
+        />
+      </div>
+      <div className="flex justify-end mb-3">
         <Link href="/booth-board/write">
-          <Button className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f]">
-            <PenLineIcon className="size-4 mr-1" />
+          <Button className="bg-primary text-white hover:bg-primary/90 text-[13px] h-8 px-3">
+            <PenLineIcon className="size-3.5 mr-1.5" />
             글쓰기
           </Button>
         </Link>
       </div>
-      <Separator className="mt-4 mb-0 bg-[#212121]" />
 
       {/* Error */}
       {error && (
