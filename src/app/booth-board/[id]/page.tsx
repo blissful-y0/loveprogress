@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import sanitizeHtml from "sanitize-html";
+import { wrapImagesWithLinks } from "@/lib/wrap-images-with-links";
 import CommentSection from "@/components/board/comment-section";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -177,17 +178,25 @@ export default function BoothBoardDetailPage({
         <div
           className="prose py-8 min-h-[240px] overflow-x-auto max-w-none"
           dangerouslySetInnerHTML={{
-            __html: sanitizeHtml(post.content.slice(HTML_MARKER.length), {
+            __html: wrapImagesWithLinks(sanitizeHtml(post.content.slice(HTML_MARKER.length), {
               allowedTags: sanitizeHtml.defaults.allowedTags.concat([
                 "img", "figure", "figcaption", "h1", "h2", "h3", "h4", "h5", "h6",
               ]),
               allowedAttributes: {
                 ...sanitizeHtml.defaults.allowedAttributes,
-                "*": ["class", "id"],
+                "*": ["class", "style", "id"],
                 a: ["href", "name", "target", "rel"],
                 img: ["src", "alt", "width", "height"],
               },
-            }),
+              allowedStyles: {
+                "*": {
+                  "text-align": [/^(left|center|right|justify)$/],
+                  "font-weight": [/^(bold|normal|[1-9]00)$/],
+                  "font-style": [/^(italic|normal)$/],
+                  "text-decoration": [/^(underline|line-through|none)$/],
+                },
+              },
+            })),
           }}
         />
       ) : (
