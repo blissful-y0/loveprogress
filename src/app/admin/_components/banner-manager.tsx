@@ -30,6 +30,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { BannerGroup, MainBannerRow } from "@/types/database";
+import { ImageUpload } from "./image-upload";
 
 const BANNER_GROUP_LABELS: Record<BannerGroup, string> = {
   top_carousel: "상단 캐러셀",
@@ -227,13 +228,12 @@ export default function BannerManager() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>이미지 URL</Label>
-                <Input
+                <Label>배너 이미지</Label>
+                <ImageUpload
                   value={form.image_key}
-                  onChange={(e) =>
-                    setForm({ ...form, image_key: e.target.value })
-                  }
-                  placeholder="/img/banners/example.png"
+                  onChange={(url) => setForm({ ...form, image_key: url })}
+                  folder="banners"
+                  placeholder="배너 이미지 선택"
                 />
               </div>
 
