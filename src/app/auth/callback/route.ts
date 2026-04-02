@@ -6,7 +6,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const rawNext = searchParams.get("next") ?? "/";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
 
   if (!code) {
     return NextResponse.redirect(`${origin}/auth/login?error=oauth`);
@@ -33,14 +34,25 @@ export async function GET(request: Request) {
       .maybeSingle();
 
     if (!existing) {
-      const nickname =
+      let nickname =
         (user.user_metadata?.full_name as string | undefined) ??
         (user.user_metadata?.user_name as string | undefined) ??
         user.email?.split("@")[0] ??
         "사용자";
 
+      // 닉네임 충돌 시 랜덤 접미사 추가
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabaseAdmin.from("users") as any).insert({
+      const { data: dupCheck } = await (supabaseAdmin.from("users") as any)
+        .select("id")
+        .eq("nickname", nickname)
+        .maybeSingle();
+
+      if (dupCheck) {
+        nickname = `${nickname}_${Math.random().toString(36).slice(2, 6)}`;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: insertError } = await (supabaseAdmin.from("users") as any).insert({
         id: user.id,
         nickname,
         email: user.email ?? "",
@@ -48,6 +60,18 @@ export async function GET(request: Request) {
         phone_last4: null,
         role: "member",
       });
+
+      if (insertError) {
+        // profile 생성 실패 시에도 로그인은 유지, 닉네임 설정 유도
+        const redirectUrl = new URL(next, origin);
+        redirectUrl.searchParams.set("nickname_setup", "1");
+        return NextResponse.redirect(redirectUrl.toString());
+      }
+
+      // 소셜 로그인 최초 가입 시 닉네임 설정 유도
+      const redirectUrl = new URL(next, origin);
+      redirectUrl.searchParams.set("nickname_setup", "1");
+      return NextResponse.redirect(redirectUrl.toString());
     }
   }
 

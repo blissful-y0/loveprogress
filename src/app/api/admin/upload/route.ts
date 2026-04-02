@@ -57,9 +57,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(storagePath);
-
-    return NextResponse.json({ url: urlData.publicUrl });
+    return NextResponse.json({ url: `/api/images/${storagePath}` });
   } catch {
     return NextResponse.json(
       { error: "이미지 업로드에 실패했습니다." },

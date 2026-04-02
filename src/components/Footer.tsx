@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 
-const TOP_BAR_TEXT = "파이낙사 온리전 – 사랑의 진도 2 –";
+const TOP_BAR_TEXT = "파이낙사 온리전 :: 사랑의 진도 2 ~9학년이지만 졸업유예하겠습니다!~";
 
 const DISCLAIMER_TEXT =
   "이 행사는 오직 2차 창작 교류를 위한 행사로, 비공식/비영리 행위임을 밝힙니다.";
@@ -65,7 +65,7 @@ export default function Footer() {
                 admin@phainaxa.com
               </Link>
             </p>
-            <p className="text-text-lighter">release on 2025. 04. 20.</p>
+            <p className="text-text-lighter">release on 2026</p>
           </div>
 
           <div className="mt-2 pt-2 border-t border-gray-200">

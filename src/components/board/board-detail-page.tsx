@@ -65,9 +65,17 @@ export default function BoardDetailPage({
               ]),
               allowedAttributes: {
                 ...sanitizeHtml.defaults.allowedAttributes,
-                "*": ["class", "id"],
+                "*": ["class", "style", "id"],
                 a: ["href", "name", "target", "rel"],
                 img: ["src", "alt", "width", "height"],
+              },
+              allowedStyles: {
+                "*": {
+                  "text-align": [/^(left|center|right|justify)$/],
+                  "font-weight": [/^(bold|normal|[1-9]00)$/],
+                  "font-style": [/^(italic|normal)$/],
+                  "text-decoration": [/^(underline|line-through|none)$/],
+                },
               },
             }),
           }}

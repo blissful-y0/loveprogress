@@ -59,8 +59,12 @@ function WritePageContent() {
         }
         const data = await res.json();
         setTitle(data.post.title);
-        const raw = data.post.content as string;
-        setContent(raw.startsWith(HTML_MARKER) ? raw.slice(HTML_MARKER.length) : raw);
+        const rawContent: string = data.post.content ?? "";
+        setContent(
+          rawContent.startsWith(HTML_MARKER)
+            ? rawContent.slice(HTML_MARKER.length)
+            : rawContent,
+        );
         setBoardType(data.post.board_type);
       } catch {
         setError("게시글을 불러오는데 실패했습니다.");
@@ -80,7 +84,7 @@ function WritePageContent() {
     try {
       const url = editId ? `/api/boards/${editId}` : "/api/boards";
       const method = editId ? "PUT" : "POST";
-      const htmlContent = HTML_MARKER + content;
+      const htmlContent = `${HTML_MARKER}${content}`;
       const body = editId
         ? { title, content: htmlContent }
         : { boardType, title, content: htmlContent };
@@ -107,7 +111,7 @@ function WritePageContent() {
     }
   }
 
-  if (loading || (!user && loading)) {
+  if (loading) {
     return (
       <div className="mx-auto w-full max-w-[1280px] px-6 lg:px-8 py-10">
         <div className="flex items-center justify-center py-20 text-[#909090] text-sm">
@@ -176,6 +180,7 @@ function WritePageContent() {
             content={content}
             onChange={setContent}
             placeholder="내용을 입력하세요..."
+            uploadEndpoint="/api/admin/upload"
           />
         </div>
 
@@ -196,7 +201,11 @@ function WritePageContent() {
           </Button>
           <Button
             type="submit"
-            disabled={submitting || !title.trim() || !content.trim()}
+            disabled={
+              submitting ||
+              !title.trim() ||
+              !content.replace(/<[^>]*>/g, "").trim()
+            }
             className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f] min-w-[100px]"
           >
             {submitting

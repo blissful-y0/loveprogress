@@ -52,9 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "이미지 업로드에 실패했습니다." }, { status: 500 });
     }
 
-    const { data: urlData } = supabase.storage.from("images").getPublicUrl(storagePath);
-
-    return NextResponse.json({ url: urlData.publicUrl });
+    return NextResponse.json({ url: `/api/images/${storagePath}` });
   } catch {
     return NextResponse.json({ error: "서버 오류가 발생했습니다." }, { status: 500 });
   }

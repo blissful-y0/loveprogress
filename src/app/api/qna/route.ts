@@ -61,7 +61,9 @@ export async function GET(request: Request) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { count, error: countError } = await (
       supabase.from("qna_posts") as any
-    ).select("*", { count: "exact", head: true });
+    )
+      .select("*", { count: "exact", head: true })
+      .eq("is_hidden", false);
 
     if (countError) {
       return NextResponse.json(
@@ -80,6 +82,7 @@ export async function GET(request: Request) {
       .select(
         "id, writer_name, is_secret, image_key, content, consent_to_privacy, created_at",
       )
+      .eq("is_hidden", false)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1)) as {
       data: QnaPostPublic[] | null;

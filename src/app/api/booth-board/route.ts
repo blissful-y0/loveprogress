@@ -63,7 +63,18 @@ export async function GET(request: Request) {
 
     const safePosts = (posts ?? []).map((post) => {
       if (post.is_secret && post.author_user_id !== auth.userId && auth.role !== "admin") {
-        return { ...post, title: "비밀글입니다.", content: "" };
+        return {
+          id: post.id,
+          board_type: post.board_type,
+          title: "비밀글입니다.",
+          content: "",
+          author_user_id: null,
+          author_display_name: "비공개",
+          is_pinned: post.is_pinned,
+          is_secret: true,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+        };
       }
       return post;
     });
