@@ -145,17 +145,11 @@ p {
 .prose a { color: #34aa8f; text-decoration: underline; }
 .prose img { max-width: 100%; border-radius: 8px; margin: 0.6em auto; display: block; cursor: pointer; }
 .prose [style*="text-align: left"] img,
-.prose [style*="text-align:left"] img,
-.prose img[style*="text-align: left"],
-.prose img[style*="text-align:left"] { margin-left: 0; margin-right: auto; }
+.prose [style*="text-align:left"] img { margin-left: 0; margin-right: auto; }
 .prose [style*="text-align: right"] img,
-.prose [style*="text-align:right"] img,
-.prose img[style*="text-align: right"],
-.prose img[style*="text-align:right"] { margin-left: auto; margin-right: 0; }
+.prose [style*="text-align:right"] img { margin-left: auto; margin-right: 0; }
 .prose [style*="text-align: center"] img,
-.prose [style*="text-align:center"] img,
-.prose img[style*="text-align: center"],
-.prose img[style*="text-align:center"] { margin-left: auto; margin-right: auto; }
+.prose [style*="text-align:center"] img { margin-left: auto; margin-right: auto; }
 .prose strong { font-weight: 700; }
 .prose em { font-style: italic; }
 .prose u { text-decoration: underline; }
