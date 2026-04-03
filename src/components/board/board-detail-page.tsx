@@ -1,6 +1,7 @@
 import sanitizeHtml from "sanitize-html";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
+import { wrapImagesWithLinks } from "@/lib/wrap-images-with-links";
 import type { BoardPostRow } from "@/types/database";
 
 const HTML_MARKER = "<!--LOVEPROGRESS:HTML-->";
@@ -58,7 +59,7 @@ export default function BoardDetailPage({
         <div
           className="prose py-8 min-h-[240px] overflow-x-auto max-w-none"
           dangerouslySetInnerHTML={{
-            __html: sanitizeHtml(post.content.slice(HTML_MARKER.length), {
+            __html: wrapImagesWithLinks(sanitizeHtml(post.content.slice(HTML_MARKER.length), {
               allowedTags: sanitizeHtml.defaults.allowedTags.concat([
                 "img", "figure", "figcaption", "details", "summary",
                 "h1", "h2", "h3", "h4", "h5", "h6",
@@ -77,7 +78,7 @@ export default function BoardDetailPage({
                   "text-decoration": [/^(underline|line-through|none)$/],
                 },
               },
-            }),
+            })),
           }}
         />
       ) : (

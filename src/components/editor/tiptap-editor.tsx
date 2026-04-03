@@ -86,7 +86,7 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
         HTMLAttributes: { class: "max-w-full rounded-lg" },
       }),
       TextAlign.configure({
-        types: ["heading", "paragraph"],
+        types: ["heading", "paragraph", "image"],
       }),
       Placeholder.configure({ placeholder }),
     ],
