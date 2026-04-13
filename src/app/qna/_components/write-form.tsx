@@ -77,31 +77,23 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
       <div className="bg-white px-5 py-5 flex gap-5 items-start">
         {/* Photo trigger (Popover) */}
         <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <div className="shrink-0">
-            <Popover.Trigger asChild>
-              <button
-                type="button"
-                className="w-[100px] h-[120px] rounded-[10px] overflow-hidden bg-[#fafafa] relative group focus:outline-none"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={selectedCharacter.src}
-                  alt={selectedCharacter.label}
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute inset-0 bg-primary/75 flex items-center justify-center text-white text-[13px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                  변경
-                </span>
-              </button>
-            </Popover.Trigger>
+          <Popover.Trigger asChild>
             <button
               type="button"
-              onClick={() => setPopoverOpen(true)}
-              className="mt-1.5 w-[100px] text-[11px] text-[#707070] bg-[#f5f5f5] border border-[#e0e0e0] rounded-md py-1 hover:bg-[#eee] transition-colors cursor-pointer"
+              className="shrink-0 w-[100px] h-[120px] rounded-[10px] overflow-hidden bg-[#fafafa] relative group focus:outline-none"
             >
-              계정 변경
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={selectedCharacter.src}
+                alt={selectedCharacter.label}
+                className="w-full h-full object-cover"
+              />
+              {/* 하단 오버레이 배지 */}
+              <span className="absolute bottom-0 inset-x-0 bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium py-1 text-center group-hover:bg-primary/80 transition-colors">
+                계정 변경
+              </span>
             </button>
-          </div>
+          </Popover.Trigger>
 
           <Popover.Portal>
             <Popover.Content
