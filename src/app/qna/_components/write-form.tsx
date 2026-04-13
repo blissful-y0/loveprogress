@@ -94,6 +94,13 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
                 </span>
               </button>
             </Popover.Trigger>
+            <button
+              type="button"
+              onClick={() => setPopoverOpen(true)}
+              className="mt-1.5 w-[100px] text-[11px] text-[#707070] bg-[#f5f5f5] border border-[#e0e0e0] rounded-md py-1 hover:bg-[#eee] transition-colors cursor-pointer"
+            >
+              계정 변경
+            </button>
           </div>
 
           <Popover.Portal>
@@ -175,14 +182,29 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
       </div>
 
       {/* Footer */}
-      <div className="bg-white border-t border-[#f0f0f0] px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col gap-1.5 text-[13px] text-[#707070]">
-          <div className="flex items-center gap-1.5">
-            <span>개인정보 수집 동의</span>
-            <PrivacyModal />
+      <div className="bg-white border-t border-[#f0f0f0] px-5 py-3.5 flex flex-col gap-2">
+        {/* Top row: Olympic rings + user count + privacy + checkboxes + submit */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {/* Olympic rings + count */}
+          <div className="flex items-center gap-2">
+            <svg width="36" height="16" viewBox="0 0 90 40" className="shrink-0">
+              <circle cx="12" cy="14" r="9" fill="none" stroke="#0081C8" strokeWidth="2.5"/>
+              <circle cx="30" cy="14" r="9" fill="none" stroke="#000000" strokeWidth="2.5"/>
+              <circle cx="48" cy="14" r="9" fill="none" stroke="#EE334E" strokeWidth="2.5"/>
+              <circle cx="21" cy="24" r="9" fill="none" stroke="#FCB131" strokeWidth="2.5"/>
+              <circle cx="39" cy="24" r="9" fill="none" stroke="#00A651" strokeWidth="2.5"/>
+            </svg>
+            <span className="text-[13px] text-primary font-medium">33550336명이 이용했어요</span>
           </div>
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-1 cursor-pointer">
+
+          {/* Spacer to push right side content */}
+          <div className="flex-1" />
+
+          {/* Privacy + checkboxes + submit */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="text-[13px] text-[#707070]">개인정보 수집 동의</span>
+            <PrivacyModal />
+            <label className="flex items-center gap-1 cursor-pointer text-[13px] text-[#707070]">
               <input
                 type="checkbox"
                 checked={privacyAgreed}
@@ -191,7 +213,7 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
               />
               동의함
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 cursor-pointer select-none text-[13px] text-[#707070]">
               <input
                 type="checkbox"
                 checked={isSecret}
@@ -200,20 +222,17 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
               />
               비밀글
             </label>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="bg-primary text-white rounded-[8px] px-7 py-1.5 text-[13px] font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              {isSubmitting ? "접수 중..." : "접수하기"}
+            </button>
           </div>
-          <span className="text-[12px] text-[#bbb]">총 {totalCount}개의 문의</span>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          {formError && <p className="text-[13px] text-red-500">{formError}</p>}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="bg-primary text-white rounded-[8px] px-7 py-1.5 text-[13px] font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors"
-          >
-            {isSubmitting ? "접수 중..." : "접수하기"}
-          </button>
-        </div>
+        {formError && <p className="text-[13px] text-red-500">{formError}</p>}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -27,6 +28,7 @@ import {
   Undo2Icon,
   Redo2Icon,
   UploadIcon,
+  CodeIcon,
 } from "lucide-react";
 
 interface TiptapEditorProps {
@@ -71,6 +73,9 @@ function ToolbarDivider() {
 }
 
 export default function TiptapEditor({ content, onChange, placeholder = "내용을 입력하세요...", uploadEndpoint }: TiptapEditorProps) {
+  const [showHtml, setShowHtml] = useState(false);
+  const [htmlSource, setHtmlSource] = useState("");
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -84,6 +89,7 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
       }),
       Image.configure({
         HTMLAttributes: { class: "max-w-full rounded-lg" },
+        allowBase64: false,
       }),
       TextAlign.configure({
         types: ["heading", "paragraph", "image"],
@@ -112,7 +118,25 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
         alert("http 또는 https URL만 입력 가능합니다.");
         return;
       }
-      editor.chain().focus().setImage({ src: url }).run();
+
+      // Ask for alignment
+      const alignment = window.prompt("정렬을 선택하세요 (left, center, right)", "center");
+      const validAlign = ["left", "center", "right"].includes(alignment ?? "") ? alignment! : "center";
+
+      // Ask for link
+      const linkUrl = window.prompt("이미지에 연결할 링크 URL (없으면 비워두세요)", "");
+
+      if (linkUrl) {
+        // Insert image wrapped in a link using HTML
+        const imgHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer"><img src="${url}" style="display:block;${validAlign === "center" ? "margin:0 auto;" : validAlign === "right" ? "margin-left:auto;" : ""}" /></a>`;
+        editor.chain().focus().insertContent(imgHtml).run();
+      } else {
+        editor.chain().focus().setImage({ src: url }).run();
+        // Apply alignment after inserting
+        if (validAlign !== "left") {
+          editor.chain().focus().setTextAlign(validAlign).run();
+        }
+      }
     } catch {
       alert("올바른 URL을 입력해주세요.");
     }
@@ -132,7 +156,22 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
         const res = await fetch(uploadEndpoint, { method: "POST", body: formData });
         const data = await res.json();
         if (res.ok && data.url) {
-          editor.chain().focus().setImage({ src: data.url }).run();
+          // Ask for alignment
+          const alignment = window.prompt("정렬을 선택하세요 (left, center, right)", "center");
+          const validAlign = ["left", "center", "right"].includes(alignment ?? "") ? alignment! : "center";
+
+          // Ask for link
+          const linkUrl = window.prompt("이미지에 연결할 링크 URL (없으면 비워두세요)", "");
+
+          if (linkUrl) {
+            const imgHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer"><img src="${data.url}" style="display:block;${validAlign === "center" ? "margin:0 auto;" : validAlign === "right" ? "margin-left:auto;" : ""}" /></a>`;
+            editor.chain().focus().insertContent(imgHtml).run();
+          } else {
+            editor.chain().focus().setImage({ src: data.url }).run();
+            if (validAlign !== "left") {
+              editor.chain().focus().setTextAlign(validAlign).run();
+            }
+          }
         } else {
           alert(data.error ?? "이미지 업로드에 실패했습니다.");
         }
@@ -160,6 +199,19 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
       editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
     } catch {
       alert("올바른 URL을 입력해주세요.");
+    }
+  };
+
+  const toggleHtmlView = () => {
+    if (!showHtml) {
+      // Switch to HTML view
+      setHtmlSource(editor.getHTML());
+      setShowHtml(true);
+    } else {
+      // Switch back to WYSIWYG - apply HTML changes
+      editor.commands.setContent(htmlSource);
+      onChange(htmlSource);
+      setShowHtml(false);
     }
   };
 
@@ -243,10 +295,25 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
             <UploadIcon className={iconSize} />
           </ToolbarButton>
         )}
+
+        <ToolbarDivider />
+
+        <ToolbarButton onClick={toggleHtmlView} active={showHtml} title="HTML 보기">
+          <CodeIcon className={iconSize} />
+        </ToolbarButton>
       </div>
 
-      {/* Editor */}
-      <EditorContent editor={editor} />
+      {/* Editor / HTML source view */}
+      {showHtml ? (
+        <textarea
+          value={htmlSource}
+          onChange={(e) => setHtmlSource(e.target.value)}
+          className="w-full px-4 py-3 min-h-[300px] text-sm font-mono text-[#333] bg-[#fafafa] focus:outline-none resize-y"
+          spellCheck={false}
+        />
+      ) : (
+        <EditorContent editor={editor} />
+      )}
     </div>
   );
 }

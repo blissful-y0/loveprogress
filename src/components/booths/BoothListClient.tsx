@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BoothKeyword } from "@/types/database";
 import type { BoothCardData } from "@/types/booth";
 import { AGE_FILTERS, KEYWORD_FILTERS } from "@/lib/mock-booth-data";
 import { BOOTH_KEYWORD_PILL_COLORS } from "@/lib/booth-keyword-colors";
+import { useUser } from "@/hooks/useUser";
 import BoothCard from "./BoothCard";
 import BoothDetailModal from "./BoothDetailModal";
 
@@ -43,9 +44,64 @@ function FilterPill({
 }
 
 export default function BoothListClient({ booths }: BoothListClientProps) {
+  const { user } = useUser();
+  const isLoggedIn = !!user;
+
   const [ageFilter, setAgeFilter] = useState<AgeFilterValue>("all");
   const [keywordFilters, setKeywordFilters] = useState<ReadonlySet<BoothKeyword>>(new Set());
   const [selectedBooth, setSelectedBooth] = useState<BoothCardData | null>(null);
+
+  // Like state
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
+
+  const fetchLikes = useCallback(async () => {
+    try {
+      const res = await fetch("/api/booths/likes");
+      if (!res.ok) return;
+      const data = await res.json();
+      setLikeCounts(data.counts ?? {});
+      setUserLikes(new Set(data.userLikes ?? []));
+    } catch {
+      // Silently fail - likes are not critical
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLikes();
+  }, [fetchLikes]);
+
+  const handleToggleLike = async (boothId: string) => {
+    try {
+      const res = await fetch("/api/booths/likes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ boothId }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        if (res.status === 401) {
+          alert("로그인 후 이용 가능합니다.");
+        } else {
+          alert(data.error ?? "좋아요 처리에 실패했습니다.");
+        }
+        return;
+      }
+      const data = await res.json();
+      setLikeCounts((prev) => ({
+        ...prev,
+        [boothId]: (prev[boothId] ?? 0) + (data.liked ? 1 : -1),
+      }));
+      setUserLikes((prev) => {
+        const next = new Set(prev);
+        if (data.liked) next.add(boothId);
+        else next.delete(boothId);
+        return next;
+      });
+    } catch {
+      alert("좋아요 처리에 실패했습니다.");
+    }
+  };
 
   const handleKeywordToggle = (keyword: BoothKeyword) => {
     setKeywordFilters((prev) => {
@@ -116,6 +172,10 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
                   key={booth.id}
                   booth={booth}
                   onClick={() => setSelectedBooth(booth)}
+                  likeCount={likeCounts[booth.id] ?? 0}
+                  liked={userLikes.has(booth.id)}
+                  isLoggedIn={isLoggedIn}
+                  onToggleLike={handleToggleLike}
                 />
               ))}
             </div>
