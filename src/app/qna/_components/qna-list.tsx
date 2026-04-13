@@ -64,7 +64,7 @@ export function QnaList() {
   return (
     <>
       {/* Write form */}
-      <WriteForm onPostCreated={handlePostCreated} totalCount={total} />
+      <WriteForm onPostCreated={handlePostCreated} />
 
       {/* QnA list */}
       <div className="space-y-4">

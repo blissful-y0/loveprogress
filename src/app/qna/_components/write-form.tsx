@@ -8,10 +8,9 @@ import { useUser } from "@/hooks/useUser";
 
 interface WriteFormProps {
   onPostCreated: () => void;
-  totalCount: number;
 }
 
-export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
+export function WriteForm({ onPostCreated }: WriteFormProps) {
   const { user } = useUser();
   const isLoggedIn = !!user;
   const [selectedCharKey, setSelectedCharKey] = useState<string>(CHARACTERS[0].key);
