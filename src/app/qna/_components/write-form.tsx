@@ -8,10 +8,9 @@ import { useUser } from "@/hooks/useUser";
 
 interface WriteFormProps {
   onPostCreated: () => void;
-  totalCount: number;
 }
 
-export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
+export function WriteForm({ onPostCreated }: WriteFormProps) {
   const { user } = useUser();
   const isLoggedIn = !!user;
   const [selectedCharKey, setSelectedCharKey] = useState<string>(CHARACTERS[0].key);
@@ -77,24 +76,23 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
       <div className="bg-white px-5 py-5 flex gap-5 items-start">
         {/* Photo trigger (Popover) */}
         <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <div className="shrink-0">
-            <Popover.Trigger asChild>
-              <button
-                type="button"
-                className="w-[100px] h-[120px] rounded-[10px] overflow-hidden bg-[#fafafa] relative group focus:outline-none"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={selectedCharacter.src}
-                  alt={selectedCharacter.label}
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute inset-0 bg-primary/75 flex items-center justify-center text-white text-[13px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                  변경
-                </span>
-              </button>
-            </Popover.Trigger>
-          </div>
+          <Popover.Trigger asChild>
+            <button
+              type="button"
+              className="shrink-0 w-[100px] h-[120px] rounded-[10px] overflow-hidden bg-[#fafafa] relative group focus:outline-none"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={selectedCharacter.src}
+                alt={selectedCharacter.label}
+                className="w-full h-full object-cover"
+              />
+              {/* 하단 오버레이 배지 */}
+              <span className="absolute bottom-0 inset-x-0 bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium py-1 text-center group-hover:bg-primary/80 transition-colors">
+                계정 변경
+              </span>
+            </button>
+          </Popover.Trigger>
 
           <Popover.Portal>
             <Popover.Content
@@ -175,14 +173,29 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
       </div>
 
       {/* Footer */}
-      <div className="bg-white border-t border-[#f0f0f0] px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col gap-1.5 text-[13px] text-[#707070]">
-          <div className="flex items-center gap-1.5">
-            <span>개인정보 수집 동의</span>
-            <PrivacyModal />
+      <div className="bg-white border-t border-[#f0f0f0] px-5 py-3.5 flex flex-col gap-2">
+        {/* Top row: Olympic rings + user count + privacy + checkboxes + submit */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {/* Olympic rings + count */}
+          <div className="flex items-center gap-2">
+            <svg width="36" height="16" viewBox="0 0 90 40" className="shrink-0">
+              <circle cx="12" cy="14" r="9" fill="none" stroke="#0081C8" strokeWidth="2.5"/>
+              <circle cx="30" cy="14" r="9" fill="none" stroke="#000000" strokeWidth="2.5"/>
+              <circle cx="48" cy="14" r="9" fill="none" stroke="#EE334E" strokeWidth="2.5"/>
+              <circle cx="21" cy="24" r="9" fill="none" stroke="#FCB131" strokeWidth="2.5"/>
+              <circle cx="39" cy="24" r="9" fill="none" stroke="#00A651" strokeWidth="2.5"/>
+            </svg>
+            <span className="text-[13px] text-primary font-medium">33550336명이 이용했어요</span>
           </div>
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-1 cursor-pointer">
+
+          {/* Spacer to push right side content */}
+          <div className="flex-1" />
+
+          {/* Privacy + checkboxes + submit */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="text-[13px] text-[#707070]">개인정보 수집 동의</span>
+            <PrivacyModal />
+            <label className="flex items-center gap-1 cursor-pointer text-[13px] text-[#707070]">
               <input
                 type="checkbox"
                 checked={privacyAgreed}
@@ -191,7 +204,7 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
               />
               동의함
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 cursor-pointer select-none text-[13px] text-[#707070]">
               <input
                 type="checkbox"
                 checked={isSecret}
@@ -200,20 +213,17 @@ export function WriteForm({ onPostCreated, totalCount }: WriteFormProps) {
               />
               비밀글
             </label>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="bg-primary text-white rounded-[8px] px-7 py-1.5 text-[13px] font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              {isSubmitting ? "접수 중..." : "접수하기"}
+            </button>
           </div>
-          <span className="text-[12px] text-[#bbb]">총 {totalCount}개의 문의</span>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          {formError && <p className="text-[13px] text-red-500">{formError}</p>}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="bg-primary text-white rounded-[8px] px-7 py-1.5 text-[13px] font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors"
-          >
-            {isSubmitting ? "접수 중..." : "접수하기"}
-          </button>
-        </div>
+        {formError && <p className="text-[13px] text-red-500">{formError}</p>}
       </div>
     </div>
   );

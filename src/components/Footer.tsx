@@ -26,7 +26,9 @@ export default function Footer() {
               <img src="/img/main/footer/twitter_1.png" alt="Twitter" width={18} height={18} />
             </Link>
             <Link
-              href="/"
+              href="https://phainaxa.com/"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Home"
               className="opacity-50 hover:opacity-80 transition-opacity"
             >
@@ -65,7 +67,7 @@ export default function Footer() {
                 admin@phainaxa.com
               </Link>
             </p>
-            <p className="text-text-lighter">release on 2026</p>
+            <p className="text-text-lighter">release on 2026.04.18</p>
           </div>
 
           <div className="mt-2 pt-2 border-t border-gray-200">

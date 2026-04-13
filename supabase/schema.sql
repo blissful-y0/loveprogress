@@ -261,6 +261,25 @@ ALTER TABLE main_banners ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "main_banners_select_active" ON main_banners FOR SELECT TO authenticated, anon USING (is_active = true);
 
+-- ─── booth_likes ─────────────────────────────────────────────
+
+CREATE TABLE booth_likes (
+  id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booth_id  UUID NOT NULL REFERENCES booths(id) ON DELETE CASCADE,
+  user_id   UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (booth_id, user_id)
+);
+
+CREATE INDEX idx_booth_likes_booth ON booth_likes (booth_id);
+CREATE INDEX idx_booth_likes_user ON booth_likes (user_id);
+
+ALTER TABLE booth_likes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "booth_likes_select_all" ON booth_likes FOR SELECT TO authenticated, anon USING (true);
+CREATE POLICY "booth_likes_insert_auth" ON booth_likes FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "booth_likes_delete_own" ON booth_likes FOR DELETE TO authenticated USING (auth.uid() = user_id);
+
 -- ─── updated_at 자동 갱신 트리거 ────────────────────────────
 
 CREATE OR REPLACE FUNCTION trigger_set_updated_at()

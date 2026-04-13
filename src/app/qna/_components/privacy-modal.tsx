@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 export function PrivacyModal() {
   return (
     <Dialog>
-      <DialogTrigger className="text-primary underline underline-offset-2 text-sm cursor-pointer">
+      <DialogTrigger className="text-primary underline underline-offset-2 text-sm font-bold cursor-pointer">
         자세히
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">

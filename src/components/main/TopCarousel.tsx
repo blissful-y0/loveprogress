@@ -5,36 +5,37 @@ import { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
+import type { MainBannerRow } from "@/types/database";
 
 import "swiper/css";
 import "swiper/css/pagination";
 
-// TODO: Replace with API data
-const BANNER_SLIDES = [
-  {
-    id: 1,
-    image: "/img/main/main.jpg",
-    backgroundColor: "#2c3e6b",
-    alt: "메인 배너 1",
-  },
-  {
-    id: 2,
-    image: "/img/main/main2.jpg",
-    backgroundColor: "#e56f6f",
-    alt: "메인 배너 2",
-  },
-  {
-    id: 3,
-    image: "/img/main/main3.jpg",
-    backgroundColor: "#9fc148",
-    alt: "메인 배너 3",
-  },
+// Fallback banners when no DB banners exist
+const FALLBACK_SLIDES = [
+  { id: "f1", image: "/img/main/main.jpg", backgroundColor: "#2c3e6b", alt: "메인 배너 1", link: "" },
+  { id: "f2", image: "/img/main/main2.jpg", backgroundColor: "#e56f6f", alt: "메인 배너 2", link: "" },
+  { id: "f3", image: "/img/main/main3.jpg", backgroundColor: "#9fc148", alt: "메인 배너 3", link: "" },
 ];
 
-export default function TopCarousel() {
+interface TopCarouselProps {
+  banners?: MainBannerRow[];
+}
+
+export default function TopCarousel({ banners }: TopCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [ready, setReady] = useState(false);
-  const currentBg = BANNER_SLIDES[activeIndex]?.backgroundColor ?? "transparent";
+
+  const slides = banners && banners.length > 0
+    ? banners.map((b) => ({
+        id: b.id,
+        image: b.image_key,
+        backgroundColor: b.bg_color ?? "transparent",
+        alt: `배너 ${b.sort_order + 1}`,
+        link: b.link_url ?? "",
+      }))
+    : FALLBACK_SLIDES;
+
+  const currentBg = slides[activeIndex]?.backgroundColor ?? "transparent";
 
   const handleSlideChange = (swiper: SwiperType): void => {
     setActiveIndex(swiper.realIndex);
@@ -75,16 +76,28 @@ export default function TopCarousel() {
             }}
             className="top-carousel"
           >
-            {BANNER_SLIDES.map((slide) => (
+            {slides.map((slide) => (
               <SwiperSlide key={slide.id}>
                 <div className="relative overflow-hidden rounded-2xl md:rounded-[30px]">
-                  <img
-                    src={slide.image}
-                    alt={slide.alt}
-                    width={1280}
-                    height={450}
-                    className="w-full h-auto"
-                  />
+                  {slide.link ? (
+                    <a href={slide.link} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={slide.image}
+                        alt={slide.alt}
+                        width={1280}
+                        height={450}
+                        className="w-full h-auto"
+                      />
+                    </a>
+                  ) : (
+                    <img
+                      src={slide.image}
+                      alt={slide.alt}
+                      width={1280}
+                      height={450}
+                      className="w-full h-auto"
+                    />
+                  )}
                   {/* Pagination indicator - overlay on image */}
                   <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4">
                     <div className="flex items-center gap-1 px-3 py-1 text-white"
@@ -92,7 +105,7 @@ export default function TopCarousel() {
                     >
                       <span className="text-[12px] font-medium">●</span>
                       <span className="text-[12px] font-medium">
-                        {activeIndex + 1} / {BANNER_SLIDES.length}
+                        {activeIndex + 1} / {slides.length}
                       </span>
                     </div>
                   </div>

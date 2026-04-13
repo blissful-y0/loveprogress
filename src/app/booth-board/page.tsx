@@ -19,8 +19,10 @@ import { PageHeader } from "@/components/page-header";
 
 const ITEMS_PER_PAGE = 10;
 
+type PostWithCommentCount = BoardPostRow & { comment_count?: number };
+
 interface PostsResponse {
-  posts: BoardPostRow[];
+  posts: PostWithCommentCount[];
   total: number;
   pinnedCount: number;
   page: number;
@@ -29,7 +31,7 @@ interface PostsResponse {
 
 export default function BoothBoardPage() {
   const { user, loading: userLoading } = useUser();
-  const [posts, setPosts] = useState<BoardPostRow[]>([]);
+  const [posts, setPosts] = useState<PostWithCommentCount[]>([]);
   const [total, setTotal] = useState(0);
   const [pinnedCount, setPinnedCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,7 +81,7 @@ export default function BoothBoardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <h1 className="text-2xl font-bold text-[#212121]">부스어 전용 게시판</h1>
-        <p className="text-[#909090]">부스어 인증이 필요합니다.</p>
+        <p className="text-[#909090]">목마른 사람이 물가에 왔지만, 수면에 비친 달빛에 녹아버렸다.</p>
         {!user && (
           <Link href="/auth/login">
             <Button className="bg-[#34aa8f] text-white hover:bg-[#2d9a7f]">
@@ -160,6 +162,9 @@ export default function BoothBoardPage() {
             <span className="text-[#212121] font-medium truncate text-sm md:text-base">
               {pinnedPost.title}
             </span>
+            {(pinnedPost.comment_count ?? 0) > 0 && (
+              <span className="text-[#34aa8f] font-bold text-sm shrink-0">[{pinnedPost.comment_count}]</span>
+            )}
           </span>
           <span className="hidden md:block text-center text-sm text-[#505050]">
             {pinnedPost.author_display_name}
@@ -196,8 +201,11 @@ export default function BoothBoardPage() {
                 <LockIcon className="size-3.5 shrink-0 text-[#909090]" />
               )}
               <span className="text-[#212121] truncate text-sm md:text-base">
-                {post.is_secret ? "비밀글입니다." : post.title}
+                {post.title}
               </span>
+              {(post.comment_count ?? 0) > 0 && (
+                <span className="text-[#34aa8f] font-bold text-sm shrink-0">[{post.comment_count}]</span>
+              )}
             </span>
             <span className="hidden md:block text-center text-sm text-[#505050]">
               {post.author_display_name}

@@ -61,22 +61,40 @@ export async function GET(request: Request) {
       );
     }
 
+    // Fetch comment counts for all posts
+    const postIds = (posts ?? []).map((p) => p.id);
+    const commentCountMap: Record<string, number> = {};
+    if (postIds.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: commentCounts } = (await (supabaseAdmin
+        .from("board_comments") as any)
+        .select("post_id")
+        .in("post_id", postIds)) as { data: { post_id: string }[] | null };
+      if (commentCounts) {
+        for (const row of commentCounts) {
+          commentCountMap[row.post_id] = (commentCountMap[row.post_id] ?? 0) + 1;
+        }
+      }
+    }
+
     const safePosts = (posts ?? []).map((post) => {
+      const comment_count = commentCountMap[post.id] ?? 0;
       if (post.is_secret && post.author_user_id !== auth.userId && auth.role !== "admin") {
         return {
           id: post.id,
           board_type: post.board_type,
-          title: "비밀글입니다.",
+          title: post.title,
           content: "",
           author_user_id: null,
-          author_display_name: "비공개",
+          author_display_name: post.author_display_name,
           is_pinned: post.is_pinned,
           is_secret: true,
           created_at: post.created_at,
           updated_at: post.updated_at,
+          comment_count,
         };
       }
-      return post;
+      return { ...post, comment_count };
     });
 
     return NextResponse.json({
