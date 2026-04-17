@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
@@ -161,6 +162,10 @@ export async function PUT(request: Request, { params }: RouteContext) {
       );
     }
 
+    revalidatePath("/");
+    revalidatePath(post.board_type === "event" ? "/info/events" : "/info/notices");
+    revalidatePath(`/info/${post.board_type === "event" ? "events" : "notices"}/${id}`);
+
     return NextResponse.json({ success: true, post });
   } catch {
     return NextResponse.json(
@@ -209,6 +214,13 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
+    // 삭제 전에 board_type 조회 (revalidate 경로 결정용)
+    const { data: existing } = await supabase
+      .from("board_posts")
+      .select("board_type")
+      .eq("id", id)
+      .single<{ board_type: string }>();
+
     const { error } = await (supabaseAdmin.from("board_posts") as any)
       .delete()
       .eq("id", id);
@@ -218,6 +230,11 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
         { error: "게시글 삭제에 실패했습니다." },
         { status: 500 },
       );
+    }
+
+    revalidatePath("/");
+    if (existing) {
+      revalidatePath(existing.board_type === "event" ? "/info/events" : "/info/notices");
     }
 
     return NextResponse.json({ success: true });
