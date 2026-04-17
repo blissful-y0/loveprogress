@@ -16,6 +16,12 @@ interface EventItem {
   created_at: string;
 }
 
+interface EventsThumbBanner {
+  image_key: string;
+}
+
+const DEFAULT_EVENTS_THUMB = "/img/main/board/event.jpg";
+
 export default async function BoardSections() {
   const supabase = await createClient();
 
@@ -36,8 +42,19 @@ export default async function BoardSections() {
     .limit(1)
     .returns<EventItem[]>();
 
+  // 어드민 배너 관리에서 events_thumb 그룹으로 지정한 썸네일 사용 (없으면 fallback)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: thumbBanner } = (await (supabase.from("main_banners") as any)
+    .select("image_key")
+    .eq("group_type", "events_thumb")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .limit(1)
+    .maybeSingle()) as { data: EventsThumbBanner | null };
+
   const noticeList = notices ?? [];
   const featuredEvent = events?.[0] ?? null;
+  const eventsThumb = thumbBanner?.image_key ?? DEFAULT_EVENTS_THUMB;
 
   return (
     <section className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -125,7 +142,7 @@ export default async function BoardSections() {
                 {/* Thumbnail */}
                 <div className="w-[120px] md:w-[140px] h-[140px] md:h-[160px] rounded-[12px] overflow-hidden shrink-0 bg-[#f0f4f0]">
                   <img
-                    src="/img/main/board/event.jpg"
+                    src={eventsThumb}
                     alt={featuredEvent.title}
                     className="w-full h-full object-cover"
                   />

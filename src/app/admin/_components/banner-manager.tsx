@@ -36,6 +36,7 @@ const BANNER_GROUP_LABELS: Record<BannerGroup, string> = {
   top_carousel: "상단 캐러셀",
   middle_carousel: "중간 캐러셀",
   fixed_banner: "고정 배너",
+  events_thumb: "학사 안내 썸네일",
 };
 
 // 고정 배너는 메인페이지에서 6개 고정 슬롯으로 렌더되며, sort_order가 슬롯 위치를 결정한다.
@@ -189,7 +190,7 @@ export default function BannerManager() {
       ...acc,
       [banner.group_type]: [...(acc[banner.group_type] ?? []), banner],
     }),
-    { top_carousel: [], middle_carousel: [], fixed_banner: [] },
+    { top_carousel: [], middle_carousel: [], fixed_banner: [], events_thumb: [] },
   );
 
   if (loading) {
@@ -234,6 +235,9 @@ export default function BannerManager() {
                       중간 캐러셀
                     </SelectItem>
                     <SelectItem value="fixed_banner">고정 배너</SelectItem>
+                    <SelectItem value="events_thumb">
+                      학사 안내 썸네일
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
