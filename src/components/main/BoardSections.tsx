@@ -22,6 +22,19 @@ interface EventsThumbBanner {
 
 const DEFAULT_EVENTS_THUMB = "/img/main/board/event.jpg";
 
+function stripHtmlToText(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export default async function BoardSections() {
   const supabase = await createClient();
 
@@ -158,7 +171,7 @@ export default async function BoardSections() {
                       {formatDate(featuredEvent.created_at)}
                     </p>
                     <p className="text-[13px] text-[#777] leading-relaxed line-clamp-3 break-all">
-                      &nbsp;
+                      {stripHtmlToText(featuredEvent.content) || "\u00a0"}
                     </p>
                   </div>
                 </div>
