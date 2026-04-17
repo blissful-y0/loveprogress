@@ -329,7 +329,7 @@ export default function BoothManager() {
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="부스 이름"
-                maxLength={20}
+                maxLength={30}
               />
             </div>
 
