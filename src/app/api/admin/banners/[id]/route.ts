@@ -8,7 +8,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 const updateBannerSchema = z.object({
   group_type: z
-    .enum(["top_carousel", "middle_carousel", "fixed_banner"])
+    .enum(["top_carousel", "middle_carousel", "fixed_banner", "events_thumb"])
     .optional(),
   image_key: z.string().min(1).optional(),
   bg_color: z.string().nullable().optional(),
