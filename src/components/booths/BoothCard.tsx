@@ -95,8 +95,9 @@ export default function BoothCard({
           />
         </button>
 
-        {/* Bottom info strip: age badge + keyword dots */}
-        <div className="absolute inset-x-0 bottom-0 bg-black/55 backdrop-blur-sm px-2 py-1.5 flex items-center gap-1.5">
+        {/* Bottom info strip: age badge + keyword dots
+            부스컷에 글씨 쓰는 부스가 많아 glass blur 제거 + opacity 30% */}
+        <div className="absolute inset-x-0 bottom-0 bg-black/30 px-2 py-1.5 flex items-center gap-1.5">
           <span
             className="shrink-0 px-1.5 py-[1px] rounded-[3px] text-[10px] font-bold text-white leading-tight tracking-wide"
             style={{ backgroundColor: ageColor }}
@@ -114,13 +115,13 @@ export default function BoothCard({
         </div>
       </div>
 
-      {/* Text area */}
-      <div className="mt-3 px-0.5">
-        <h3 className="text-[14px] font-bold text-[#1a1a1a] leading-snug tracking-[-0.02em] line-clamp-2 min-h-[2.6em]">
+      {/* Text area — 썸네일 왼쪽 edge와 flush 정렬 */}
+      <div className="mt-3">
+        <h3 className="text-[14px] font-medium text-[#1a1a1a] leading-snug tracking-[-0.02em] line-clamp-2 min-h-[2.6em]">
           {booth.name}
         </h3>
 
-        <p className="mt-1.5 text-[12px] font-medium text-[#707070] tracking-[-0.01em] line-clamp-2 leading-relaxed">
+        <p className="mt-1.5 text-[12px] font-normal text-[#707070] tracking-[-0.01em] line-clamp-2 leading-relaxed">
           {allParticipants.map((p, i) => (
             <span key={`${p.name}-${i}`}>
               {i > 0 && <span className="text-[#d0d0d0] mx-[4px]">&middot;</span>}
