@@ -38,6 +38,17 @@ const BANNER_GROUP_LABELS: Record<BannerGroup, string> = {
   fixed_banner: "고정 배너",
 };
 
+// 고정 배너는 메인페이지에서 6개 고정 슬롯으로 렌더되며, sort_order가 슬롯 위치를 결정한다.
+// 라벨은 코드로 고정되어 있고 (src/components/main/MiddleBanners.tsx) 어드민에서 바꿀 수 없다.
+const FIXED_BANNER_SLOTS: readonly { value: number; label: string }[] = [
+  { value: 0, label: "학사일정" },
+  { value: 1, label: "신입생안내" },
+  { value: 2, label: "예술교육원" },
+  { value: 3, label: "졸업수료" },
+  { value: 4, label: "대학원통합과정" },
+  { value: 5, label: "산학협력단" },
+];
+
 interface BannerFormData {
   readonly group_type: BannerGroup;
   readonly image_key: string;
@@ -271,18 +282,47 @@ export default function BannerManager() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>정렬 순서</Label>
-                <Input
-                  type="number"
-                  value={form.sort_order}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      sort_order: parseInt(e.target.value, 10) || 0,
-                    })
-                  }
-                  min={0}
-                />
+                <Label>
+                  {form.group_type === "fixed_banner" ? "슬롯 위치" : "정렬 순서"}
+                </Label>
+                {form.group_type === "fixed_banner" ? (
+                  <>
+                    <Select
+                      value={String(form.sort_order)}
+                      onValueChange={(v) => {
+                        if (v == null) return;
+                        setForm({ ...form, sort_order: parseInt(v, 10) });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FIXED_BANNER_SLOTS.map((slot) => (
+                          <SelectItem key={slot.value} value={String(slot.value)}>
+                            {slot.value}. {slot.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-text-muted leading-relaxed">
+                      메인페이지 고정배너 6개 슬롯 중 하나를 선택. 라벨(학사일정/신입생안내/…)은 코드로 고정되어 있고,
+                      이미지와 링크만 관리됩니다. 같은 슬롯에 두 개 이상 등록하면 한쪽만 표시됩니다.
+                    </p>
+                  </>
+                ) : (
+                  <Input
+                    type="number"
+                    value={form.sort_order}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        sort_order: parseInt(e.target.value, 10) || 0,
+                      })
+                    }
+                    min={0}
+                  />
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -371,8 +411,12 @@ export default function BannerManager() {
                     <TableCell className="max-w-32 truncate text-xs">
                       {banner.link_url || "-"}
                     </TableCell>
-                    <TableCell className="text-center">
-                      {banner.sort_order}
+                    <TableCell className="text-center text-xs">
+                      {banner.group_type === "fixed_banner"
+                        ? `${banner.sort_order}. ${
+                            FIXED_BANNER_SLOTS[banner.sort_order]?.label ?? "?"
+                          }`
+                        : banner.sort_order}
                     </TableCell>
                     <TableCell>
                       <button
