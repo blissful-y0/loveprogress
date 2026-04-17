@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
+import { Autoplay, Pagination } from "swiper/modules";
 import type { MainBannerRow } from "@/types/database";
 
 import "swiper/css";
@@ -13,7 +13,17 @@ const FALLBACK_SLIDES = [
   { id: "f1", image: "/img/main/middle-carousel.jpg", alt: "Phainaxa Wedding Cafe", link: "" },
 ];
 
-const ICON_CARDS: { id: number; icon: string; label: string; link: string }[] = [
+// sort_order 기준 기본 라벨. DB의 이미지/링크를 덮어써도 라벨은 코드 소스로 유지.
+const ICON_LABELS: readonly string[] = [
+  "학사일정",
+  "신입생안내",
+  "예술교육원",
+  "졸업수료",
+  "대학원통합과정",
+  "산학협력단",
+];
+
+const FALLBACK_ICON_CARDS: { id: number; icon: string; label: string; link: string }[] = [
   { id: 1, icon: "/img/main/topcarousel/academic-calendar.png", label: "학사일정", link: "" },
   { id: 2, icon: "/img/main/topcarousel/freshmen-guide.png", label: "신입생안내", link: "" },
   { id: 3, icon: "/img/main/topcarousel/arts-education.png", label: "예술교육원", link: "" },
@@ -37,42 +47,44 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
       }))
     : FALLBACK_SLIDES;
 
-  // Use fixed banners from DB if available, with link support
+  // DB 값 우선, 라벨은 sort_order 위치로 매핑. DB가 비어있으면 하드코드 fallback 사용.
   const iconCards = fixedBanners && fixedBanners.length > 0
     ? fixedBanners.map((b, i) => ({
-        id: i + 1,
+        id: b.id,
         icon: b.image_key,
-        label: "",
+        label: ICON_LABELS[b.sort_order] ?? ICON_LABELS[i] ?? "",
         link: b.link_url ?? "",
       }))
-    : ICON_CARDS;
+    : FALLBACK_ICON_CARDS.map((c) => ({ ...c, id: String(c.id) }));
   return (
-    <section className="mx-auto max-w-[1280px] px-6 lg:px-8 py-6 md:py-8">
+    <section className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Mobile: 3-col grid with carousel spanning 2 cols */}
       <div className="lg:hidden">
         <div className="grid grid-cols-4 gap-2 place-items-center">
-          {/* Mini carousel - spans 2 columns, 1 row */}
-          <div className="col-span-2 row-span-1 w-full px-1 flex items-center justify-center">
+          {/* Mini carousel - spans 2 columns, matches icon height */}
+          <div className="col-span-2 row-span-1 w-full flex items-center justify-center">
             <Swiper
-              modules={[Pagination]}
+              modules={[Pagination, Autoplay]}
               spaceBetween={10}
               slidesPerView={1}
+              loop={slides.length > 1}
+              autoplay={slides.length > 1 ? { delay: 4000, disableOnInteraction: false } : false}
               pagination={{
                 clickable: true,
                 bulletActiveClass: "mini-bullet-active",
                 bulletClass: "mini-bullet",
               }}
-              className="mini-carousel-mobile"
+              className="mini-carousel-mobile w-full h-[72px]"
             >
               {slides.map((slide) => (
                 <SwiperSlide key={slide.id}>
-                  <div className="w-full h-full rounded-lg overflow-hidden">
+                  <div className="w-full h-[72px] rounded-[10px] overflow-hidden bg-bg-light">
                     {slide.link ? (
-                      <a href={slide.link} target="_blank" rel="noopener noreferrer">
-                        <img src={slide.image} alt={slide.alt} className="w-full h-full object-contain" />
+                      <a href={slide.link} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                        <img src={slide.image} alt={slide.alt} className="w-full h-full object-cover" />
                       </a>
                     ) : (
-                      <img src={slide.image} alt={slide.alt} className="w-full h-full object-contain" />
+                      <img src={slide.image} alt={slide.alt} className="w-full h-full object-cover" />
                     )}
                   </div>
                 </SwiperSlide>
@@ -109,14 +121,16 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
         </div>
       </div>
 
-      {/* Desktop: horizontal layout */}
-      <div className="hidden lg:flex items-center justify-center">
-        {/* Mini carousel - inset with equal margins */}
-        <div className="w-[260px] shrink-0 mx-8">
+      {/* Desktop: horizontal layout with symmetric inset */}
+      <div className="hidden lg:flex items-center justify-center gap-10 px-6">
+        {/* Mini carousel */}
+        <div className="w-[260px] shrink-0">
           <Swiper
-            modules={[Pagination]}
+            modules={[Pagination, Autoplay]}
             spaceBetween={10}
             slidesPerView={1}
+            loop={slides.length > 1}
+            autoplay={slides.length > 1 ? { delay: 4000, disableOnInteraction: false } : false}
             pagination={{
               clickable: true,
               bulletActiveClass: "mini-bullet-active",
@@ -141,10 +155,10 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
         </div>
 
         {/* Divider */}
-        <div className="w-px h-[80px] bg-gray-200" />
+        <div className="w-px h-[80px] bg-gray-200 shrink-0" />
 
         {/* Icon cards */}
-        <div className="flex-1 mx-8">
+        <div className="shrink-0">
           <div className="grid grid-cols-6 gap-2">
             {iconCards.map((card) => (
               <div key={card.id} className="flex flex-col items-center gap-2">
