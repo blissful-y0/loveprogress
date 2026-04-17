@@ -12,7 +12,6 @@ import {
 interface BoothCardProps {
   readonly booth: BoothCardData;
   readonly onClick: () => void;
-  readonly likeCount?: number;
   readonly liked?: boolean;
   readonly isLoggedIn?: boolean;
   readonly onToggleLike?: (boothId: string) => void;
@@ -30,7 +29,6 @@ const KEYWORD_SHORT: Record<string, string> = {
 export default function BoothCard({
   booth,
   onClick,
-  likeCount = 0,
   liked = false,
   isLoggedIn = false,
   onToggleLike,
@@ -84,11 +82,11 @@ export default function BoothCard({
           loading="lazy"
         />
 
-        {/* Top-right heart */}
+        {/* Top-right heart (좋아요 개수는 미표시) */}
         <button
           type="button"
           onClick={handleLike}
-          className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white transition-colors cursor-pointer shadow-sm group/like"
+          className="absolute top-2 right-2 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white transition-colors cursor-pointer shadow-sm group/like"
           aria-label={liked ? "좋아요 취소" : "좋아요"}
         >
           <HeartIcon
@@ -98,15 +96,6 @@ export default function BoothCard({
                 : "text-[#9a9a9a] group-hover/like:text-[#34aa8f]"
             }`}
           />
-          {likeCount > 0 && (
-            <span
-              className={`text-[11px] font-semibold tabular-nums ${
-                liked ? "text-[#34aa8f]" : "text-[#707070]"
-              }`}
-            >
-              {likeCount}
-            </span>
-          )}
         </button>
 
         {/* Bottom info strip: age badge + keyword dots */}
