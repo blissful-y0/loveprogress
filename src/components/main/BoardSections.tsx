@@ -22,6 +22,26 @@ interface EventsThumbBanner {
 
 const DEFAULT_EVENTS_THUMB = "/img/main/board/event.jpg";
 
+const PREVIEW_MAX_LENGTH = 150;
+
+function stripHtmlToText(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function truncatePreview(text: string): string {
+  if (text.length <= PREVIEW_MAX_LENGTH) return text;
+  return `${text.slice(0, PREVIEW_MAX_LENGTH).trimEnd()}…`;
+}
+
 export default async function BoardSections() {
   const supabase = await createClient();
 
@@ -31,7 +51,7 @@ export default async function BoardSections() {
     .eq("board_type", "notice")
     .order("is_pinned", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(5)
+    .limit(4)
     .returns<NoticeItem[]>();
 
   const { data: events } = await supabase
@@ -158,7 +178,7 @@ export default async function BoardSections() {
                       {formatDate(featuredEvent.created_at)}
                     </p>
                     <p className="text-[13px] text-[#777] leading-relaxed line-clamp-3 break-all">
-                      &nbsp;
+                      {truncatePreview(stripHtmlToText(featuredEvent.content)) || "\u00a0"}
                     </p>
                   </div>
                 </div>
