@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.groveofepiphany.com",
+  ),
   title: "파이낙사 온리전 :: 사랑의 진도",
   description: "깨달음의 나무 정원 - 파이낙사 온리전 행사 안내 사이트",
   icons: {

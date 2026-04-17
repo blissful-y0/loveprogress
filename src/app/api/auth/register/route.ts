@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://loveprogress.vercel.app"}/`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.groveofepiphany.com"}/`,
       },
     });
 
