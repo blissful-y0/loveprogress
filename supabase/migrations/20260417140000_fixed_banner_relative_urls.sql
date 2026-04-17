@@ -3,6 +3,6 @@
 -- 이전 마이그레이션에서 absolute URL이 이미 저장된 경우 모두 path-only로 치환.
 
 UPDATE main_banners
-SET link_url = regexp_replace(link_url, '^https?://[^/]+', '')
+SET link_url = regexp_replace(link_url, '^https?://[^/]+', '', 'i')
 WHERE group_type = 'fixed_banner'
-  AND link_url ~ '^https?://(www\.)?(groveofepiphany\.com|loveprogress\.vercel\.app)/';
+  AND link_url ~* '^https?://(www\.)?(groveofepiphany\.com|loveprogress\.vercel\.app)/';

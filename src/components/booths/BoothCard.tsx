@@ -63,7 +63,9 @@ export default function BoothCard({
       {/* Thumbnail — aspect 314:220 ≈ 1.43 */}
       <div
         className={`relative aspect-[314/220] overflow-hidden rounded-[6px] bg-[#f4f4f4] ring-1 transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-0.5 ${
-          liked ? "ring-[#34aa8f]" : "ring-[#e0e0e0] group-hover:ring-[#bdbdbd]"
+          liked
+            ? "ring-[#34aa8f] group-hover:ring-[#2a8f79]"
+            : "ring-[#e0e0e0] group-hover:ring-[#bdbdbd]"
         }`}
       >
         {/* Preload hover image */}

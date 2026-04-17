@@ -22,6 +22,11 @@ const ALLOWED_ATTRIBUTES = {
 };
 
 // 이미지 정렬(margin:auto, float, display:block) 및 텍스트 정렬/강조 스타일 허용.
+// 모든 길이값은 비음수만 허용해 오프스크린 overlay를 통한 클릭 하이재킹 방지.
+const LEN_UNIT = "(auto|0|[0-9]+(\\.[0-9]+)?(px|em|rem|%))";
+const LEN_SHORTHAND = new RegExp(`^${LEN_UNIT}(\\s+${LEN_UNIT}){0,3}$`, "i");
+const LEN_SINGLE = new RegExp(`^${LEN_UNIT}$`, "i");
+
 const ALLOWED_STYLES: sanitizeHtml.IOptions["allowedStyles"] = {
   "*": {
     "text-align": [/^(left|center|right|justify)$/],
@@ -30,13 +35,13 @@ const ALLOWED_STYLES: sanitizeHtml.IOptions["allowedStyles"] = {
     "text-decoration": [/^(underline|line-through|none)$/],
     display: [/^(block|inline|inline-block|flex|none)$/],
     float: [/^(left|right|none)$/],
-    margin: [/^[\d\sa-z.%-]+$/i],
-    "margin-left": [/^(auto|0|[\d.]+(px|em|rem|%))$/i],
-    "margin-right": [/^(auto|0|[\d.]+(px|em|rem|%))$/i],
-    "margin-top": [/^(auto|0|[\d.]+(px|em|rem|%))$/i],
-    "margin-bottom": [/^(auto|0|[\d.]+(px|em|rem|%))$/i],
-    width: [/^(auto|[\d.]+(px|em|rem|%))$/i],
-    "max-width": [/^(none|[\d.]+(px|em|rem|%))$/i],
+    margin: [LEN_SHORTHAND],
+    "margin-left": [LEN_SINGLE],
+    "margin-right": [LEN_SINGLE],
+    "margin-top": [LEN_SINGLE],
+    "margin-bottom": [LEN_SINGLE],
+    width: [LEN_SINGLE],
+    "max-width": [/^(none)$/, LEN_SINGLE],
   },
 };
 

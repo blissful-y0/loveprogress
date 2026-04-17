@@ -24,10 +24,10 @@ const ICON_SLOTS: readonly { icon: string; label: string }[] = [
   { icon: "/img/main/topcarousel/industry-collab.png", label: "산학협력단" },
 ];
 
-// 내부 링크는 상대 경로로 저장(마이그레이션으로 정규화). 슬래시 시작이면 내부.
-// SSR/CSR 일관성을 위해 window.location 참조는 하지 않는다.
+// 내부 링크는 상대 경로로 저장(마이그레이션으로 정규화).
+// 단일 슬래시(/path)만 허용. "//host/" protocol-relative는 외부로 분류해 target="_blank"/rel 적용.
 function isInternalLink(link: string): boolean {
-  return link.startsWith("/");
+  return link.startsWith("/") && !link.startsWith("//");
 }
 
 interface MiddleBannersProps {
