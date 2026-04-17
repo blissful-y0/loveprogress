@@ -351,6 +351,11 @@ export default function BoothManager() {
                 folder="booths"
                 placeholder="썸네일 이미지 선택"
               />
+              <p className="text-[11px] text-[#888] leading-relaxed">
+                권장 비율 <strong>14:10 (1.43:1)</strong> · 권장 사이즈 <strong>942×660px</strong> (최소 628×440px)
+                <br />
+                다른 비율로 올리면 부스카드에서 상하 또는 좌우가 잘릴 수 있습니다.
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -361,6 +366,9 @@ export default function BoothManager() {
                 folder="booths"
                 placeholder="호버 이미지 선택 (선택)"
               />
+              <p className="text-[11px] text-[#888] leading-relaxed">
+                썸네일과 동일한 사이즈 권장 (14:10 · 942×660px)
+              </p>
             </div>
 
             <div className="space-y-1.5">
