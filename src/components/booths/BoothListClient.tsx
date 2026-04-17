@@ -161,7 +161,7 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
             <p className="text-[12px] text-[#bbb] tracking-wide mb-6 text-center">
               총 <span className="font-semibold text-[#888]">{filteredBooths.length}</span>개의 부스
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-2 gap-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-5">
               {filteredBooths.map((booth) => (
                 <BoothCard
                   key={booth.id}
