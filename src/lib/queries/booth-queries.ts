@@ -33,7 +33,8 @@ export async function fetchBoothsWithDetails(
   supabase: AnySupabaseClient,
   options?: FetchBoothsOptions,
 ): Promise<{ data: BoothWithDetails[] | null; error: string | null }> {
-  const ascending = options?.ascending ?? false;
+  // 기본: 먼저 등록된 부스가 위로 오도록 오름차순 (공개 부스리스트/관리자 모두).
+  const ascending = options?.ascending ?? true;
   const columns = options?.includePasswordLast4 ? BOOTH_ADMIN_COLUMNS : BOOTH_PUBLIC_COLUMNS;
 
   let boothQuery = supabase
