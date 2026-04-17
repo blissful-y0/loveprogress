@@ -96,7 +96,7 @@ export default function BoothCard({
         </button>
 
         {/* Bottom info strip: age badge + keyword dots */}
-        <div className="absolute inset-x-0 bottom-0 bg-black/40 backdrop-blur-sm px-2 py-1.5 flex items-center gap-1.5">
+        <div className="absolute inset-x-0 bottom-0 bg-black/55 backdrop-blur-sm px-2 py-1.5 flex items-center gap-1.5">
           <span
             className="shrink-0 px-1.5 py-[1px] rounded-[3px] text-[10px] font-bold text-white leading-tight tracking-wide"
             style={{ backgroundColor: ageColor }}

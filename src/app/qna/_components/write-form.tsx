@@ -193,6 +193,8 @@ export function WriteForm({ onPostCreated }: WriteFormProps) {
                   alt=""
                   aria-hidden="true"
                   className="w-6 h-6 rounded-full object-cover ring-2 ring-white shrink-0"
+                  // 기본 DOM 스택은 뒤 배지가 위로 올라오는데 시각적으론 첫 배지가
+                  // 가장 앞에 보이도록 역순 z-index로 뒤집는다.
                   style={{ zIndex: VISITOR_BADGES.length - i }}
                 />
               ))}

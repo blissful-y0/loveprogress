@@ -414,7 +414,9 @@ export default function BannerManager() {
                     <TableCell className="text-center text-xs">
                       {banner.group_type === "fixed_banner"
                         ? `${banner.sort_order}. ${
-                            FIXED_BANNER_SLOTS[banner.sort_order]?.label ?? "?"
+                            FIXED_BANNER_SLOTS.find(
+                              (s) => s.value === banner.sort_order,
+                            )?.label ?? "알 수 없음"
                           }`
                         : banner.sort_order}
                     </TableCell>
