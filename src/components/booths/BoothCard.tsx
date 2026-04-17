@@ -4,10 +4,7 @@
 import { useState } from "react";
 import { HeartIcon } from "lucide-react";
 import type { BoothCardData } from "@/types/booth";
-import {
-  BOOTH_AGE_COLORS,
-  getBoothKeywordColor,
-} from "@/lib/booth-keyword-colors";
+import { BOOTH_AGE_COLORS } from "@/lib/booth-keyword-colors";
 
 interface BoothCardProps {
   readonly booth: BoothCardData;
@@ -99,20 +96,18 @@ export default function BoothCard({
         </button>
 
         {/* Bottom info strip: age badge + keyword dots */}
-        <div className="absolute inset-x-0 bottom-0 bg-white/90 backdrop-blur-sm px-2 py-1.5 flex items-center gap-1.5">
+        <div className="absolute inset-x-0 bottom-0 bg-black/40 backdrop-blur-sm px-2 py-1.5 flex items-center gap-1.5">
           <span
             className="shrink-0 px-1.5 py-[1px] rounded-[3px] text-[10px] font-bold text-white leading-tight tracking-wide"
             style={{ backgroundColor: ageColor }}
           >
             {ageLabel}
           </span>
-          <span className="flex-1 min-w-0 truncate text-[10.5px] font-medium">
+          <span className="flex-1 min-w-0 truncate text-[10.5px] font-medium text-white">
             {booth.keywords.map((kw, i) => (
               <span key={kw}>
-                {i > 0 && <span className="text-[#c8c8c8] mx-[3px]">·</span>}
-                <span style={{ color: getBoothKeywordColor(kw) }}>
-                  {KEYWORD_SHORT[kw] ?? kw}
-                </span>
+                {i > 0 && <span className="text-white/60 mx-[3px]">·</span>}
+                {KEYWORD_SHORT[kw] ?? kw}
               </span>
             ))}
           </span>
