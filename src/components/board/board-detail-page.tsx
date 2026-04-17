@@ -1,6 +1,6 @@
-import sanitizeHtml from "sanitize-html";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
+import { sanitizePostContent } from "@/lib/sanitize-content";
 import { wrapImagesWithLinks } from "@/lib/wrap-images-with-links";
 import type { BoardPostRow } from "@/types/database";
 
@@ -59,26 +59,9 @@ export default function BoardDetailPage({
         <div
           className="prose py-8 min-h-[240px] overflow-x-auto max-w-none"
           dangerouslySetInnerHTML={{
-            __html: wrapImagesWithLinks(sanitizeHtml(post.content.slice(HTML_MARKER.length), {
-              allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-                "img", "figure", "figcaption", "details", "summary",
-                "h1", "h2", "h3", "h4", "h5", "h6",
-              ]),
-              allowedAttributes: {
-                ...sanitizeHtml.defaults.allowedAttributes,
-                "*": ["class", "style", "id"],
-                a: ["href", "name", "target", "rel"],
-                img: ["src", "alt", "width", "height"],
-              },
-              allowedStyles: {
-                "*": {
-                  "text-align": [/^(left|center|right|justify)$/],
-                  "font-weight": [/^(bold|normal|[1-9]00)$/],
-                  "font-style": [/^(italic|normal)$/],
-                  "text-decoration": [/^(underline|line-through|none)$/],
-                },
-              },
-            })),
+            __html: wrapImagesWithLinks(
+              sanitizePostContent(post.content.slice(HTML_MARKER.length)),
+            ),
           }}
         />
       ) : (
