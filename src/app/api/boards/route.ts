@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
@@ -138,6 +139,9 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    revalidatePath("/");
+    revalidatePath(boardType === "event" ? "/info/events" : "/info/notices");
 
     return NextResponse.json({ success: true, post });
   } catch {
