@@ -24,25 +24,25 @@ export default function BoothDetailModal({ booth, open, onOpenChange }: BoothDet
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[720px] p-0 overflow-hidden rounded-2xl gap-0">
+      <DialogContent className="max-w-[720px] w-[calc(100vw-2rem)] p-0 overflow-hidden rounded-2xl gap-0 max-h-[90vh] flex flex-col">
         <DialogHeader className="sr-only">
           <DialogTitle>{booth.name}</DialogTitle>
         </DialogHeader>
 
-        {/* Booth Cut Image — 550x300 */}
-        <div className="aspect-[550/300] w-full bg-[#eee] overflow-hidden">
+        {/* Booth Cut Image — 원본 비율 유지 (object-contain) */}
+        <div className="w-full aspect-[550/300] bg-[#eee] overflow-hidden shrink-0">
           <img
             src={booth.thumbnailImageKey}
             alt={booth.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         </div>
 
         {/* Info */}
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto min-w-0">
           {/* Name + Age badge */}
           <div className="flex items-start justify-between gap-3">
-            <h2 className="text-[20px] font-bold text-[#1a1a1a] leading-tight tracking-[-0.02em]">
+            <h2 className="flex-1 min-w-0 text-[20px] font-bold text-[#1a1a1a] leading-tight tracking-[-0.02em] break-all">
               {booth.name}
             </h2>
             <span
@@ -64,7 +64,10 @@ export default function BoothDetailModal({ booth, open, onOpenChange }: BoothDet
             <p className="text-[11px] font-semibold text-[#bbb] tracking-[0.05em] uppercase mb-2">참가자</p>
             <div className="flex flex-wrap gap-x-5 gap-y-1">
               {allParticipants.map((p, i) => (
-                <span key={`${p.name}-${i}`} className="text-[14px] font-medium text-[#505050]">
+                <span
+                  key={`${p.name}-${i}`}
+                  className="text-[14px] font-medium text-[#505050] break-all max-w-full"
+                >
                   {p.snsUrl ? (
                     <a
                       href={p.snsUrl}
