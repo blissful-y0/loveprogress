@@ -82,8 +82,33 @@ export default function BoothCard({
           loading="lazy"
         />
 
-        {/* Bottom info strip: age badge + keyword dots + heart */}
-        <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm px-2 py-1.5 flex items-center gap-1.5">
+        {/* Top-right heart */}
+        <button
+          type="button"
+          onClick={handleLike}
+          className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-white/85 backdrop-blur-sm hover:bg-white transition-colors cursor-pointer shadow-sm group/like"
+          aria-label={liked ? "좋아요 취소" : "좋아요"}
+        >
+          <HeartIcon
+            className={`size-[14px] transition-colors ${
+              liked
+                ? "fill-[#34aa8f] text-[#34aa8f]"
+                : "text-[#9a9a9a] group-hover/like:text-[#34aa8f]"
+            }`}
+          />
+          {likeCount > 0 && (
+            <span
+              className={`text-[11px] font-semibold tabular-nums ${
+                liked ? "text-[#34aa8f]" : "text-[#707070]"
+              }`}
+            >
+              {likeCount}
+            </span>
+          )}
+        </button>
+
+        {/* Bottom info strip: age badge + keyword dots */}
+        <div className="absolute inset-x-0 bottom-0 bg-white/90 backdrop-blur-sm px-2 py-1.5 flex items-center gap-1.5">
           <span
             className="shrink-0 px-1.5 py-[1px] rounded-[3px] text-[10px] font-bold text-white leading-tight tracking-wide"
             style={{ backgroundColor: ageColor }}
@@ -93,36 +118,13 @@ export default function BoothCard({
           <span className="flex-1 min-w-0 truncate text-[10.5px] font-medium">
             {booth.keywords.map((kw, i) => (
               <span key={kw}>
-                {i > 0 && <span className="text-[#d0d0d0] mx-[3px]">·</span>}
+                {i > 0 && <span className="text-[#c8c8c8] mx-[3px]">·</span>}
                 <span style={{ color: getBoothKeywordColor(kw) }}>
                   {KEYWORD_SHORT[kw] ?? kw}
                 </span>
               </span>
             ))}
           </span>
-          <button
-            type="button"
-            onClick={handleLike}
-            className="shrink-0 flex items-center gap-0.5 pl-1 -mr-0.5 cursor-pointer group/like"
-            aria-label={liked ? "좋아요 취소" : "좋아요"}
-          >
-            <HeartIcon
-              className={`size-[15px] transition-colors ${
-                liked
-                  ? "fill-[#34aa8f] text-[#34aa8f]"
-                  : "text-[#b0b0b0] group-hover/like:text-[#34aa8f]"
-              }`}
-            />
-            {likeCount > 0 && (
-              <span
-                className={`text-[10.5px] font-semibold tabular-nums ${
-                  liked ? "text-[#34aa8f]" : "text-[#707070]"
-                }`}
-              >
-                {likeCount}
-              </span>
-            )}
-          </button>
         </div>
       </div>
 
