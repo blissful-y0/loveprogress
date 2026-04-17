@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { PrivacyModal } from "./privacy-modal";
 import { CHARACTERS, PLACEHOLDER_TEXT } from "../_lib/constants";
@@ -9,6 +9,12 @@ import { useUser } from "@/hooks/useUser";
 interface WriteFormProps {
   onPostCreated: () => void;
 }
+
+const VISITOR_BADGES = [
+  "/img/qna/visitor-badges/1.jpg",
+  "/img/qna/visitor-badges/2.jpg",
+  "/img/qna/visitor-badges/3.jpg",
+] as const;
 
 export function WriteForm({ onPostCreated }: WriteFormProps) {
   const { user } = useUser();
@@ -22,6 +28,12 @@ export function WriteForm({ onPostCreated }: WriteFormProps) {
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  // 방문자 배지는 mount 후 랜덤 선택 (SSR/hydration mismatch 회피)
+  const [badgeSrc, setBadgeSrc] = useState<string | null>(null);
+  useEffect(() => {
+    const idx = Math.floor(Math.random() * VISITOR_BADGES.length);
+    setBadgeSrc(VISITOR_BADGES[idx]);
+  }, []);
 
   const selectedCharacter = CHARACTERS.find((c) => c.key === selectedCharKey)!;
 
@@ -74,25 +86,26 @@ export function WriteForm({ onPostCreated }: WriteFormProps) {
 
       {/* Body */}
       <div className="bg-white px-5 py-5 flex gap-5 items-start">
-        {/* Photo trigger (Popover) */}
+        {/* Photo + change-account button */}
         <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <Popover.Trigger asChild>
-            <button
-              type="button"
-              className="shrink-0 w-[100px] h-[120px] rounded-[10px] overflow-hidden bg-[#fafafa] relative group focus:outline-none"
-            >
+          <div className="shrink-0 flex flex-col items-center gap-1.5">
+            <div className="w-[100px] h-[120px] rounded-[10px] overflow-hidden bg-[#fafafa]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={selectedCharacter.src}
                 alt={selectedCharacter.label}
                 className="w-full h-full object-cover"
               />
-              {/* 하단 오버레이 배지 */}
-              <span className="absolute bottom-0 inset-x-0 bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium py-1 text-center group-hover:bg-primary/80 transition-colors">
+            </div>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                className="w-[100px] rounded-[7px] border border-[#e0e0e0] bg-white text-[11px] font-medium text-[#707070] py-1 hover:bg-[#f5f5f5] hover:text-primary hover:border-primary/40 transition-colors focus:outline-none"
+              >
                 계정 변경
-              </span>
-            </button>
-          </Popover.Trigger>
+              </button>
+            </Popover.Trigger>
+          </div>
 
           <Popover.Portal>
             <Popover.Content
@@ -174,18 +187,19 @@ export function WriteForm({ onPostCreated }: WriteFormProps) {
 
       {/* Footer */}
       <div className="bg-white border-t border-[#f0f0f0] px-5 py-3.5 flex flex-col gap-2">
-        {/* Top row: Olympic rings + user count + privacy + checkboxes + submit */}
+        {/* Top row: visitor badge + count + privacy + checkboxes + submit */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          {/* Olympic rings + count */}
-          <div className="flex items-center gap-2">
-            <svg width="36" height="16" viewBox="0 0 90 40" className="shrink-0">
-              <circle cx="12" cy="14" r="9" fill="none" stroke="#0081C8" strokeWidth="2.5"/>
-              <circle cx="30" cy="14" r="9" fill="none" stroke="#000000" strokeWidth="2.5"/>
-              <circle cx="48" cy="14" r="9" fill="none" stroke="#EE334E" strokeWidth="2.5"/>
-              <circle cx="21" cy="24" r="9" fill="none" stroke="#FCB131" strokeWidth="2.5"/>
-              <circle cx="39" cy="24" r="9" fill="none" stroke="#00A651" strokeWidth="2.5"/>
-            </svg>
-            <span className="text-[13px] text-primary font-medium">33550336명이 이용했어요</span>
+          <div className="flex items-center gap-1.5">
+            {badgeSrc && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={badgeSrc}
+                alt=""
+                aria-hidden="true"
+                className="w-5 h-5 rounded-[4px] object-cover shrink-0"
+              />
+            )}
+            <span className="text-[13px] text-[#707070]">33550336명이 이용했어요</span>
           </div>
 
           {/* Spacer to push right side content */}

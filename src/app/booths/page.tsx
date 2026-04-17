@@ -24,7 +24,7 @@ export default async function BoothsPage() {
   return (
     <section className="min-h-[60vh]">
       {/* Page Header */}
-      <div className="mx-auto max-w-[960px] px-6 pt-12 pb-2">
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8 pt-12 pb-2">
         <h1 className="text-center text-[24px] font-bold text-[#1a1a1a] tracking-[-0.03em]">
           교내 동아리
         </h1>

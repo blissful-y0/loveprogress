@@ -48,7 +48,7 @@ export default function TopCarousel({ banners }: TopCarouselProps) {
         className="absolute top-0 left-0 w-full h-[85%] transition-colors duration-500"
         style={{ backgroundColor: currentBg }}
       />
-      <div className="relative z-10 mx-auto w-full max-w-[1280px] px-4 md:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div
           className="w-full transition-opacity duration-300"
           style={{ opacity: ready ? 1 : 0 }}
