@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { PrivacyModal } from "./privacy-modal";
 import { CHARACTERS, PLACEHOLDER_TEXT } from "../_lib/constants";
@@ -28,12 +28,6 @@ export function WriteForm({ onPostCreated }: WriteFormProps) {
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
-  // 방문자 배지는 mount 후 랜덤 선택 (SSR/hydration mismatch 회피)
-  const [badgeSrc, setBadgeSrc] = useState<string | null>(null);
-  useEffect(() => {
-    const idx = Math.floor(Math.random() * VISITOR_BADGES.length);
-    setBadgeSrc(VISITOR_BADGES[idx]);
-  }, []);
 
   const selectedCharacter = CHARACTERS.find((c) => c.key === selectedCharKey)!;
 
@@ -187,18 +181,22 @@ export function WriteForm({ onPostCreated }: WriteFormProps) {
 
       {/* Footer */}
       <div className="bg-white border-t border-[#f0f0f0] px-5 py-3.5 flex flex-col gap-2">
-        {/* Top row: visitor badge + count + privacy + checkboxes + submit */}
+        {/* Top row: visitor badges + count + privacy + checkboxes + submit */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <div className="flex items-center gap-1.5">
-            {badgeSrc && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={badgeSrc}
-                alt=""
-                aria-hidden="true"
-                className="w-5 h-5 rounded-[4px] object-cover shrink-0"
-              />
-            )}
+          <div className="flex items-center gap-2">
+            <div className="flex -space-x-2">
+              {VISITOR_BADGES.map((src, i) => (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  aria-hidden="true"
+                  className="w-6 h-6 rounded-full object-cover ring-2 ring-white shrink-0"
+                  style={{ zIndex: VISITOR_BADGES.length - i }}
+                />
+              ))}
+            </div>
             <span className="text-[13px] text-[#707070]">33550336명이 이용했어요</span>
           </div>
 
