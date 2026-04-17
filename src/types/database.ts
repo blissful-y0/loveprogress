@@ -13,7 +13,7 @@ export type BoothKeyword =
   | "수공예품"
   | "무료나눔";
 
-export type BannerGroup = "top_carousel" | "middle_carousel" | "fixed_banner";
+export type BannerGroup = "top_carousel" | "middle_carousel" | "fixed_banner" | "events_thumb";
 
 // ─── Row types (matching DB tables) ──────────────────────────────
 
