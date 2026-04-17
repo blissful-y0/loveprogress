@@ -32,6 +32,7 @@ yarn-error.log*
 .env*.local
 .env
 .env.*
+!.env.example
 
 # secrets & credentials
 *.key
@@ -59,3 +60,9 @@ playwright-report/
 test-results/
 desktop-full.png
 mobile-full.png
+.worktrees/
+.claude/worktrees/
+qa-artifacts/
+qa-tests/
+playwright.config.ts
+supabase/.temp/

@@ -1,8 +1,419 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+
+type CheckStatus = "idle" | "checking" | "available" | "taken";
+
 export default function RegisterPage() {
+  const [formData, setFormData] = useState({
+    email: "",
+    nickname: "",
+    password: "",
+    passwordConfirm: "",
+    boothName: "",
+    phoneLast4: "",
+  });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [emailCheckStatus, setEmailCheckStatus] = useState<CheckStatus>("idle");
+  const [checkedEmail, setCheckedEmail] = useState("");
+  const [nicknameCheckStatus, setNicknameCheckStatus] = useState<CheckStatus>("idle");
+  const [checkedNickname, setCheckedNickname] = useState("");
+
+  const updateField = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === "email") {
+      setEmailCheckStatus("idle");
+      setCheckedEmail("");
+    }
+    if (field === "nickname") {
+      setNicknameCheckStatus("idle");
+      setCheckedNickname("");
+    }
+  };
+
+  const handleCheckNickname = async () => {
+    const trimmed = formData.nickname.trim();
+    if (!trimmed) {
+      setError("닉네임을 입력해주세요.");
+      return;
+    }
+    if (trimmed.length > 20) {
+      setError("닉네임은 20자 이하여야 합니다.");
+      return;
+    }
+
+    setError("");
+    setNicknameCheckStatus("checking");
+
+    try {
+      const res = await fetch("/api/auth/check-nickname", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: trimmed }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "닉네임 확인에 실패했습니다.");
+        setNicknameCheckStatus("idle");
+        return;
+      }
+
+      setNicknameCheckStatus(data.available ? "available" : "taken");
+      setCheckedNickname(trimmed);
+    } catch {
+      setError("서버 오류가 발생했습니다.");
+      setNicknameCheckStatus("idle");
+    }
+  };
+
+  const handleCheckEmail = async () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    setError("");
+    setEmailCheckStatus("checking");
+
+    try {
+      const res = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "이메일 확인에 실패했습니다.");
+        setEmailCheckStatus("idle");
+        return;
+      }
+
+      setEmailCheckStatus(data.available ? "available" : "taken");
+      setCheckedEmail(formData.email);
+    } catch {
+      setError("서버 오류가 발생했습니다.");
+      setEmailCheckStatus("idle");
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    if (emailCheckStatus !== "available" || checkedEmail !== formData.email) {
+      setError("이메일 중복확인을 해주세요.");
+      return;
+    }
+
+    if (!formData.nickname.trim()) {
+      setError("닉네임을 입력해주세요.");
+      return;
+    }
+
+    if (formData.nickname.trim().length > 20) {
+      setError("닉네임은 20자 이하여야 합니다.");
+      return;
+    }
+
+    if (nicknameCheckStatus !== "available" || checkedNickname !== formData.nickname.trim()) {
+      setError("닉네임 중복확인을 해주세요.");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("비밀번호는 6자 이상이어야 합니다.");
+      return;
+    }
+
+    if (formData.password !== formData.passwordConfirm) {
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    if (formData.phoneLast4 && !/^\d{4}$/.test(formData.phoneLast4)) {
+      setError("휴대폰번호 뒷자리는 숫자 4자리여야 합니다.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 서버에서 원자적으로 auth user + 프로필 생성
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: formData.nickname.trim(),
+          email: formData.email,
+          password: formData.password,
+          boothName: formData.boothName.trim() || undefined,
+          phoneLast4: formData.phoneLast4.trim() || undefined,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.error ?? "회원가입에 실패했습니다.");
+        return;
+      }
+
+      setIsRegistered(true);
+    } catch {
+      setError("서버 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isRegistered) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+        <div className="w-full max-w-[500px] rounded-[15px] border border-border bg-white p-8 text-center shadow-md sm:p-10">
+          <h1 className="mb-4 text-2xl font-bold text-text-dark">
+            회원가입 완료
+          </h1>
+          <p className="mb-6 text-sm text-text-sub">
+            이메일 인증 메일을 발송했습니다. 메일함을 확인해주세요.
+          </p>
+          <Link
+            href="/auth/login"
+            className="inline-block rounded-[10px] bg-primary px-6 py-2.5 text-base font-semibold text-white hover:bg-primary/90"
+          >
+            로그인 페이지로 이동
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <h1 className="text-2xl font-bold text-[#212121]">회원가입</h1>
-      <p className="text-[#909090]">준비 중입니다</p>
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+      <div className="w-full max-w-[500px] rounded-[15px] border border-border bg-white p-8 shadow-md sm:p-10">
+        {/* Title */}
+        <h1 className="mb-8 text-center text-2xl font-bold text-text-dark">
+          회원가입
+        </h1>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Email with duplicate check */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="email" className="text-sm text-text-sub">
+              이메일 <span className="text-destructive">*</span>
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="email"
+                type="email"
+                placeholder="이메일을 입력하세요"
+                required
+                value={formData.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                className="h-10 flex-1 rounded-lg border-border px-3 text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCheckEmail}
+                disabled={
+                  emailCheckStatus === "checking" || !formData.email.trim()
+                }
+                className="h-10 shrink-0 rounded-lg border-border px-3 text-xs font-medium"
+              >
+                {emailCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+              </Button>
+            </div>
+            {emailCheckStatus === "available" && (
+              <p className="text-xs text-green-600">
+                사용 가능한 이메일입니다.
+              </p>
+            )}
+            {emailCheckStatus === "taken" && (
+              <p className="text-xs text-destructive">
+                이미 사용 중인 이메일입니다.
+              </p>
+            )}
+          </div>
+
+          {/* Nickname with duplicate check */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="nickname" className="text-sm text-text-sub">
+              닉네임 <span className="text-destructive">*</span>
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="nickname"
+                type="text"
+                placeholder="닉네임을 입력하세요"
+                required
+                value={formData.nickname}
+                onChange={(e) => updateField("nickname", e.target.value)}
+                className="h-10 flex-1 rounded-lg border-border px-3 text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCheckNickname}
+                disabled={
+                  nicknameCheckStatus === "checking" || !formData.nickname.trim()
+                }
+                className="h-10 shrink-0 rounded-lg border-border px-3 text-xs font-medium"
+              >
+                {nicknameCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+              </Button>
+            </div>
+            {nicknameCheckStatus === "available" && (
+              <p className="text-xs text-green-600">
+                사용 가능한 닉네임입니다.
+              </p>
+            )}
+            {nicknameCheckStatus === "taken" && (
+              <p className="text-xs text-destructive">
+                이미 사용 중인 닉네임입니다.
+              </p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="password" className="text-sm text-text-sub">
+              비밀번호 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="비밀번호를 입력하세요 (6자 이상)"
+              required
+              minLength={6}
+              value={formData.password}
+              onChange={(e) => updateField("password", e.target.value)}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
+          </div>
+
+          {/* Password confirm */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="passwordConfirm" className="text-sm text-text-sub">
+              비밀번호 확인 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="passwordConfirm"
+              type="password"
+              placeholder="비밀번호를 다시 입력하세요"
+              required
+              value={formData.passwordConfirm}
+              onChange={(e) => updateField("passwordConfirm", e.target.value)}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
+          </div>
+
+          {/* Booth name (optional) */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="boothName" className="text-sm text-text-sub">
+              부스이름{" "}
+              <span className="text-xs font-normal text-text-light">
+                (선택)
+              </span>
+            </Label>
+            <Input
+              id="boothName"
+              type="text"
+              placeholder="부스이름을 입력하세요"
+              value={formData.boothName}
+              onChange={(e) => updateField("boothName", e.target.value)}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
+          </div>
+
+          {/* Phone last 4 digits (optional) */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="phoneLast4" className="text-sm text-text-sub">
+              휴대폰번호 뒷자리{" "}
+              <span className="text-xs font-normal text-text-light">
+                (선택)
+              </span>
+            </Label>
+            <Input
+              id="phoneLast4"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="휴대폰번호 뒷자리를 입력하세요"
+              value={formData.phoneLast4}
+              onChange={(e) => updateField("phoneLast4", e.target.value)}
+              maxLength={4}
+              className="h-10 rounded-lg border-border px-3 text-sm"
+            />
+          </div>
+
+          {/* Error message */}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          {/* Register button */}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="mx-auto mt-3 h-[40px] w-full max-w-[420px] rounded-[10px] bg-primary text-base font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+          >
+            {isSubmitting ? "가입 중..." : "가입하기"}
+          </Button>
+        </form>
+
+        {/* Discord simple register */}
+        <div className="mt-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-text-light">간편 회원가입</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm text-text-sub transition-colors hover:bg-muted"
+            onClick={() => {
+              /* TODO: Discord OAuth 연동 */
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/img/login/discord_i.jpg"
+              alt="Discord"
+              width={24}
+              height={24}
+              className="size-6 rounded-full object-cover"
+            />
+            Discord로 간편 가입
+          </button>
+        </div>
+
+        {/* Login link */}
+        <p className="mt-6 text-center text-sm text-text-muted">
+          이미 계정이 있으신가요?{" "}
+          <Link
+            href="/auth/login"
+            className="font-medium text-primary hover:underline"
+          >
+            로그인
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
