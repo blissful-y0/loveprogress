@@ -289,8 +289,11 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Bottom row: Scrollable nav */}
-        <nav ref={mobileNavRef} className="flex overflow-x-auto scrollbar-hide border-t border-gray-100">
+        {/* Bottom row: nav (6개 아이템이 화면에 들어오면 가운데 정렬, 넘치면 안전하게 스크롤 가능) */}
+        <nav
+          ref={mobileNavRef}
+          className="flex overflow-x-auto scrollbar-hide border-t border-gray-100 [justify-content:safe_center]"
+        >
           {NAV_ITEMS.map((item) => {
             const active = isActiveRoute(pathname, item.href);
             return (
@@ -298,7 +301,7 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 data-active={active ? "" : undefined}
-                className={`relative shrink-0 px-4 py-2.5 text-[13px] font-medium transition-colors whitespace-nowrap ${
+                className={`relative shrink-0 px-3 py-2.5 text-[13px] font-medium transition-colors whitespace-nowrap ${
                   active ? "text-text-dark" : "text-text-muted"
                 }`}
               >

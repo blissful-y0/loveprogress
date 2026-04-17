@@ -36,17 +36,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ count: count ?? 0, liked });
     }
 
-    // Get all like counts (for booth listing)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: likes } = (await (supabase.from("booth_likes") as any)
-      .select("booth_id")) as { data: { booth_id: string }[] | null };
-
-    const countMap: Record<string, number> = {};
-    for (const like of likes ?? []) {
-      countMap[like.booth_id] = (countMap[like.booth_id] ?? 0) + 1;
-    }
-
-    // Get user's liked booths
+    // 리스트 뷰는 본인 좋아요 여부만 표시(개수는 UI에서 제거됨).
+    // 전체 booth_likes 스캔을 피하기 위해 counts aggregation 제거.
     let userLikes: string[] = [];
     if (user) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,7 +47,7 @@ export async function GET(request: Request) {
       userLikes = (myLikes ?? []).map((l) => l.booth_id);
     }
 
-    return NextResponse.json({ counts: countMap, userLikes });
+    return NextResponse.json({ userLikes });
   } catch {
     return NextResponse.json({ error: "좋아요 정보를 불러올 수 없습니다." }, { status: 500 });
   }

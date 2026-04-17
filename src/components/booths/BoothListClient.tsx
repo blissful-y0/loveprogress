@@ -51,8 +51,7 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
   const [keywordFilters, setKeywordFilters] = useState<ReadonlySet<BoothKeyword>>(new Set());
   const [selectedBooth, setSelectedBooth] = useState<BoothCardData | null>(null);
 
-  // Like state
-  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  // 좋아요는 카드 UI에서 개수 표기는 숨기지만, 사용자별 liked 상태는 서버에 계속 기록
   const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
 
   const fetchLikes = useCallback(async () => {
@@ -60,7 +59,6 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
       const res = await fetch("/api/booths/likes");
       if (!res.ok) return;
       const data = await res.json();
-      setLikeCounts(data.counts ?? {});
       setUserLikes(new Set(data.userLikes ?? []));
     } catch {
       // Silently fail - likes are not critical
@@ -88,10 +86,6 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
         return;
       }
       const data = await res.json();
-      setLikeCounts((prev) => ({
-        ...prev,
-        [boothId]: (prev[boothId] ?? 0) + (data.liked ? 1 : -1),
-      }));
       setUserLikes((prev) => {
         const next = new Set(prev);
         if (data.liked) next.add(boothId);
@@ -173,7 +167,6 @@ export default function BoothListClient({ booths }: BoothListClientProps) {
                   key={booth.id}
                   booth={booth}
                   onClick={() => setSelectedBooth(booth)}
-                  likeCount={likeCounts[booth.id] ?? 0}
                   liked={userLikes.has(booth.id)}
                   isLoggedIn={isLoggedIn}
                   onToggleLike={handleToggleLike}
