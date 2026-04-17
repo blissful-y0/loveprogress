@@ -19,7 +19,7 @@ export const boothBaseSchema = z.object({
   name: z
     .string()
     .min(1, "부스 이름을 입력해주세요.")
-    .max(20, "부스 이름은 20자 이하여야 합니다."),
+    .max(30, "부스 이름은 30자 이하여야 합니다."),
   passwordLast4: z
     .string()
     .regex(/^\d{4}$/, "비밀번호는 숫자 4자리여야 합니다.")
