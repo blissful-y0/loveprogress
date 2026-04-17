@@ -29,12 +29,12 @@ export default function BoothDetailModal({ booth, open, onOpenChange }: BoothDet
           <DialogTitle>{booth.name}</DialogTitle>
         </DialogHeader>
 
-        {/* Booth Cut Image — 원본 비율 유지 (object-contain) */}
-        <div className="w-full aspect-[550/300] bg-[#eee] overflow-hidden shrink-0">
+        {/* Booth Cut Image — 원본 비율 그대로 노출 */}
+        <div className="w-full bg-[#eee] shrink-0 flex items-center justify-center">
           <img
             src={booth.thumbnailImageKey}
             alt={booth.name}
-            className="w-full h-full object-contain"
+            className="w-full h-auto max-h-[60vh] object-contain"
           />
         </div>
 
