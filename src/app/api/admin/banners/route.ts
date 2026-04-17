@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const createBannerSchema = z.object({
-  group_type: z.enum(["top_carousel", "middle_carousel", "fixed_banner"]),
+  group_type: z.enum(["top_carousel", "middle_carousel", "fixed_banner", "events_thumb"]),
   image_key: z.string().min(1, "이미지 URL을 입력해주세요."),
   bg_color: z.string().nullable().optional(),
   link_url: z.string().nullable().optional(),
