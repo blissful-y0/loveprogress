@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
+import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import type { MainBannerRow } from "@/types/database";
@@ -23,9 +24,70 @@ const ICON_SLOTS: readonly { icon: string; label: string }[] = [
   { icon: "/img/main/topcarousel/industry-collab.png", label: "산학협력단" },
 ];
 
+// 내부 링크는 상대 경로로 저장(마이그레이션으로 정규화). 슬래시 시작이면 내부.
+// SSR/CSR 일관성을 위해 window.location 참조는 하지 않는다.
+function isInternalLink(link: string): boolean {
+  return link.startsWith("/");
+}
+
 interface MiddleBannersProps {
   middleBanners?: MainBannerRow[];
   fixedBanners?: MainBannerRow[];
+}
+
+interface IconCardData {
+  readonly id: string;
+  readonly icon: string;
+  readonly label: string;
+  readonly link: string;
+}
+
+interface IconCardProps {
+  readonly card: IconCardData;
+  readonly boxClass: string;
+  readonly imgWrapperClass: string;
+  readonly labelClass: string;
+}
+
+function IconCard({ card, boxClass, imgWrapperClass, labelClass }: IconCardProps) {
+  const inner = (
+    <div className={`${imgWrapperClass} transition-transform duration-200 group-hover:scale-105`}>
+      <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
+    </div>
+  );
+
+  let clickable: React.ReactNode;
+  if (!card.link) {
+    // 링크 미등록 슬롯 — 비활성 표시
+    clickable = (
+      <div
+        className={`${boxClass} opacity-60 cursor-not-allowed`}
+        aria-disabled="true"
+        title="준비 중"
+      >
+        {inner}
+      </div>
+    );
+  } else if (isInternalLink(card.link)) {
+    clickable = (
+      <Link href={card.link} className={boxClass}>
+        {inner}
+      </Link>
+    );
+  } else {
+    clickable = (
+      <a href={card.link} target="_blank" rel="noopener noreferrer" className={boxClass}>
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-1 lg:gap-2">
+      {clickable}
+      <span className={labelClass}>{card.label}</span>
+    </div>
+  );
 }
 
 export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBannersProps) {
@@ -42,7 +104,7 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
   const dbBySortOrder = new Map<number, MainBannerRow>();
   (fixedBanners ?? []).forEach((b) => dbBySortOrder.set(b.sort_order, b));
 
-  const iconCards = ICON_SLOTS.map((slot, sortOrder) => {
+  const iconCards: IconCardData[] = ICON_SLOTS.map((slot, sortOrder) => {
     const db = dbBySortOrder.get(sortOrder);
     return {
       id: db?.id ?? `slot-${sortOrder}`,
@@ -51,6 +113,32 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
       link: db?.link_url ?? "",
     };
   });
+
+  const mobileBox = "group flex items-center justify-center w-[72px] h-[72px] bg-bg-light rounded-[10px] hover:brightness-95 transition-all duration-200";
+  const mobileImgWrap = "w-[32px] h-[32px]";
+  const mobileLabel = "text-[10px] text-text-sub font-medium whitespace-nowrap";
+
+  const desktopBox = "group flex items-center justify-center w-[76px] h-[76px] lg:w-[100px] lg:h-[100px] bg-bg-light rounded-[12px] lg:rounded-[15px] hover:brightness-95 transition-all duration-200";
+  const desktopImgWrap = "w-[40px] h-[40px] lg:w-[52px] lg:h-[52px]";
+  const desktopLabel = "text-[11px] lg:text-[14px] text-text-sub font-medium whitespace-nowrap";
+
+  const renderSlide = (slide: { id: string; image: string; alt: string; link: string }, wrapperClass: string) => {
+    const img = <img src={slide.image} alt={slide.alt} className="w-full h-full object-contain" />;
+    if (!slide.link) return <div className={wrapperClass}>{img}</div>;
+    if (isInternalLink(slide.link)) {
+      return (
+        <Link href={slide.link} className={`block ${wrapperClass}`}>
+          {img}
+        </Link>
+      );
+    }
+    return (
+      <a href={slide.link} target="_blank" rel="noopener noreferrer" className={`block ${wrapperClass}`}>
+        {img}
+      </a>
+    );
+  };
+
   return (
     <section className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Mobile: 3-col grid with carousel spanning 2 cols */}
@@ -73,15 +161,7 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
             >
               {slides.map((slide) => (
                 <SwiperSlide key={slide.id}>
-                  <div className="w-full h-[72px] rounded-[10px] overflow-hidden bg-bg-light">
-                    {slide.link ? (
-                      <a href={slide.link} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                        <img src={slide.image} alt={slide.alt} className="w-full h-full object-cover" />
-                      </a>
-                    ) : (
-                      <img src={slide.image} alt={slide.alt} className="w-full h-full object-cover" />
-                    )}
-                  </div>
+                  {renderSlide(slide, "w-full h-[72px] rounded-[10px] overflow-hidden bg-bg-light")}
                 </SwiperSlide>
               ))}
             </Swiper>
@@ -89,29 +169,13 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
 
           {/* 6 icons filling remaining cells */}
           {iconCards.map((card) => (
-            <div key={card.id} className="flex flex-col items-center gap-1">
-              {card.link ? (
-                <a
-                  href={card.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-center w-[72px] h-[72px] bg-bg-light rounded-[10px] hover:brightness-95 transition-all duration-200"
-                >
-                  <div className="w-[32px] h-[32px] transition-transform duration-200 group-hover:scale-105">
-                    <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
-                  </div>
-                </a>
-              ) : (
-                <button
-                  className="group flex items-center justify-center w-[72px] h-[72px] bg-bg-light rounded-[10px] hover:brightness-95 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="w-[32px] h-[32px] transition-transform duration-200 group-hover:scale-105">
-                    <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
-                  </div>
-                </button>
-              )}
-              {card.label && <span className="text-[10px] text-text-sub font-medium whitespace-nowrap">{card.label}</span>}
-            </div>
+            <IconCard
+              key={card.id}
+              card={card}
+              boxClass={mobileBox}
+              imgWrapperClass={mobileImgWrap}
+              labelClass={mobileLabel}
+            />
           ))}
         </div>
       </div>
@@ -135,15 +199,7 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
           >
             {slides.map((slide) => (
               <SwiperSlide key={slide.id}>
-                <div className="w-full h-[80px] lg:h-[100px] rounded-[12px] lg:rounded-[15px] overflow-hidden">
-                  {slide.link ? (
-                    <a href={slide.link} target="_blank" rel="noopener noreferrer">
-                      <img src={slide.image} alt={slide.alt} className="w-full h-full object-contain" />
-                    </a>
-                  ) : (
-                    <img src={slide.image} alt={slide.alt} className="w-full h-full object-contain" />
-                  )}
-                </div>
+                {renderSlide(slide, "w-full h-[80px] lg:h-[100px] rounded-[12px] lg:rounded-[15px] overflow-hidden")}
               </SwiperSlide>
             ))}
           </Swiper>
@@ -156,29 +212,13 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
         <div className="shrink-0">
           <div className="grid grid-cols-6 gap-1.5 md:gap-2">
             {iconCards.map((card) => (
-              <div key={card.id} className="flex flex-col items-center gap-1 lg:gap-2">
-                {card.link ? (
-                  <a
-                    href={card.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center justify-center w-[76px] h-[76px] lg:w-[100px] lg:h-[100px] bg-bg-light rounded-[12px] lg:rounded-[15px] hover:brightness-95 transition-all duration-200"
-                  >
-                    <div className="w-[40px] h-[40px] lg:w-[52px] lg:h-[52px] transition-transform duration-200 group-hover:scale-105">
-                      <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
-                    </div>
-                  </a>
-                ) : (
-                  <button
-                    className="group flex items-center justify-center w-[76px] h-[76px] lg:w-[100px] lg:h-[100px] bg-bg-light rounded-[12px] lg:rounded-[15px] hover:brightness-95 transition-all duration-200 cursor-pointer"
-                  >
-                    <div className="w-[40px] h-[40px] lg:w-[52px] lg:h-[52px] transition-transform duration-200 group-hover:scale-105">
-                      <img src={card.icon} alt={card.label} className="w-full h-full object-contain" />
-                    </div>
-                  </button>
-                )}
-                {card.label && <span className="text-[11px] lg:text-[14px] text-text-sub font-medium whitespace-nowrap">{card.label}</span>}
-              </div>
+              <IconCard
+                key={card.id}
+                card={card}
+                boxClass={desktopBox}
+                imgWrapperClass={desktopImgWrap}
+                labelClass={desktopLabel}
+              />
             ))}
           </div>
         </div>
