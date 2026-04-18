@@ -117,11 +117,11 @@ export default function BoothCard({
 
       {/* Text area — 썸네일 왼쪽 edge와 flush 정렬 */}
       <div className="mt-3">
-        <h3 className="text-[14px] font-medium text-[#1a1a1a] leading-snug tracking-[-0.02em] line-clamp-2 min-h-[2.6em]">
+        <h3 className="text-[16px] font-medium text-[#1a1a1a] leading-snug tracking-[-0.02em] line-clamp-2 min-h-[2.6em]">
           {booth.name}
         </h3>
 
-        <p className="mt-1.5 text-[12px] font-normal text-[#707070] tracking-[-0.01em] line-clamp-2 leading-relaxed">
+        <p className="mt-1.5 text-[14px] font-normal text-[#707070] tracking-[-0.01em] line-clamp-2 leading-relaxed">
           {allParticipants.map((p, i) => (
             <span key={`${p.name}-${i}`}>
               {i > 0 && <span className="text-[#d0d0d0] mx-[4px]">&middot;</span>}
