@@ -21,18 +21,24 @@ export default async function EventsPage({ searchParams }: Props) {
 
   const supabase = await createClient();
 
-  const { data: pinnedPosts } = await supabase
-    .from("board_posts")
-    .select("*")
-    .eq("board_type", "event")
-    .eq("is_pinned", true)
-    .order("created_at", { ascending: false })
-    .returns<BoardPostRow[]>();
+  const [pinnedRes, countRes, authRes] = await Promise.all([
+    supabase
+      .from("board_posts")
+      .select("*")
+      .eq("board_type", "event")
+      .eq("is_pinned", true)
+      .order("created_at", { ascending: false })
+      .returns<BoardPostRow[]>(),
+    supabase
+      .from("board_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("board_type", "event"),
+    supabase.auth.getUser(),
+  ]);
 
-  const { count } = await supabase
-    .from("board_posts")
-    .select("*", { count: "exact", head: true })
-    .eq("board_type", "event");
+  const pinnedPosts = pinnedRes.data;
+  const count = countRes.count;
+  const authUser = authRes.data.user;
 
   const total = count ?? 0;
   const totalRegular = total - (pinnedPosts?.length ?? 0);
@@ -40,28 +46,26 @@ export default async function EventsPage({ searchParams }: Props) {
   const clampedPage = Math.min(page, totalPages);
   const offset = (clampedPage - 1) * ITEMS_PER_PAGE;
 
-  const { data: regularPosts } = await supabase
-    .from("board_posts")
-    .select("*")
-    .eq("board_type", "event")
-    .eq("is_pinned", false)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + ITEMS_PER_PAGE - 1)
-    .returns<BoardPostRow[]>();
+  const [regularRes, profileRes] = await Promise.all([
+    supabase
+      .from("board_posts")
+      .select("*")
+      .eq("board_type", "event")
+      .eq("is_pinned", false)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + ITEMS_PER_PAGE - 1)
+      .returns<BoardPostRow[]>(),
+    authUser
+      ? supabase
+          .from("users")
+          .select("role")
+          .eq("id", authUser.id)
+          .single<{ role: string }>()
+      : Promise.resolve({ data: null }),
+  ]);
 
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
-
-  let isAdmin = false;
-  if (authUser) {
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", authUser.id)
-      .single<{ role: string }>();
-    isAdmin = profile?.role === "admin";
-  }
+  const regularPosts = regularRes.data;
+  const isAdmin = profileRes.data?.role === "admin";
 
   return (
     <BoardListPage
