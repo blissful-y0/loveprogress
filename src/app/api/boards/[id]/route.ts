@@ -234,7 +234,9 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
     revalidatePath("/");
     if (existing) {
-      revalidatePath(existing.board_type === "event" ? "/info/events" : "/info/notices");
+      const basePath = existing.board_type === "event" ? "/info/events" : "/info/notices";
+      revalidatePath(basePath);
+      revalidatePath(`${basePath}/${id}`);
     }
 
     return NextResponse.json({ success: true });
