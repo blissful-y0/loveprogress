@@ -50,9 +50,11 @@ export const LinkedImage = Image.extend({
     };
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes, node }) {
     const attrs = { ...(HTMLAttributes as ImageAttrs) };
-    const href = typeof attrs.href === "string" ? attrs.href : null;
+    // href 속성의 renderHTML은 빈 객체를 반환하므로 node.attrs에서 직접 읽는다.
+    const hrefAttr = (node.attrs as ImageAttrs).href;
+    const href = typeof hrefAttr === "string" && hrefAttr ? hrefAttr : null;
     delete attrs.href;
     const imgSpec = ["img", attrs] as const;
     if (href) {
