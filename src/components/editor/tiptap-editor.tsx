@@ -5,8 +5,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
+import { LinkedImage } from "./extensions/linked-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import {
   BoldIcon,
@@ -94,12 +94,12 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
         openOnClick: false,
         HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
       }),
-      Image.configure({
+      LinkedImage.configure({
         HTMLAttributes: { class: "max-w-full rounded-lg" },
         allowBase64: false,
       }),
       TextAlign.configure({
-        types: ["heading", "paragraph", "image"],
+        types: ["heading", "paragraph"],
       }),
       Placeholder.configure({ placeholder }),
     ],
@@ -119,6 +119,32 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
 
   if (!editor) return null;
 
+  const insertImageWithOptions = (src: string) => {
+    const alignment = window.prompt("정렬을 선택하세요 (left, center, right)", "center");
+    const align = (["left", "center", "right"].includes(alignment ?? "")
+      ? alignment
+      : "center") as "left" | "center" | "right";
+
+    const linkUrlRaw = window.prompt("이미지에 연결할 링크 URL (없으면 비워두세요)", "");
+    let href: string | null = null;
+    if (linkUrlRaw) {
+      try {
+        const parsedLink = new URL(linkUrlRaw);
+        if (!["http:", "https:"].includes(parsedLink.protocol)) {
+          alert("http 또는 https URL만 입력 가능합니다.");
+          return;
+        }
+        href = linkUrlRaw;
+      } catch {
+        alert("올바른 URL을 입력해주세요.");
+        return;
+      }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    editor.chain().focus().setImage({ src, align, href } as any).run();
+  };
+
   const addImageByUrl = () => {
     const url = window.prompt("이미지 URL을 입력하세요");
     if (!url) return;
@@ -128,35 +154,7 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
         alert("http 또는 https URL만 입력 가능합니다.");
         return;
       }
-
-      // Ask for alignment
-      const alignment = window.prompt("정렬을 선택하세요 (left, center, right)", "center");
-      const validAlign = ["left", "center", "right"].includes(alignment ?? "") ? alignment! : "center";
-
-      // Ask for link
-      const linkUrl = window.prompt("이미지에 연결할 링크 URL (없으면 비워두세요)", "");
-
-      if (linkUrl) {
-        try {
-          const parsedLink = new URL(linkUrl);
-          if (!["http:", "https:"].includes(parsedLink.protocol)) {
-            alert("http 또는 https URL만 입력 가능합니다.");
-            return;
-          }
-        } catch {
-          alert("올바른 URL을 입력해주세요.");
-          return;
-        }
-        // Insert image wrapped in a link using HTML
-        const imgHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer"><img src="${url}" style="display:block;${validAlign === "center" ? "margin:0 auto;" : validAlign === "right" ? "margin-left:auto;" : ""}" /></a>`;
-        editor.chain().focus().insertContent(imgHtml).run();
-      } else {
-        editor.chain().focus().setImage({ src: url }).run();
-        // Apply alignment after inserting
-        if (validAlign !== "left") {
-          editor.chain().focus().setTextAlign(validAlign).run();
-        }
-      }
+      insertImageWithOptions(url);
     } catch {
       alert("올바른 URL을 입력해주세요.");
     }
@@ -176,32 +174,7 @@ export default function TiptapEditor({ content, onChange, placeholder = "내용�
         const res = await fetch(uploadEndpoint, { method: "POST", body: formData });
         const data = await res.json();
         if (res.ok && data.url) {
-          // Ask for alignment
-          const alignment = window.prompt("정렬을 선택하세요 (left, center, right)", "center");
-          const validAlign = ["left", "center", "right"].includes(alignment ?? "") ? alignment! : "center";
-
-          // Ask for link
-          const linkUrl = window.prompt("이미지에 연결할 링크 URL (없으면 비워두세요)", "");
-
-          if (linkUrl) {
-            try {
-              const parsedLink = new URL(linkUrl);
-              if (!["http:", "https:"].includes(parsedLink.protocol)) {
-                alert("http 또는 https URL만 입력 가능합니다.");
-                return;
-              }
-            } catch {
-              alert("올바른 URL을 입력해주세요.");
-              return;
-            }
-            const imgHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer"><img src="${data.url}" style="display:block;${validAlign === "center" ? "margin:0 auto;" : validAlign === "right" ? "margin-left:auto;" : ""}" /></a>`;
-            editor.chain().focus().insertContent(imgHtml).run();
-          } else {
-            editor.chain().focus().setImage({ src: data.url }).run();
-            if (validAlign !== "left") {
-              editor.chain().focus().setTextAlign(validAlign).run();
-            }
-          }
+          insertImageWithOptions(data.url);
         } else {
           alert(data.error ?? "이미지 업로드에 실패했습니다.");
         }
