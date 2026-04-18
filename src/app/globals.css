@@ -143,7 +143,8 @@ p {
 }
 .prose hr { border-top: 1px solid #e5e5e5; margin: 1.2em 0; }
 .prose a { color: #34aa8f; text-decoration: underline; }
-.prose img { max-width: 100%; border-radius: 8px; margin: 0.6em auto; display: block; cursor: pointer; }
+/* 기본 margin-left/right는 설정하지 않음 → 이미지 자체 inline style(margin-left/right: auto)이 정렬을 결정. */
+.prose img { max-width: 100%; border-radius: 8px; margin-top: 0.6em; margin-bottom: 0.6em; display: block; cursor: pointer; }
 .prose [style*="text-align: left"] img,
 .prose [style*="text-align:left"] img { margin-left: 0; margin-right: auto; }
 .prose [style*="text-align: right"] img,
