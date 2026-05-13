@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   // Admin: select all fields including content of secret posts
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: posts, error: postsError } = await (supabase.from("qna_posts") as any)
-    .select("id, writer_name, is_secret, image_key, content, is_hidden, created_at")
+    .select("id, writer_name, user_id, is_secret, image_key, content, is_hidden, created_at")
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -38,7 +38,15 @@ export async function GET(request: Request) {
   }
 
   const postIds = (posts as { id: string }[]).map((p) => p.id);
+  const userIds = Array.from(
+    new Set(
+      (posts as { user_id: string | null }[])
+        .map((post) => post.user_id)
+        .filter((userId): userId is string => Boolean(userId)),
+    ),
+  );
   let answers: Record<string, string> = {};
+  let nicknames: Record<string, string> = {};
 
   if (postIds.length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,9 +61,23 @@ export async function GET(request: Request) {
     }
   }
 
+  if (userIds.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: usersData } = await (supabase.from("users") as any)
+      .select("id, nickname")
+      .in("id", userIds);
+
+    if (usersData) {
+      nicknames = Object.fromEntries(
+        (usersData as { id: string; nickname: string }[]).map((user) => [user.id, user.nickname]),
+      );
+    }
+  }
+
   const result = (posts as {
     id: string;
     writer_name: string;
+    user_id: string | null;
     is_secret: boolean;
     image_key: string | null;
     content: string;
@@ -63,6 +85,7 @@ export async function GET(request: Request) {
     created_at: string;
   }[]).map((post) => ({
     ...post,
+    author_nickname: post.user_id ? (nicknames[post.user_id] ?? null) : null,
     answer: answers[post.id] ?? null,
     hasAnswer: post.id in answers,
   }));
