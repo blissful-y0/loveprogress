@@ -66,6 +66,11 @@ test("users nickname is unique at the schema level", () => {
   );
 });
 
+test("qna posts schema includes admin visibility columns from migrations", () => {
+  assert.match(schema, /user_id\s+UUID\s+REFERENCES auth\.users\(id\) ON DELETE SET NULL/i);
+  assert.match(schema, /is_hidden\s+BOOLEAN\s+NOT NULL\s+DEFAULT false/i);
+});
+
 test("rate limit function is not executable by public", () => {
   assert.match(
     rateLimitMigration,

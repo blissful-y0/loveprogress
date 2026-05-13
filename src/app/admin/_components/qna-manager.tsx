@@ -6,6 +6,7 @@ import { getCharacterByKey } from "@/app/qna/_lib/constants";
 interface QnaAdminPost {
   id: string;
   writer_name: string;
+  author_nickname?: string | null;
   is_secret: boolean;
   is_hidden: boolean;
   image_key: string | null;
@@ -113,6 +114,11 @@ function PostCard({ post, onAnswerSaved }: { post: QnaAdminPost; onAnswerSaved: 
       <div className="bg-primary px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-bold text-white">{post.writer_name}</span>
+          {post.author_nickname && (
+            <span className="text-[11px] text-white bg-white/20 px-2 py-0.5 rounded-full font-bold">
+              로그인 닉네임: {post.author_nickname}
+            </span>
+          )}
           {post.is_secret && (
             <span className="text-[11px] text-white bg-black/15 px-2 py-0.5 rounded-full font-bold">비밀글</span>
           )}

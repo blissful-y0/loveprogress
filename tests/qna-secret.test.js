@@ -28,8 +28,9 @@ test("secret qna client does not use a hardcoded password", () => {
 });
 
 test("secret qna list response strips protected content server-side", () => {
-  assert.match(qnaRouteSource, /content:\s*post\.is_secret\s*\?\s*""\s*:\s*post\.content/);
-  assert.match(qnaRouteSource, /answer:\s*post\.is_secret\s*\?\s*null\s*:/);
+  assert.match(qnaRouteSource, /const canView = !post\.is_secret \|\| isOwner/);
+  assert.match(qnaRouteSource, /content:\s*canView\s*\?\s*post\.content\s*:\s*""/);
+  assert.match(qnaRouteSource, /answer:\s*canView\s*\?/);
 });
 
 test("secret qna verification is handled by a server route", () => {
