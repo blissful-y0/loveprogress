@@ -15,12 +15,16 @@ const FALLBACK_SLIDES = [
 ];
 
 // sort_order(0~5) 기준 6개 슬롯의 기본값. DB 값이 있으면 해당 슬롯만 덮어씀.
-const ICON_SLOTS: readonly { icon: string; label: string }[] = [
+const ICON_SLOTS: readonly { icon: string; label: string; link?: string }[] = [
   { icon: "/img/main/topcarousel/academic-calendar.png", label: "학사일정" },
   { icon: "/img/main/topcarousel/freshmen-guide.png", label: "신입생안내" },
   { icon: "/img/main/topcarousel/arts-education.png", label: "예술교육원" },
   { icon: "/img/main/topcarousel/graduation.png", label: "졸업수료" },
-  { icon: "/img/main/topcarousel/graduate-program.png", label: "대학원통합과정" },
+  {
+    icon: "/img/main/topcarousel/graduate-program.png",
+    label: "대학원통합과정",
+    link: "https://phnxgame.com/nyang/",
+  },
   { icon: "/img/main/topcarousel/industry-collab.png", label: "산학협력단" },
 ];
 
@@ -110,7 +114,7 @@ export default function MiddleBanners({ middleBanners, fixedBanners }: MiddleBan
       id: db?.id ?? `slot-${sortOrder}`,
       icon: db?.image_key ?? slot.icon,
       label: slot.label,
-      link: db?.link_url ?? "",
+      link: slot.link ?? db?.link_url ?? "",
     };
   });
 
