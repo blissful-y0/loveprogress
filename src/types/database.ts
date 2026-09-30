@@ -74,6 +74,10 @@ export interface QnaAnswerRow {
 }
 
 export interface BoothRow {
+  row_label?: string | null;
+  column_number?: number | null;
+  info_url?: string | null;
+  author_user_id?: string | null;
   id: string;
   name: string;
   password_last4: string | null;
@@ -198,7 +202,9 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      save_booth_promotion: { Args: { p_id: string | null; p_author: string; p_data: unknown }; Returns: string };
+    };
     Enums: {
       user_role: UserRole;
       board_type: BoardType;

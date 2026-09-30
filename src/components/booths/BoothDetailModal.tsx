@@ -8,44 +8,61 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { BoothCardData } from "@/types/booth";
+import { HeartIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { BOOTH_KEYWORD_COLORS } from "@/lib/booth-keyword-colors";
 
 interface BoothDetailModalProps {
   booth: BoothCardData | null;
+  promotion?: boolean;
+  empty?: boolean;
+  liked?: boolean;
+  likePending?: boolean;
+  onToggleLike?: () => void;
+  onEdit?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export default function BoothDetailModal({ booth, open, onOpenChange }: BoothDetailModalProps) {
-  if (!booth) return null;
+export default function BoothDetailModal({ booth, open, onOpenChange, promotion = false, empty = false, liked = false, likePending = false, onToggleLike, onEdit }: BoothDetailModalProps) {
+  if (!booth && !empty) return null;
 
-  const isAdult = booth.ageType === "adult";
-  const allParticipants = [booth.owner, ...booth.participants.slice(0, 3)];
+  const title = booth?.name ?? "등록된 부스 정보가 없습니다.";
+
+  const isAdult = booth?.ageType === "adult";
+  const allParticipants = booth ? [booth.owner, ...booth.participants.slice(0, 3)] : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[720px] w-[calc(100vw-2rem)] p-0 overflow-hidden rounded-2xl gap-0 max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-[720px] w-[calc(100vw-2rem)] p-0 overflow-hidden rounded-2xl gap-0 max-h-[calc(100dvh-2rem)] flex flex-col [&>[data-slot=dialog-close]]:size-11 sm:[&>[data-slot=dialog-close]]:size-8">
         <DialogHeader className="sr-only">
-          <DialogTitle>{booth.name}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
         {/* Booth Cut Image — 원본 비율 그대로 노출 */}
-        <div className="w-full bg-[#eee] shrink-0 flex items-center justify-center">
-          <img
+        <div className="relative w-full bg-[#eee] shrink-0 flex items-center justify-center">
+          {booth ? <img
             src={booth.thumbnailImageKey}
             alt={booth.name}
-            className="w-full h-auto max-h-[60vh] object-contain"
-          />
+            className="w-full h-auto max-h-[40dvh] sm:max-h-[60vh] object-contain"
+          /> : (
+            <div className="flex aspect-[14/10] max-h-[40dvh] w-full items-center justify-center bg-[#e6e6e6] sm:max-h-[60vh]">
+              <div className="relative aspect-[2.1] w-[90%] overflow-hidden">
+                <img src="/img/booth/promotion-empty.jpg" alt="부스 공용 캐릭터 이미지" className="absolute left-0 top-0 w-[340%] max-w-none -translate-x-[36%] -translate-y-[32.5%]" />
+              </div>
+            </div>
+          )}
+          {promotion && booth && <button type="button" aria-label={liked ? "즐겨찾기 해제" : "즐겨찾기"} aria-pressed={liked} disabled={likePending} onClick={onToggleLike} className="absolute bottom-3 right-3 flex size-11 items-center sm:size-9 justify-center rounded-full bg-white text-[#33aa8e] shadow disabled:opacity-50"><HeartIcon className="size-5" fill={liked ? "currentColor" : "none"} /></button>}
         </div>
 
         {/* Info */}
-        <div className="px-6 py-5 space-y-4 overflow-y-auto min-w-0">
+        <div className="px-4 py-4 sm:px-6 sm:py-5 space-y-4 overflow-y-auto overscroll-contain min-h-0 min-w-0">
           {/* Name + Age badge */}
           <div className="flex items-start justify-between gap-3">
             <h2 className="flex-1 min-w-0 text-[20px] font-bold text-[#1a1a1a] leading-tight tracking-[-0.02em] break-all">
-              {booth.name}
+              {promotion && booth?.rowLabel && `[${booth.rowLabel}-${booth.columnNumber}] `}{title}
             </h2>
-            <span
+            {booth && <span
               className={`shrink-0 rounded-full px-3 py-[3px] text-[11px] font-semibold tracking-wide ${
                 isAdult
                   ? "text-[#dc4a4a] bg-[#fef2f2] ring-1 ring-inset ring-[#fecaca]"
@@ -53,9 +70,10 @@ export default function BoothDetailModal({ booth, open, onOpenChange }: BoothDet
               }`}
             >
               {isAdult ? "성인" : "일반"}
-            </span>
+            </span>}
           </div>
 
+          {booth && <>
           {/* Divider */}
           <div className="h-px bg-[#f0f0f0]" />
 
@@ -96,7 +114,12 @@ export default function BoothDetailModal({ booth, open, onOpenChange }: BoothDet
               </span>
             ))}
           </div>
+          </>}
         </div>
+        {promotion && booth && <div className="flex shrink-0 justify-center gap-3 border-t border-[#f0f0f0] bg-white px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-8 sm:px-6">
+          {booth.infoUrl && /^https?:\/\//i.test(booth.infoUrl) ? <a href={booth.infoUrl} target="_blank" rel="noopener noreferrer" className="flex h-11 flex-1 items-center sm:h-[30px] sm:w-20 sm:flex-none justify-center rounded bg-[#33aa8e] text-base font-semibold text-white">부스인포</a> : <Button disabled className="h-11 flex-1 sm:h-[30px] sm:w-20 sm:flex-none bg-[#999] text-base font-semibold text-white opacity-100 disabled:opacity-100">부스인포</Button>}
+          {onEdit && <Button variant="outline" onClick={onEdit} className="h-11 flex-1 sm:h-[30px] sm:w-20 sm:flex-none text-base font-semibold">수정</Button>}
+        </div>}
       </DialogContent>
     </Dialog>
   );
