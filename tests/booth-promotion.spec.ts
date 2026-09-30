@@ -22,7 +22,7 @@ test("preview preserves booth layout, edits, likes, and role boundaries without 
   await page.keyboard.press("Escape");
   await page.getByLabel("미리보기 권한").selectOption("guest");
   await page.getByRole("button",{name:"거-2 미등록"}).click();
-  await expect(page.getByRole("heading",{name:"부스 인포 미등록"})).toBeVisible();
+  await expect(page.getByRole("dialog",{name:"부스 인포 미등록"})).toBeVisible();
   await page.mouse.click(5,150);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.setViewportSize({width:390,height:844});
