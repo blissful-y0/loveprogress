@@ -18,6 +18,7 @@ const BOOTH_PUBLIC_COLUMNS =
 const BOOTH_ADMIN_COLUMNS = `${BOOTH_PUBLIC_COLUMNS}, password_last4`;
 
 interface FetchBoothsOptions {
+  readonly includePromotion?: boolean;
   readonly ageType?: BoothAgeType;
   readonly ascending?: boolean;
   /** Include password_last4 in results. Admin use only. */
@@ -35,7 +36,8 @@ export async function fetchBoothsWithDetails(
 ): Promise<{ data: BoothWithDetails[] | null; error: string | null }> {
   // 기본: 먼저 등록된 부스가 위로 오도록 오름차순 (공개 부스리스트/관리자 모두).
   const ascending = options?.ascending ?? true;
-  const columns = options?.includePasswordLast4 ? BOOTH_ADMIN_COLUMNS : BOOTH_PUBLIC_COLUMNS;
+  const baseColumns = options?.includePasswordLast4 ? BOOTH_ADMIN_COLUMNS : BOOTH_PUBLIC_COLUMNS;
+  const columns = options?.includePromotion ? `${baseColumns}, row_label, column_number, info_url, author_user_id` : baseColumns;
 
   let boothQuery = supabase
     .from("booths")

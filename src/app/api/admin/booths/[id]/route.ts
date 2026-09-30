@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isAdminError, verifyAdmin } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { boothBaseSchema } from "@/lib/schemas/booth-schema";
+import { adminPromotionSchema } from "@/lib/schemas/promotion-schema";
 import type { BoothKeywordRow, BoothParticipantRow } from "@/types/database";
 
 type RouteContext = {
@@ -16,7 +16,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
     const { id } = await params;
     const body = await request.json();
-    const parsed = boothBaseSchema.safeParse(body);
+    const parsed = adminPromotionSchema.safeParse(body);
 
     if (!parsed.success) {
       const firstError =
@@ -26,6 +26,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
     const {
       name,
+      rowLabel, columnNumber, infoUrl, authorUserId,
       passwordLast4,
       thumbnailImageKey,
       hoverImageKey,
@@ -36,13 +37,17 @@ export async function PUT(request: Request, { params }: RouteContext) {
     } = parsed.data;
 
     const supabaseAdmin = getSupabaseAdmin();
+    if (authorUserId) {
+      const { data: author } = await supabaseAdmin.from("users").select("id").eq("id", authorUserId).in("role", ["booth_member", "admin"]).maybeSingle();
+      if (!author) return NextResponse.json({error:"부스어 계정 ID를 확인해주세요."}, {status:400});
+    }
 
     // Verify booth exists and save old data for rollback
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: oldBooth } = (await (
       supabaseAdmin.from("booths") as any
     )
-      .select("name, password_last4, thumbnail_image_key, hover_image_key, age_type")
+      .select("name, password_last4, thumbnail_image_key, hover_image_key, age_type, row_label, column_number, info_url, author_user_id")
       .eq("id", id)
       .single()) as {
       data: {
@@ -102,6 +107,9 @@ export async function PUT(request: Request, { params }: RouteContext) {
     )
       .update({
         name,
+        ...(rowLabel !== undefined ? {row_label:rowLabel, column_number:columnNumber ?? null} : {}),
+        ...(infoUrl !== undefined ? {info_url:infoUrl} : {}),
+        ...(authorUserId !== undefined ? {author_user_id:authorUserId} : {}),
         password_last4: passwordLast4 ?? null,
         thumbnail_image_key: thumbnailImageKey,
         hover_image_key: hoverImageKey ?? null,
@@ -197,6 +205,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
     const { id } = await params;
     const supabaseAdmin = getSupabaseAdmin();
+
 
     // Verify booth exists
     const { data: existing } = await supabaseAdmin

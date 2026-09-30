@@ -80,18 +80,20 @@ export async function POST(request: Request) {
     if (existing) {
       // Unlike
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("booth_likes") as any)
+      const {error} = await (supabase.from("booth_likes") as any)
         .delete()
         .eq("booth_id", boothId)
         .eq("user_id", user.id);
 
+      if (error) return NextResponse.json({error:"즐겨찾기 저장에 실패했습니다."}, {status:500});
       return NextResponse.json({ liked: false });
     } else {
       // Like
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("booth_likes") as any)
+      const {error} = await (supabase.from("booth_likes") as any)
         .insert({ booth_id: boothId, user_id: user.id });
 
+      if (error) return NextResponse.json({error:"즐겨찾기 저장에 실패했습니다."}, {status:500});
       return NextResponse.json({ liked: true });
     }
   } catch {

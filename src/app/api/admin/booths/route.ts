@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isAdminError, verifyAdmin } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { boothBaseSchema } from "@/lib/schemas/booth-schema";
+import { adminPromotionSchema } from "@/lib/schemas/promotion-schema";
 import { fetchBoothsWithDetails } from "@/lib/queries/booth-queries";
 
 export async function GET() {
@@ -14,6 +14,7 @@ export async function GET() {
     const { data: booths, error } = await fetchBoothsWithDetails(supabaseAdmin, {
       ascending: true,
       includePasswordLast4: true,
+      includePromotion: true,
     });
 
     if (error || !booths) {
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
     if (isAdminError(adminResult)) return adminResult;
 
     const body = await request.json();
-    const parsed = boothBaseSchema.safeParse(body);
+    const parsed = adminPromotionSchema.safeParse(body);
 
     if (!parsed.success) {
       const firstError =
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
 
     const {
       name,
+      rowLabel, columnNumber, infoUrl, authorUserId,
       passwordLast4,
       thumbnailImageKey,
       hoverImageKey,
@@ -52,6 +54,10 @@ export async function POST(request: Request) {
     } = parsed.data;
 
     const supabaseAdmin = getSupabaseAdmin();
+    if (authorUserId) {
+      const { data: author } = await supabaseAdmin.from("users").select("id").eq("id", authorUserId).in("role", ["booth_member", "admin"]).maybeSingle();
+      if (!author) return NextResponse.json({error:"부스어 계정 ID를 확인해주세요."}, {status:400});
+    }
 
     // 1. Insert booth
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,6 +66,9 @@ export async function POST(request: Request) {
     )
       .insert({
         name,
+        ...(rowLabel !== undefined ? {row_label:rowLabel, column_number:columnNumber ?? null} : {}),
+        ...(infoUrl !== undefined ? {info_url:infoUrl} : {}),
+        ...(authorUserId !== undefined ? {author_user_id:authorUserId} : {}),
         password_last4: passwordLast4 ?? null,
         thumbnail_image_key: thumbnailImageKey,
         hover_image_key: hoverImageKey ?? null,

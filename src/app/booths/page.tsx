@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchBoothsWithDetails } from "@/lib/queries/booth-queries";
 import BoothListClient from "@/components/booths/BoothListClient";
@@ -33,6 +34,7 @@ export default async function BoothsPage() {
         </p>
       </div>
 
+      <div className="my-4 text-center"><Link href="/booth-promotion" className="text-sm font-semibold text-primary underline underline-offset-4">부스홍보게시판 · 배치도 보기</Link></div>
       {/* Client-side filter + grid */}
       <BoothListClient booths={booths} />
     </section>

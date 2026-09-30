@@ -12,6 +12,10 @@ export interface BoothWithDetails extends BoothRow {
 
 /** Client-friendly shape used by BoothCard / BoothListClient */
 export interface BoothCardData {
+  readonly rowLabel?: string | null;
+  readonly columnNumber?: number | null;
+  readonly infoUrl?: string | null;
+  readonly authorUserId?: string | null;
   readonly id: string;
   readonly name: string;
   readonly thumbnailImageKey: string;
@@ -35,6 +39,10 @@ export function toBoothCardData(booth: BoothWithDetails): BoothCardData {
 
   return {
     id: booth.id,
+    rowLabel: booth.row_label,
+    columnNumber: booth.column_number,
+    infoUrl: booth.info_url,
+    authorUserId: booth.author_user_id,
     name: booth.name,
     thumbnailImageKey: booth.thumbnail_image_key,
     hoverImageKey: booth.hover_image_key,
