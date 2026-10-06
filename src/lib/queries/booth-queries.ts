@@ -12,7 +12,7 @@ type AnySupabaseClient = { from: (table: string) => any };
 
 /** Columns to select from booths table (excludes password_last4) */
 const BOOTH_PUBLIC_COLUMNS =
-  "id, name, thumbnail_image_key, hover_image_key, age_type, created_at, updated_at";
+  "id, name, thumbnail_image_key, hover_image_key, age_type, row_label, col_no, info_url, user_id, created_at, updated_at";
 
 /** Admin-only columns: public columns + password_last4 */
 const BOOTH_ADMIN_COLUMNS = `${BOOTH_PUBLIC_COLUMNS}, password_last4`;

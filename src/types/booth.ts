@@ -17,6 +17,10 @@ export interface BoothCardData {
   readonly thumbnailImageKey: string;
   readonly hoverImageKey: string | null;
   readonly ageType: "general" | "adult";
+  readonly rowLabel: string | null;
+  readonly colNo: number | null;
+  readonly infoUrl: string | null;
+  readonly userId: string | null;
   readonly keywords: readonly BoothKeyword[];
   readonly owner: { readonly name: string; readonly snsUrl: string | null };
   readonly participants: readonly {
@@ -39,6 +43,10 @@ export function toBoothCardData(booth: BoothWithDetails): BoothCardData {
     thumbnailImageKey: booth.thumbnail_image_key,
     hoverImageKey: booth.hover_image_key,
     ageType: booth.age_type,
+    rowLabel: booth.row_label ?? null,
+    colNo: booth.col_no ?? null,
+    infoUrl: booth.info_url ?? null,
+    userId: booth.user_id ?? null,
     keywords: booth.keywords.map((k) => k.keyword),
     owner: owner
       ? { name: owner.name, snsUrl: owner.sns_url }
