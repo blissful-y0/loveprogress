@@ -96,10 +96,19 @@ export async function updateBooth(
 
   if (!oldBooth) return fail(404, "부스를 찾을 수 없습니다.");
 
-  const [{ data: oldKeywords }, { data: oldParticipants }] = (await Promise.all([
+  const [
+    { data: oldKeywords, error: oldKeywordsError },
+    { data: oldParticipants, error: oldParticipantsError },
+  ] = (await Promise.all([
     supabaseAdmin.from("booth_keywords").select("*").eq("booth_id", id),
     supabaseAdmin.from("booth_participants").select("*").eq("booth_id", id),
-  ])) as [{ data: BoothKeywordRow[] | null }, { data: BoothParticipantRow[] | null }];
+  ])) as [
+    { data: BoothKeywordRow[] | null; error: unknown },
+    { data: BoothParticipantRow[] | null; error: unknown },
+  ];
+
+  // 롤백할 원본을 못 읽었으면 아무것도 쓰지 않는다
+  if (oldKeywordsError || oldParticipantsError) return fail(500, "부스 수정에 실패했습니다.");
 
   const rollbackBooth = async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

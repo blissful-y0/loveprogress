@@ -99,8 +99,9 @@ export default function BoothPromoFormDialog({
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
-  // 비밀번호는 공개 데이터에 없어서 관리자 API로 따로 불러옴. 불러오기 전에는 저장 막음
-  const [loadingAdminData, setLoadingAdminData] = useState(false);
+  // 비밀번호는 공개 데이터에 없어서 관리자 API로 따로 불러옴.
+  // 불러오기에 성공하기 전에는 저장을 막는다 (빈 값으로 덮어쓰기 방지)
+  const [adminDataReady, setAdminDataReady] = useState(true);
   const { accounts, nicknameById } = useBoothAccounts(isAdmin && open);
   const sortedAccounts = useMemo(
     () => sortAccountsFor(accounts, form.name, form.ownerName),
@@ -111,21 +112,22 @@ export default function BoothPromoFormDialog({
     if (!open) return;
     setForm(booth ? toForm(booth) : INITIAL_FORM);
     setFormError("");
-    if (!isAdmin || !booth) return;
+    const needsAdminData = isAdmin && !!booth;
+    setAdminDataReady(!needsAdminData);
+    if (!needsAdminData) return;
 
     let cancelled = false;
-    setLoadingAdminData(true);
     fetch("/api/admin/booths")
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data: { booths: { id: string; password_last4: string | null }[] }) => {
         const row = data.booths.find((b) => b.id === booth.id);
-        if (!cancelled) setForm((f) => ({ ...f, passwordLast4: row?.password_last4 ?? "" }));
+        if (!row) throw new Error("not found");
+        if (cancelled) return;
+        setForm((f) => ({ ...f, passwordLast4: row.password_last4 ?? "" }));
+        setAdminDataReady(true);
       })
       .catch(() => {
         if (!cancelled) setFormError("부스 정보를 불러오지 못했습니다. 다시 열어주세요.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingAdminData(false);
       });
     return () => {
       cancelled = true;
@@ -444,7 +446,7 @@ export default function BoothPromoFormDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
               취소
             </Button>
-            <Button onClick={handleSubmit} disabled={saving || loadingAdminData}>
+            <Button onClick={handleSubmit} disabled={saving || !adminDataReady}>
               {saving ? "저장 중..." : booth ? "수정" : "등록"}
             </Button>
           </div>
