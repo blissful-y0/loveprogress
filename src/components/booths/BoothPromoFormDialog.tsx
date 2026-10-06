@@ -86,6 +86,8 @@ interface BoothPromoFormDialogProps {
   readonly onSaved: () => void;
   /** 관리자: 비밀번호·호버 이미지·담당 계정까지 수정 (관리자 API 사용) */
   readonly isAdmin?: boolean;
+  /** 미리보기: 관리자 데이터 요청·저장을 하지 않음 */
+  readonly preview?: boolean;
 }
 
 export default function BoothPromoFormDialog({
@@ -95,6 +97,7 @@ export default function BoothPromoFormDialog({
   occupied,
   onSaved,
   isAdmin = false,
+  preview = false,
 }: BoothPromoFormDialogProps) {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
@@ -112,7 +115,7 @@ export default function BoothPromoFormDialog({
     if (!open) return;
     setForm(booth ? toForm(booth) : INITIAL_FORM);
     setFormError("");
-    const needsAdminData = isAdmin && !!booth;
+    const needsAdminData = isAdmin && !!booth && !preview;
     setAdminDataReady(!needsAdminData);
     if (!needsAdminData) return;
 
@@ -132,7 +135,7 @@ export default function BoothPromoFormDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, booth, isAdmin]);
+  }, [open, booth, isAdmin, preview]);
 
   const isTaken = (row: BoothRowLabel, col: number) => {
     const key = boothPositionKey(row, col);
@@ -142,6 +145,7 @@ export default function BoothPromoFormDialog({
 
   async function handleSubmit() {
     setFormError("");
+    if (preview) { setFormError("미리보기에서는 저장되지 않습니다."); return; }
     if (!form.rowLabel || !form.colNo) { setFormError("행번과 열번을 선택해주세요."); return; }
     if (!form.name.trim()) { setFormError("부스 이름을 입력해주세요."); return; }
     if (!form.thumbnailImageKey) { setFormError("썸네일 이미지를 선택해주세요."); return; }

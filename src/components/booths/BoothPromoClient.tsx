@@ -19,6 +19,16 @@ interface BoothPromoClientProps {
   readonly booths: readonly BoothCardData[];
 }
 
+// ponytail: develop(Vercel Preview)·로컬 전용 시점 전환. 로그인 없이 모달 확인용, 정식 오픈 전에 제거
+const PREVIEW_ENABLED =
+  process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" || process.env.NODE_ENV === "development";
+type PreviewRole = "member" | "booth_member" | "admin";
+const PREVIEW_ROLES: readonly { value: PreviewRole; label: string }[] = [
+  { value: "member", label: "일반" },
+  { value: "booth_member", label: "부스어(본인 부스)" },
+  { value: "admin", label: "관리자" },
+];
+
 const ACTION_BUTTON = "flex h-[30px] w-[80px] items-center justify-center rounded-[4px] text-[16px] font-semibold";
 
 export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
@@ -29,6 +39,7 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
   const [selected, setSelected] = useState<{ row: BoothRowLabel; col: number } | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<BoothCardData | null>(null);
+  const [previewRole, setPreviewRole] = useState<PreviewRole | null>(null);
 
   const boothsByPosition = useMemo(() => {
     const map = new Map<string, BoothCardData>();
@@ -39,10 +50,15 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
   }, [booths]);
   const occupied = useMemo(() => new Set(boothsByPosition.keys()), [boothsByPosition]);
 
-  const canWrite = user?.role === "booth_member" || user?.role === "admin";
+  const role = previewRole ?? user?.role;
+  const canWrite = role === "booth_member" || role === "admin";
   const selectedBooth = selected ? boothsByPosition.get(boothPositionKey(selected.row, selected.col)) : undefined;
+  // 미리보기 부스어는 모든 칸을 본인 부스로 취급
   const canEdit =
-    !!selectedBooth && !!user && (user.role === "admin" || selectedBooth.userId === user.authUser.id);
+    !!selectedBooth &&
+    (previewRole
+      ? previewRole !== "member"
+      : !!user && (user.role === "admin" || selectedBooth.userId === user.authUser.id));
 
   const openForm = (booth: BoothCardData | null) => {
     setSelected(null);
@@ -52,6 +68,23 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
 
   return (
     <div className="pb-16">
+      {PREVIEW_ENABLED && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-[#f0a020] bg-[#fff8e8] px-3 py-2 text-[12px] text-[#8a5a00]">
+          <span className="font-semibold">미리보기 (develop 전용, 저장 안 됨)</span>
+          {PREVIEW_ROLES.map((r) => (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => setPreviewRole((prev) => (prev === r.value ? null : r.value))}
+              className={`rounded-full px-2.5 py-0.5 ring-1 ring-inset cursor-pointer ${
+                previewRole === r.value ? "bg-[#f0a020] text-white ring-[#f0a020]" : "ring-[#f0c070] hover:bg-white"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex justify-end mb-6 min-h-8">
         {canWrite && (
           <Button
@@ -129,7 +162,8 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
         booth={editing}
         occupied={occupied}
         onSaved={() => router.refresh()}
-        isAdmin={user?.role === "admin"}
+        isAdmin={role === "admin"}
+        preview={previewRole !== null}
       />
     </div>
   );
