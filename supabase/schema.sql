@@ -207,9 +207,24 @@ CREATE TABLE booths (
   thumbnail_image_key TEXT           NOT NULL,
   hover_image_key     TEXT,
   age_type            booth_age_type NOT NULL DEFAULT 'general',
+  -- 부스홍보게시판 배치도 위치 / 부스인포 링크 / 담당 부스어 계정
+  row_label           TEXT,
+  col_no              INTEGER,
+  info_url            TEXT,
+  user_id             UUID           REFERENCES users (id) ON DELETE SET NULL,
   created_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
-  updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now()
+  updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
+  CONSTRAINT booths_position_check CHECK (
+    (row_label IS NULL AND col_no IS NULL)
+    OR (row_label IN ('거', '위') AND col_no BETWEEN 1 AND 11)
+    OR (row_label = '와' AND col_no BETWEEN 1 AND 7)
+    OR (row_label = '토' AND col_no BETWEEN 1 AND 3)
+    OR (row_label = '끼' AND col_no BETWEEN 1 AND 8)
+  ),
+  CONSTRAINT booths_position_unique UNIQUE (row_label, col_no)
 );
+
+CREATE INDEX idx_booths_user ON booths (user_id);
 
 ALTER TABLE booths ENABLE ROW LEVEL SECURITY;
 

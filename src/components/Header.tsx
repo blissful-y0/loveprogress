@@ -26,6 +26,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: "입학·교육", href: "/info/notices" },
   { label: "학사안내", href: "/info/events" },
   { label: "대학생활", href: "/booths" },
+  { label: "부스홍보", href: "/booth-promo" },
   { label: "나무광장", href: "/qna" },
   { label: "우애의관", href: "/booth-board" },
 ] as const;
