@@ -32,7 +32,7 @@ CREATE UNIQUE INDEX idx_users_nickname_unique ON users (nickname);
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "users_select_own" ON users FOR SELECT TO authenticated USING (id = auth.uid());
-CREATE POLICY "users_update_own" ON users FOR UPDATE TO authenticated USING (id = auth.uid());
+-- users 쓰기는 API(service role)에서만 처리한다. 사용자 세션 UPDATE 정책을 두면 role을 직접 바꿀 수 있다.
 
 -- ─── board_posts ──────────────────────────────────────────
 
