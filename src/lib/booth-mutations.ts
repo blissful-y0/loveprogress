@@ -14,7 +14,8 @@ interface ParticipantInput {
 export interface BoothWriteInput {
   readonly columns: Readonly<Record<string, unknown>>;
   readonly keywords: readonly string[];
-  readonly owner: ParticipantInput;
+  /** 관리자 구역은 대표자 없이 등록할 수 있음 */
+  readonly owner?: ParticipantInput;
   readonly participants: readonly ParticipantInput[];
 }
 
@@ -28,15 +29,30 @@ function fail(status: number, error: string): BoothMutationResult {
 
 /** booths 쓰기 오류 → 사용자용 메시지 (칸 중복은 409) */
 function boothWriteError(error: { code?: string } | null, fallback: string): BoothMutationResult {
-  if (error?.code === "23505") return fail(409, "이미 다른 부스가 등록된 위치입니다.");
+  if (error?.code === "23505" || error?.code === "23P01") {
+    return fail(409, "이미 다른 부스가 등록된 위치입니다.");
+  }
   if (error?.code === "23503") return fail(400, "존재하지 않는 계정입니다.");
   if (error?.code === "23514") return fail(400, "존재하지 않는 부스 위치입니다.");
   return fail(500, fallback);
 }
 
+/** 빈 배열이면 요청하지 않음 (키워드·대표자 없는 관리자 구역) */
+async function insertRows(
+  supabaseAdmin: AdminClient,
+  table: "booth_keywords" | "booth_participants",
+  rows: readonly object[],
+): Promise<{ error: unknown }> {
+  if (rows.length === 0) return { error: null };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (supabaseAdmin.from(table) as any).insert(rows);
+}
+
 function participantRows(boothId: string, input: BoothWriteInput) {
   return [
-    { booth_id: boothId, name: input.owner.name, sns_url: input.owner.snsUrl ?? null, role_order: 0 },
+    ...(input.owner
+      ? [{ booth_id: boothId, name: input.owner.name, sns_url: input.owner.snsUrl ?? null, role_order: 0 }]
+      : []),
     ...input.participants.map((p, i) => ({
       booth_id: boothId,
       name: p.name,
@@ -61,8 +77,9 @@ export async function createBooth(
   const boothId = (booth as { id: string }).id;
   const rollback = () => supabaseAdmin.from("booths").delete().eq("id", boothId);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: kwError } = await (supabaseAdmin.from("booth_keywords") as any).insert(
+  const { error: kwError } = await insertRows(
+    supabaseAdmin,
+    "booth_keywords",
     input.keywords.map((keyword) => ({ booth_id: boothId, keyword })),
   );
   if (kwError) {
@@ -70,8 +87,9 @@ export async function createBooth(
     return fail(500, "키워드 등록에 실패했습니다.");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: partError } = await (supabaseAdmin.from("booth_participants") as any).insert(
+  const { error: partError } = await insertRows(
+    supabaseAdmin,
+    "booth_participants",
     participantRows(boothId, input),
   );
   if (partError) {
@@ -134,8 +152,9 @@ export async function updateBooth(
 
   // 2. 키워드 교체
   await supabaseAdmin.from("booth_keywords").delete().eq("booth_id", id);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: kwError } = await (supabaseAdmin.from("booth_keywords") as any).insert(
+  const { error: kwError } = await insertRows(
+    supabaseAdmin,
+    "booth_keywords",
     input.keywords.map((keyword) => ({ booth_id: id, keyword })),
   );
   if (kwError) {
@@ -146,8 +165,9 @@ export async function updateBooth(
 
   // 3. 참여자 교체
   await supabaseAdmin.from("booth_participants").delete().eq("booth_id", id);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: partError } = await (supabaseAdmin.from("booth_participants") as any).insert(
+  const { error: partError } = await insertRows(
+    supabaseAdmin,
+    "booth_participants",
     participantRows(id, input),
   );
   if (partError) {

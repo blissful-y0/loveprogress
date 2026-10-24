@@ -1,18 +1,18 @@
 /** 부스홍보게시판 배치도: 행 라벨과 행별 최대 열 번호 */
-export const BOOTH_ROWS = ["거", "위", "와", "토", "끼"] as const;
+export const BOOTH_ROWS = ["오", "리", "와", "토", "끼"] as const;
 export type BoothRowLabel = (typeof BOOTH_ROWS)[number];
 
 export const BOOTH_ROW_MAX: Readonly<Record<BoothRowLabel, number>> = {
-  거: 11,
-  위: 11,
+  오: 11,
+  리: 11,
   와: 7,
   토: 3,
   끼: 8,
 };
 
 export const BOOTH_ROW_COLORS: Readonly<Record<BoothRowLabel, string>> = {
-  거: "#2f80d2",
-  위: "#2f80d2",
+  오: "#2f80d2",
+  리: "#2f80d2",
   와: "#999999",
   토: "#33aa8e",
   끼: "#33aa8e",
@@ -27,9 +27,20 @@ export function boothPositionKey(row: string, col: number): string {
   return `${row}-${col}`;
 }
 
+/** 부스 하나가 차지한 열들. colEnd가 있으면 colNo~colEnd (관리자 구역용) */
+export function boothCoveredCols(colNo: number, colEnd: number | null): number[] {
+  const end = colEnd ?? colNo;
+  return Array.from({ length: Math.max(end - colNo + 1, 1) }, (_, i) => colNo + i);
+}
+
+/** 배치도 위치 표시: "끼-1" 또는 "끼-1~2" */
+export function boothPositionLabel(row: string, colNo: number, colEnd: number | null): string {
+  return colEnd ? `${row}-${colNo}~${colEnd}` : `${row}-${colNo}`;
+}
+
 /**
  * 배치도 박스 하나. cols가 2개면 위아래로 나뉜 박스(칸마다 따로 클릭).
- * gridCol: 1=거, 2=위, 3=와, 4=토, 5=끼-1(가로 박스), 6=끼 / gridRow: 1~8
+ * gridCol: 1=오, 2=리, 3=와, 4=토, 5=끼-1(가로 박스), 6=끼 / gridRow: 1~8
  */
 export interface BoothLayoutBox {
   readonly row: BoothRowLabel;
@@ -48,8 +59,8 @@ function column(
 }
 
 export const BOOTH_LAYOUT: readonly BoothLayoutBox[] = [
-  ...column("거", 1, [[1], [2], [3], [4, 5], [6], [7, 8], [9], [10, 11]]),
-  ...column("위", 2, [[1], [2, 3], [4], [5], [6, 7], [8], [9, 10], [11]]),
+  ...column("오", 1, [[1], [2], [3], [4, 5], [6], [7, 8], [9], [10, 11]]),
+  ...column("리", 2, [[1], [2, 3], [4], [5], [6, 7], [8], [9, 10], [11]]),
   ...column("와", 3, [[1], [2], null, [3, 4], [5], null, [6, 7]]),
   ...column("토", 4, [[1], [2, 3]]),
   { row: "끼", cols: [1], gridCol: 5, gridRow: 1, horizontal: true },
@@ -58,8 +69,8 @@ export const BOOTH_LAYOUT: readonly BoothLayoutBox[] = [
 
 /** 배치도 컬럼 헤더(행 라벨 원) 위치 */
 export const BOOTH_ROW_HEADER_COL: Readonly<Record<BoothRowLabel, number>> = {
-  거: 1,
-  위: 2,
+  오: 1,
+  리: 2,
   와: 3,
   토: 4,
   끼: 6,

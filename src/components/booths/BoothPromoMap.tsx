@@ -18,7 +18,7 @@ interface BoothPromoMapProps {
   readonly onSelect: (row: BoothRowLabel, col: number) => void;
 }
 
-// 레이아웃 컬럼(1=거 … 6=끼) → CSS grid 컬럼. 2·5번째는 통로 간격
+// 레이아웃 컬럼(1=오 … 6=끼) → CSS grid 컬럼. 2·5번째는 통로 간격
 const GRID_COLUMN: Readonly<Record<number, number>> = { 1: 1, 2: 3, 3: 4, 4: 6, 5: 7, 6: 8 };
 const GRID_TEMPLATE = "48px 24px 48px 48px 24px 48px 72px 48px";
 

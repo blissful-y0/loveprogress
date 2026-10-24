@@ -49,7 +49,8 @@ export default function BoothDetailModal({
   };
 
   const isAdult = booth.ageType === "adult";
-  const allParticipants = [booth.owner, ...booth.participants.slice(0, 3)];
+  // 대표자 없이 등록된 관리자 구역은 이름이 비어 있음
+  const allParticipants = [booth.owner, ...booth.participants.slice(0, 3)].filter((p) => p.name);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,34 +102,38 @@ export default function BoothDetailModal({
               </span>
             </div>
 
-            {/* Divider */}
-            <div className="h-px bg-[#f0f0f0]" />
+            {allParticipants.length > 0 && (
+              <>
+                {/* Divider */}
+                <div className="h-px bg-[#f0f0f0]" />
 
-            {/* Participants */}
-            <div>
-              <p className="text-[11px] font-semibold text-[#bbb] tracking-[0.05em] uppercase mb-2">참가자</p>
-              <div className="flex flex-wrap gap-x-5 gap-y-1">
-                {allParticipants.map((p, i) => (
-                  <span
-                    key={`${p.name}-${i}`}
-                    className="text-[14px] font-medium text-[#505050] break-all max-w-full"
-                  >
-                    {p.snsUrl ? (
-                      <a
-                        href={p.snsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline underline-offset-2 decoration-[#ccc] hover:decoration-[#666] hover:text-[#333] transition-colors duration-200"
+                {/* Participants */}
+                <div>
+                  <p className="text-[11px] font-semibold text-[#bbb] tracking-[0.05em] uppercase mb-2">참가자</p>
+                  <div className="flex flex-wrap gap-x-5 gap-y-1">
+                    {allParticipants.map((p, i) => (
+                      <span
+                        key={`${p.name}-${i}`}
+                        className="text-[14px] font-medium text-[#505050] break-all max-w-full"
                       >
-                        {p.name}
-                      </a>
-                    ) : (
-                      p.name
-                    )}
-                  </span>
-                ))}
-              </div>
-            </div>
+                        {p.snsUrl ? (
+                          <a
+                            href={p.snsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-2 decoration-[#ccc] hover:decoration-[#666] hover:text-[#333] transition-colors duration-200"
+                          >
+                            {p.name}
+                          </a>
+                        ) : (
+                          p.name
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Keywords */}
             <div className="flex flex-wrap gap-[6px]">
