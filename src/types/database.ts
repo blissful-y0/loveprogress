@@ -82,6 +82,7 @@ export interface BoothRow {
   age_type: BoothAgeType;
   row_label: string | null;
   col_no: number | null;
+  col_end: number | null;
   info_url: string | null;
   user_id: string | null;
   created_at: string;

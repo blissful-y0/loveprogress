@@ -23,7 +23,7 @@ test("booth layout boxes do not overlap", () => {
 });
 
 test("isValidBoothPosition enforces per-row column range", () => {
-  assert.equal(isValidBoothPosition("거", 11), true);
+  assert.equal(isValidBoothPosition("오", 11), true);
   assert.equal(isValidBoothPosition("토", 4), false);
   assert.equal(isValidBoothPosition("끼", 0), false);
   assert.equal(isValidBoothPosition("와", 1.5), false);

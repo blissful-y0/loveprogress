@@ -14,11 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BOOTH_ROW_MAX, BOOTH_ROWS, boothPositionKey, type BoothRowLabel } from "@/lib/booth-layout";
+import { BOOTH_ROW_MAX, BOOTH_ROWS, boothCoveredCols, boothPositionKey, type BoothRowLabel } from "@/lib/booth-layout";
 import { NO_ACCOUNT, sortAccountsFor, useBoothAccounts } from "@/hooks/useBoothAccounts";
 import { VALID_KEYWORDS } from "@/lib/schemas/booth-schema";
 import type { BoothCardData } from "@/types/booth";
 import type { BoothKeyword } from "@/types/database";
+
+const NO_COL_END = "single";
 
 interface Participant {
   name: string;
@@ -28,6 +30,8 @@ interface Participant {
 interface FormState {
   rowLabel: BoothRowLabel | "";
   colNo: number | null;
+  /** 관리자 전용: 여러 칸을 차지할 때 마지막 열 */
+  colEnd: number | null;
   name: string;
   thumbnailImageKey: string;
   infoUrl: string;
@@ -45,6 +49,7 @@ interface FormState {
 const INITIAL_FORM: FormState = {
   rowLabel: "",
   colNo: null,
+  colEnd: null,
   name: "",
   thumbnailImageKey: "",
   infoUrl: "",
@@ -62,6 +67,7 @@ function toForm(booth: BoothCardData): FormState {
   return {
     rowLabel: (booth.rowLabel as BoothRowLabel | null) ?? "",
     colNo: booth.colNo,
+    colEnd: booth.colEnd,
     name: booth.name,
     thumbnailImageKey: booth.thumbnailImageKey,
     infoUrl: booth.infoUrl ?? "",
@@ -137,10 +143,16 @@ export default function BoothPromoFormDialog({
     };
   }, [open, booth, isAdmin, preview]);
 
+  const ownKeys = useMemo(
+    () =>
+      booth?.rowLabel && booth.colNo
+        ? new Set(boothCoveredCols(booth.colNo, booth.colEnd).map((c) => boothPositionKey(booth.rowLabel!, c)))
+        : new Set<string>(),
+    [booth],
+  );
   const isTaken = (row: BoothRowLabel, col: number) => {
     const key = boothPositionKey(row, col);
-    const own = booth?.rowLabel && booth.colNo ? boothPositionKey(booth.rowLabel, booth.colNo) : null;
-    return occupied.has(key) && key !== own;
+    return occupied.has(key) && !ownKeys.has(key);
   };
 
   async function handleSubmit() {
@@ -149,8 +161,9 @@ export default function BoothPromoFormDialog({
     if (!form.rowLabel || !form.colNo) { setFormError("행번과 열번을 선택해주세요."); return; }
     if (!form.name.trim()) { setFormError("부스 이름을 입력해주세요."); return; }
     if (!form.thumbnailImageKey) { setFormError("썸네일 이미지를 선택해주세요."); return; }
-    if (form.keywords.length === 0) { setFormError("키워드를 최소 1개 선택해주세요."); return; }
-    if (!form.ownerName.trim()) { setFormError("대표자 이름을 입력해주세요."); return; }
+    // 관리자는 주최부스·본부석 같은 운영 구역을 키워드·대표자 없이 등록할 수 있음
+    if (!isAdmin && form.keywords.length === 0) { setFormError("키워드를 최소 1개 선택해주세요."); return; }
+    if (!isAdmin && !form.ownerName.trim()) { setFormError("대표자 이름을 입력해주세요."); return; }
     if (isAdmin && form.passwordLast4 && !/^\d{4}$/.test(form.passwordLast4)) {
       setFormError("비밀번호는 숫자 4자리여야 합니다."); return;
     }
@@ -163,7 +176,9 @@ export default function BoothPromoFormDialog({
       infoUrl: form.infoUrl.trim() || undefined,
       ageType: form.ageType,
       keywords: form.keywords,
-      owner: { name: form.ownerName.trim(), snsUrl: form.ownerSnsUrl.trim() || undefined },
+      owner: form.ownerName.trim()
+        ? { name: form.ownerName.trim(), snsUrl: form.ownerSnsUrl.trim() || undefined }
+        : undefined,
       participants: form.participants
         .filter((p) => p.name.trim())
         .map((p) => ({ name: p.name.trim(), snsUrl: p.snsUrl.trim() || undefined })),
@@ -171,6 +186,7 @@ export default function BoothPromoFormDialog({
         passwordLast4: form.passwordLast4 || undefined,
         hoverImageKey: form.hoverImageKey || undefined,
         userId: form.userId === NO_ACCOUNT ? null : form.userId,
+        colEnd: form.colEnd,
       }),
     };
 
@@ -214,6 +230,11 @@ export default function BoothPromoFormDialog({
   }
 
   const maxCol = form.rowLabel ? BOOTH_ROW_MAX[form.rowLabel] : 0;
+  // 끝 열 후보: 시작 열 다음부터 다른 부스가 나오기 전까지
+  const colEndOptions: number[] = [];
+  if (form.rowLabel && form.colNo) {
+    for (let col = form.colNo + 1; col <= maxCol && !isTaken(form.rowLabel, col); col++) colEndOptions.push(col);
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -226,7 +247,7 @@ export default function BoothPromoFormDialog({
             <Label>행번 *</Label>
             <Select
               value={form.rowLabel}
-              onValueChange={(v) => setForm((f) => ({ ...f, rowLabel: v as BoothRowLabel, colNo: null }))}
+              onValueChange={(v) => setForm((f) => ({ ...f, rowLabel: v as BoothRowLabel, colNo: null, colEnd: null }))}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="행 선택" />
@@ -243,7 +264,7 @@ export default function BoothPromoFormDialog({
             <Label>열번 *</Label>
             <Select
               value={form.colNo ? String(form.colNo) : ""}
-              onValueChange={(v) => setForm((f) => ({ ...f, colNo: Number(v) }))}
+              onValueChange={(v) => setForm((f) => ({ ...f, colNo: Number(v), colEnd: null }))}
               disabled={!form.rowLabel}
             >
               <SelectTrigger className="w-full">
@@ -261,6 +282,28 @@ export default function BoothPromoFormDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {isAdmin && (
+            <div className="space-y-1.5">
+              <Label>끝 열</Label>
+              <Select
+                value={form.colEnd ? String(form.colEnd) : NO_COL_END}
+                onValueChange={(v) => setForm((f) => ({ ...f, colEnd: v === NO_COL_END ? null : Number(v) }))}
+                disabled={colEndOptions.length === 0}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>{(v: string) => (v === NO_COL_END ? "한 칸만" : `${form.colNo}~${v}`)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_COL_END}>한 칸만</SelectItem>
+                  {colEndOptions.map((col) => (
+                    <SelectItem key={col} value={String(col)}>{form.colNo}~{col}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-[#888]">무료나눔존처럼 여러 칸을 한 구역으로 쓸 때 선택합니다.</p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label>부스명 *</Label>
@@ -343,7 +386,7 @@ export default function BoothPromoFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>키워드 * (최소 1개)</Label>
+            <Label>{isAdmin ? "키워드 (선택)" : "키워드 * (최소 1개)"}</Label>
             <div className="flex flex-wrap gap-2">
               {VALID_KEYWORDS.map((kw) => (
                 <button
@@ -363,7 +406,7 @@ export default function BoothPromoFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>대표자 *</Label>
+            <Label>{isAdmin ? "대표자 (선택)" : "대표자 *"}</Label>
             <Input
               value={form.ownerName}
               onChange={(e) => setForm((f) => ({ ...f, ownerName: e.target.value }))}

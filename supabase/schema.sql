@@ -200,6 +200,9 @@ CREATE POLICY "qna_answers_select_public" ON qna_answers
 
 -- ─── booths ───────────────────────────────────────────────
 
+-- booths_position_no_overlap(행 + 열 범위 겹침 금지)에 필요
+CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA extensions;
+
 CREATE TABLE booths (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name                TEXT           NOT NULL,
@@ -210,18 +213,25 @@ CREATE TABLE booths (
   -- 부스홍보게시판 배치도 위치 / 부스인포 링크 / 담당 부스어 계정
   row_label           TEXT,
   col_no              INTEGER,
+  col_end             INTEGER,  -- 관리자 구역이 col_no~col_end를 차지할 때
   info_url            TEXT,
   user_id             UUID           REFERENCES users (id) ON DELETE SET NULL,
   created_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
   CONSTRAINT booths_position_check CHECK (
-    (row_label IS NULL AND col_no IS NULL)
-    OR (row_label IN ('거', '위') AND col_no BETWEEN 1 AND 11)
-    OR (row_label = '와' AND col_no BETWEEN 1 AND 7)
-    OR (row_label = '토' AND col_no BETWEEN 1 AND 3)
-    OR (row_label = '끼' AND col_no BETWEEN 1 AND 8)
+    (row_label IS NULL AND col_no IS NULL AND col_end IS NULL)
+    OR (
+      col_no >= 1
+      AND (col_end IS NULL OR col_end > col_no)
+      AND COALESCE(col_end, col_no) <= CASE row_label
+        WHEN '오' THEN 11 WHEN '리' THEN 11 WHEN '와' THEN 7 WHEN '토' THEN 3 WHEN '끼' THEN 8 ELSE 0
+      END
+    )
   ),
-  CONSTRAINT booths_position_unique UNIQUE (row_label, col_no)
+  CONSTRAINT booths_position_no_overlap EXCLUDE USING gist (
+    row_label WITH =,
+    int4range(col_no, COALESCE(col_end, col_no), '[]') WITH &&
+  )
 );
 
 CREATE INDEX idx_booths_user ON booths (user_id);

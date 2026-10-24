@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useBoothLikes } from "@/hooks/useBoothLikes";
 import { useUser } from "@/hooks/useUser";
-import { boothPositionKey, type BoothRowLabel } from "@/lib/booth-layout";
+import { boothCoveredCols, boothPositionKey, boothPositionLabel, type BoothRowLabel } from "@/lib/booth-layout";
 import type { BoothCardData } from "@/types/booth";
 import BoothDetailModal from "./BoothDetailModal";
 import BoothPromoFormDialog from "./BoothPromoFormDialog";
@@ -44,7 +44,10 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
   const boothsByPosition = useMemo(() => {
     const map = new Map<string, BoothCardData>();
     for (const booth of booths) {
-      if (booth.rowLabel && booth.colNo) map.set(boothPositionKey(booth.rowLabel, booth.colNo), booth);
+      if (!booth.rowLabel || !booth.colNo) continue;
+      for (const col of boothCoveredCols(booth.colNo, booth.colEnd)) {
+        map.set(boothPositionKey(booth.rowLabel, col), booth);
+      }
     }
     return map;
   }, [booths]);
@@ -108,7 +111,11 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
         open={!!selectedBooth}
         onOpenChange={(open) => { if (!open) setSelected(null); }}
         size="compact"
-        positionLabel={selected ? `${selected.row}-${selected.col}` : undefined}
+        positionLabel={
+          selectedBooth?.rowLabel && selectedBooth.colNo
+            ? boothPositionLabel(selectedBooth.rowLabel, selectedBooth.colNo, selectedBooth.colEnd)
+            : undefined
+        }
         like={{
           liked: !!selectedBooth && userLikes.has(selectedBooth.id),
           isLoggedIn: !!user,

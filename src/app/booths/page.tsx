@@ -19,7 +19,8 @@ async function fetchBooths(): Promise<BoothWithDetails[]> {
 
 export default async function BoothsPage() {
   const boothsWithDetails = await fetchBooths();
-  const booths = boothsWithDetails.map(toBoothCardData);
+  // 대표자 없는 부스는 본부석·무료나눔존 같은 관리자 구역이라 동아리 목록에서 뺀다
+  const booths = boothsWithDetails.map(toBoothCardData).filter((booth) => booth.owner.name);
 
   return (
     <section className="min-h-[60vh]">
