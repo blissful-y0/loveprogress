@@ -54,7 +54,9 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
 
   const role = previewRole ?? user?.role;
   const canWrite = role === "booth_member" || role === "admin";
-  const selectedBooth = selected ? boothsByPosition.get(boothPositionKey(selected.row, selected.col)) : undefined;
+  const selectedSlotBooth = selected ? boothsByPosition.get(boothPositionKey(selected.row, selected.col)) : undefined;
+  // 부스홍보 글이 올라오기 전에는 이름만 보이는 미등록 칸
+  const selectedBooth = selectedSlotBooth?.promoPostedAt ? selectedSlotBooth : undefined;
   // 미리보기 부스어는 모든 칸을 본인 부스로 취급
   const canEditBooth = (booth: BoothCardData) =>
     previewRole
@@ -157,8 +159,17 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
         >
           <img src="/img/booth/booth-unregistered.png" alt="" className="w-[280px] h-auto" />
           <DialogTitle className="text-[24px] font-bold text-[#333333] tracking-[-0.02em]">
-            부스 인포 미등록
+            {selectedSlotBooth?.name ?? "부스 인포 미등록"}
           </DialogTitle>
+          {canWrite && selectedSlotBooth && canEditBooth(selectedSlotBooth) && (
+            <button
+              type="button"
+              onClick={() => openForm(selectedSlotBooth)}
+              className={`${ACTION_BUTTON} bg-[#33aa8e] text-white hover:bg-[#2d9a7f] cursor-pointer transition-colors`}
+            >
+              등록
+            </button>
+          )}
         </DialogContent>
       </Dialog>
 

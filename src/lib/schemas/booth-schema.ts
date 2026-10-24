@@ -76,6 +76,8 @@ export const boothBaseSchema = boothFields
   .extend({
     userId: z.string().uuid("유효하지 않은 계정입니다.").nullable().optional(),
     colEnd: z.number().int().nullable().optional(),
+    // 부스홍보 화면에서 저장하면 true → promo_posted_at 갱신
+    promoPosted: z.boolean().optional(),
     owner: participantSchema.optional(),
     keywords: boothFields.shape.keywords.unwrap().array(),
   })
@@ -112,6 +114,7 @@ export function toAdminBoothWrite(data: BoothAdminInput): BoothWriteInput {
       ...((data.colEnd !== undefined || data.rowLabel == null) && { col_end: data.colEnd ?? null }),
       info_url: data.infoUrl ?? null,
       user_id: data.userId ?? null,
+      ...(data.promoPosted && { promo_posted_at: new Date().toISOString() }),
     },
     ...participantsOf(data),
   };
@@ -127,6 +130,7 @@ export function toPromoBoothWrite(data: BoothPromoInput): BoothWriteInput {
       row_label: data.rowLabel,
       col_no: data.colNo,
       col_end: null,
+      promo_posted_at: new Date().toISOString(),
       info_url: data.infoUrl ?? null,
     },
     ...participantsOf(data),

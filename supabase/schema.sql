@@ -215,6 +215,7 @@ CREATE TABLE booths (
   col_no              INTEGER,
   col_end             INTEGER,  -- 관리자 구역이 col_no~col_end를 차지할 때
   info_url            TEXT,
+  promo_posted_at     TIMESTAMPTZ,
   user_id             UUID           REFERENCES users (id) ON DELETE SET NULL,
   created_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),

@@ -41,9 +41,9 @@ function Slot({
     <button
       type="button"
       onClick={() => onSelect(row, col)}
-      aria-label={`${row}-${col} ${booth?.name ?? "부스 인포 미등록"}`}
+      aria-label={`${row}-${col} ${booth?.name ?? ""}${booth?.promoPostedAt ? "" : " 부스 인포 미등록"}`}
       className={`relative flex flex-1 items-center justify-center border text-[24px] font-semibold leading-none text-[#333333] cursor-pointer transition-[filter] hover:brightness-95 ${
-        booth ? "bg-white" : "bg-[#DDDDDD]"
+        booth?.promoPostedAt ? "bg-white" : "bg-[#DDDDDD]"
       } ${liked ? "z-10 border-2 border-[#33aa8e]" : "border-[#999999]"} ${className}`}
     >
       {col}
@@ -67,7 +67,7 @@ function Box({ box, ...props }: { box: BoothLayoutBox } & BoothPromoMapProps) {
             row={box.row}
             col={col}
             booth={booth}
-            liked={!!booth && props.likedIds.has(booth.id)}
+            liked={!!booth?.promoPostedAt && props.likedIds.has(booth.id)}
             className={shape}
             onSelect={props.onSelect}
           />

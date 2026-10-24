@@ -84,6 +84,7 @@ export interface BoothRow {
   col_no: number | null;
   col_end: number | null;
   info_url: string | null;
+  promo_posted_at: string | null;
   user_id: string | null;
   created_at: string;
   updated_at: string;

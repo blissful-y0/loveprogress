@@ -198,6 +198,7 @@ export default function BoothPromoFormDialog({
         hoverImageKey: form.hoverImageKey || undefined,
         userId: form.userId === NO_ACCOUNT ? null : form.userId,
         colEnd: form.colEnd,
+        promoPosted: true,
       }),
     };
 
