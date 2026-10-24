@@ -37,6 +37,8 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
   const { userLikes, toggleLike } = useBoothLikes();
 
   const [selected, setSelected] = useState<{ row: BoothRowLabel; col: number } | null>(null);
+  // 팝업이 닫히는 애니메이션 동안 selected가 비어도 이름이 바뀌지 않도록 따로 보관
+  const [slotTitle, setSlotTitle] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<BoothCardData | null>(null);
   const [previewRole, setPreviewRole] = useState<PreviewRole | null>(null);
@@ -104,7 +106,10 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
       <BoothPromoMap
         boothsByPosition={boothsByPosition}
         likedIds={userLikes}
-        onSelect={(row, col) => setSelected({ row, col })}
+        onSelect={(row, col) => {
+          setSelected({ row, col });
+          setSlotTitle(boothsByPosition.get(boothPositionKey(row, col))?.name ?? "부스 인포 미등록");
+        }}
       />
 
       <BoothDetailModal
@@ -159,7 +164,7 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
         >
           <img src="/img/booth/booth-unregistered.png" alt="" className="w-[280px] h-auto" />
           <DialogTitle className="text-[24px] font-bold text-[#333333] tracking-[-0.02em]">
-            {selectedSlotBooth?.name ?? "부스 인포 미등록"}
+            {slotTitle}
           </DialogTitle>
           {canWrite && selectedSlotBooth && canEditBooth(selectedSlotBooth) && (
             <button
