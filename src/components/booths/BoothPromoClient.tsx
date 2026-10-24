@@ -51,17 +51,16 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
     }
     return map;
   }, [booths]);
-  const occupied = useMemo(() => new Set(boothsByPosition.keys()), [boothsByPosition]);
 
   const role = previewRole ?? user?.role;
   const canWrite = role === "booth_member" || role === "admin";
   const selectedBooth = selected ? boothsByPosition.get(boothPositionKey(selected.row, selected.col)) : undefined;
   // 미리보기 부스어는 모든 칸을 본인 부스로 취급
-  const canEdit =
-    !!selectedBooth &&
-    (previewRole
+  const canEditBooth = (booth: BoothCardData) =>
+    previewRole
       ? previewRole !== "member"
-      : !!user && (user.role === "admin" || selectedBooth.userId === user.authUser.id));
+      : !!user && (user.role === "admin" || booth.userId === user.authUser.id);
+  const canEdit = !!selectedBooth && canEditBooth(selectedBooth);
 
   const openForm = (booth: BoothCardData | null) => {
     setSelected(null);
@@ -167,7 +166,9 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
         open={formOpen}
         onOpenChange={setFormOpen}
         booth={editing}
-        occupied={occupied}
+        boothsByPosition={boothsByPosition}
+        canEditBooth={canEditBooth}
+        onPickExisting={setEditing}
         onSaved={() => router.refresh()}
         isAdmin={role === "admin"}
         preview={previewRole !== null}
