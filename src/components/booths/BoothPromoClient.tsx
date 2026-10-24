@@ -163,7 +163,7 @@ export default function BoothPromoClient({ booths }: BoothPromoClientProps) {
           className="w-auto bg-transparent ring-0 p-0 flex flex-col items-center gap-3"
         >
           <img src="/img/booth/booth-unregistered.png" alt="" className="w-[280px] h-auto" />
-          <DialogTitle className="text-[24px] font-bold text-[#333333] tracking-[-0.02em]">
+          <DialogTitle className="max-w-[280px] text-center text-[24px] font-bold leading-tight text-[#333333] tracking-[-0.02em] break-keep">
             {slotTitle}
           </DialogTitle>
           {canWrite && selectedSlotBooth && canEditBooth(selectedSlotBooth) && (
