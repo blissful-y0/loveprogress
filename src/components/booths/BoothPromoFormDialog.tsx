@@ -87,8 +87,12 @@ interface BoothPromoFormDialogProps {
   readonly onOpenChange: (open: boolean) => void;
   /** 수정할 부스. null이면 새로 등록 */
   readonly booth: BoothCardData | null;
-  /** 다른 부스가 차지한 위치("행-열") */
-  readonly occupied: ReadonlySet<string>;
+  /** 위치("행-열")별 등록된 부스 */
+  readonly boothsByPosition: ReadonlyMap<string, BoothCardData>;
+  /** 이 사용자가 고칠 수 있는 부스인지 (본인 부스 또는 관리자) */
+  readonly canEditBooth: (booth: BoothCardData) => boolean;
+  /** 새로 등록하다 본인이 고칠 수 있는 칸을 고르면, 그 부스를 다시 등록(덮어쓰기)하도록 전환 */
+  readonly onPickExisting: (booth: BoothCardData) => void;
   readonly onSaved: () => void;
   /** 관리자: 비밀번호·호버 이미지·담당 계정까지 수정 (관리자 API 사용) */
   readonly isAdmin?: boolean;
@@ -100,7 +104,9 @@ export default function BoothPromoFormDialog({
   open,
   onOpenChange,
   booth,
-  occupied,
+  boothsByPosition,
+  canEditBooth,
+  onPickExisting,
   onSaved,
   isAdmin = false,
   preview = false,
@@ -150,9 +156,14 @@ export default function BoothPromoFormDialog({
         : new Set<string>(),
     [booth],
   );
-  const isTaken = (row: BoothRowLabel, col: number) => {
+  /** 다른 부스가 있는 칸. 고칠 수 있는 부스면 "재등록"으로 고를 수 있다 */
+  const existingAt = (row: BoothRowLabel, col: number) => {
     const key = boothPositionKey(row, col);
-    return occupied.has(key) && !ownKeys.has(key);
+    return ownKeys.has(key) ? undefined : boothsByPosition.get(key);
+  };
+  const isTaken = (row: BoothRowLabel, col: number) => {
+    const existing = existingAt(row, col);
+    return !!existing && !canEditBooth(existing);
   };
 
   async function handleSubmit() {
@@ -233,7 +244,7 @@ export default function BoothPromoFormDialog({
   // 끝 열 후보: 시작 열 다음부터 다른 부스가 나오기 전까지
   const colEndOptions: number[] = [];
   if (form.rowLabel && form.colNo) {
-    for (let col = form.colNo + 1; col <= maxCol && !isTaken(form.rowLabel, col); col++) colEndOptions.push(col);
+    for (let col = form.colNo + 1; col <= maxCol && !existingAt(form.rowLabel, col); col++) colEndOptions.push(col);
   }
 
   return (
@@ -264,7 +275,12 @@ export default function BoothPromoFormDialog({
             <Label>열번 *</Label>
             <Select
               value={form.colNo ? String(form.colNo) : ""}
-              onValueChange={(v) => setForm((f) => ({ ...f, colNo: Number(v), colEnd: null }))}
+              onValueChange={(v) => {
+                const col = Number(v);
+                const existing = form.rowLabel ? existingAt(form.rowLabel, col) : undefined;
+                if (existing) onPickExisting(existing);
+                else setForm((f) => ({ ...f, colNo: col, colEnd: null }));
+              }}
               disabled={!form.rowLabel}
             >
               <SelectTrigger className="w-full">
@@ -272,10 +288,11 @@ export default function BoothPromoFormDialog({
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: maxCol }, (_, i) => i + 1).map((col) => {
-                  const taken = form.rowLabel !== "" && isTaken(form.rowLabel, col);
+                  const existing = form.rowLabel ? existingAt(form.rowLabel, col) : undefined;
+                  const taken = !!existing && !canEditBooth(existing);
                   return (
                     <SelectItem key={col} value={String(col)} disabled={taken}>
-                      {col}{taken ? " (등록됨)" : ""}
+                      {col}{taken ? " (등록됨)" : existing ? " (재등록)" : ""}
                     </SelectItem>
                   );
                 })}

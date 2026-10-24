@@ -25,7 +25,7 @@ const ICON_SLOTS: readonly { icon: string; label: string; link?: string }[] = [
     label: "대학원통합과정",
     link: "https://phnxgame.com/nyang/",
   },
-  { icon: "/img/main/topcarousel/industry-collab.png", label: "산학협력단" },
+  { icon: "/img/main/topcarousel/industry-collab.png", label: "산학협력단", link: "/booth-promo" },
 ];
 
 // 내부 링크는 상대 경로로 저장(마이그레이션으로 정규화).
