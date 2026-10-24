@@ -22,6 +22,7 @@ export interface BoothCardData {
   /** 관리자 구역이 여러 칸을 차지할 때 마지막 열 */
   readonly colEnd: number | null;
   readonly infoUrl: string | null;
+  readonly promoPostedAt: string | null;
   readonly userId: string | null;
   readonly keywords: readonly BoothKeyword[];
   readonly owner: { readonly name: string; readonly snsUrl: string | null };
@@ -50,6 +51,7 @@ export function toBoothCardData(booth: BoothWithDetails): BoothCardData {
     colNo: booth.col_no ?? null,
     colEnd: booth.col_end ?? null,
     infoUrl: booth.info_url ?? null,
+    promoPostedAt: booth.promo_posted_at ?? null,
     userId: booth.user_id ?? null,
     keywords: booth.keywords.map((k) => k.keyword),
     owner: owner

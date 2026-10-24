@@ -19,7 +19,7 @@ type RouteContext = {
 
 /** Columns to select from booths table (excludes password_last4) */
 const BOOTH_PUBLIC_COLUMNS =
-  "id, name, thumbnail_image_key, hover_image_key, age_type, row_label, col_no, col_end, info_url, user_id, created_at, updated_at";
+  "id, name, thumbnail_image_key, hover_image_key, age_type, row_label, col_no, col_end, info_url, promo_posted_at, user_id, created_at, updated_at";
 
 export async function GET(_request: Request, { params }: RouteContext) {
   try {
