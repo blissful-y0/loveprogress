@@ -32,7 +32,7 @@ CREATE UNIQUE INDEX idx_users_nickname_unique ON users (nickname);
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "users_select_own" ON users FOR SELECT TO authenticated USING (id = auth.uid());
-CREATE POLICY "users_update_own" ON users FOR UPDATE TO authenticated USING (id = auth.uid());
+-- users 쓰기는 API(service role)에서만 처리한다. 사용자 세션 UPDATE 정책을 두면 role을 직접 바꿀 수 있다.
 
 -- ─── board_posts ──────────────────────────────────────────
 
@@ -200,6 +200,9 @@ CREATE POLICY "qna_answers_select_public" ON qna_answers
 
 -- ─── booths ───────────────────────────────────────────────
 
+-- booths_position_no_overlap(행 + 열 범위 겹침 금지)에 필요
+CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA extensions;
+
 CREATE TABLE booths (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name                TEXT           NOT NULL,
@@ -207,9 +210,32 @@ CREATE TABLE booths (
   thumbnail_image_key TEXT           NOT NULL,
   hover_image_key     TEXT,
   age_type            booth_age_type NOT NULL DEFAULT 'general',
+  -- 부스홍보게시판 배치도 위치 / 부스인포 링크 / 담당 부스어 계정
+  row_label           TEXT,
+  col_no              INTEGER,
+  col_end             INTEGER,  -- 관리자 구역이 col_no~col_end를 차지할 때
+  info_url            TEXT,
+  promo_posted_at     TIMESTAMPTZ,
+  user_id             UUID           REFERENCES users (id) ON DELETE SET NULL,
   created_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
-  updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now()
+  updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
+  CONSTRAINT booths_position_check CHECK (
+    (row_label IS NULL AND col_no IS NULL AND col_end IS NULL)
+    OR (
+      col_no >= 1
+      AND (col_end IS NULL OR col_end > col_no)
+      AND COALESCE(col_end, col_no) <= CASE row_label
+        WHEN '오' THEN 11 WHEN '리' THEN 11 WHEN '와' THEN 7 WHEN '토' THEN 3 WHEN '끼' THEN 8 ELSE 0
+      END
+    )
+  ),
+  CONSTRAINT booths_position_no_overlap EXCLUDE USING gist (
+    row_label WITH =,
+    int4range(col_no, COALESCE(col_end, col_no), '[]') WITH &&
+  )
 );
+
+CREATE INDEX idx_booths_user ON booths (user_id);
 
 ALTER TABLE booths ENABLE ROW LEVEL SECURITY;
 

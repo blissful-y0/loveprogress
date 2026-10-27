@@ -22,6 +22,14 @@ export async function GET(request: Request) {
     { count: "exact" },
   );
 
+  // ?role=booth_member,admin — 부스 담당 계정 선택용
+  const roles = (searchParams.get("role") ?? "")
+    .split(",")
+    .filter((r) => ["member", "booth_member", "admin"].includes(r));
+  if (roles.length > 0) {
+    query = query.in("role", roles);
+  }
+
   if (search) {
     const safe = search.replace(/[%_\\]/g, "\\$&");
     query = query.or(

@@ -80,6 +80,12 @@ export interface BoothRow {
   thumbnail_image_key: string;
   hover_image_key: string | null;
   age_type: BoothAgeType;
+  row_label: string | null;
+  col_no: number | null;
+  col_end: number | null;
+  info_url: string | null;
+  promo_posted_at: string | null;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
 }

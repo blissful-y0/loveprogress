@@ -81,3 +81,7 @@ test("rate limit function is not executable by public", () => {
     /GRANT EXECUTE ON FUNCTION increment_rate_limit\(TEXT,\s*INTEGER,\s*BIGINT\) TO service_role;/,
   );
 });
+
+test("users table has no session UPDATE policy (role escalation)", () => {
+  assert.doesNotMatch(schema, /CREATE POLICY "users_update_own"/);
+});

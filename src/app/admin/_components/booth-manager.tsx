@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BOOTH_ROW_MAX, BOOTH_ROWS, type BoothRowLabel } from "@/lib/booth-layout";
 import { VALID_KEYWORDS } from "@/lib/schemas/booth-schema";
+import { NO_ACCOUNT, sortAccountsFor, useBoothAccounts } from "@/hooks/useBoothAccounts";
 import type { BoothKeyword } from "@/types/database";
 import { ImageUpload } from "./image-upload";
 
@@ -29,6 +31,10 @@ interface AdminBooth {
   thumbnail_image_key: string;
   hover_image_key: string | null;
   age_type: "general" | "adult";
+  row_label: string | null;
+  col_no: number | null;
+  info_url: string | null;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
   keywords: { keyword: BoothKeyword }[];
@@ -50,6 +56,10 @@ interface FormState {
   ownerName: string;
   ownerSnsUrl: string;
   participants: Participant[];
+  rowLabel: BoothRowLabel | "";
+  colNo: number | null;
+  infoUrl: string;
+  userId: string;
 }
 
 const INITIAL_FORM: FormState = {
@@ -62,6 +72,10 @@ const INITIAL_FORM: FormState = {
   ownerName: "",
   ownerSnsUrl: "",
   participants: [],
+  rowLabel: "",
+  colNo: null,
+  infoUrl: "",
+  userId: NO_ACCOUNT,
 };
 
 function formatDate(dateStr: string) {
@@ -81,6 +95,7 @@ export default function BoothManager() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const { accounts, nicknameById: accountNickname } = useBoothAccounts(true);
 
   const fetchBooths = useCallback(async () => {
     setLoading(true);
@@ -100,6 +115,11 @@ export default function BoothManager() {
   useEffect(() => {
     fetchBooths();
   }, [fetchBooths]);
+
+  const sortedAccounts = useMemo(
+    () => sortAccountsFor(accounts, form.name, form.ownerName),
+    [accounts, form.name, form.ownerName],
+  );
 
   function openCreate() {
     setEditingId(null);
@@ -123,6 +143,10 @@ export default function BoothManager() {
       ownerName: owner?.name ?? "",
       ownerSnsUrl: owner?.sns_url ?? "",
       participants: rest.map((p) => ({ name: p.name, snsUrl: p.sns_url ?? "" })),
+      rowLabel: (booth.row_label as BoothRowLabel | null) ?? "",
+      colNo: booth.col_no,
+      infoUrl: booth.info_url ?? "",
+      userId: booth.user_id ?? NO_ACCOUNT,
     });
     setFormError("");
     setDialogOpen(true);
@@ -152,6 +176,7 @@ export default function BoothManager() {
     if (form.passwordLast4 && !/^\d{4}$/.test(form.passwordLast4)) {
       setFormError("비밀번호는 숫자 4자리여야 합니다."); return;
     }
+    if (!!form.rowLabel !== !!form.colNo) { setFormError("행번과 열번을 함께 선택해주세요."); return; }
 
     const body = {
       name: form.name.trim(),
@@ -167,6 +192,10 @@ export default function BoothManager() {
       participants: form.participants
         .filter((p) => p.name.trim())
         .map((p) => ({ name: p.name.trim(), snsUrl: p.snsUrl.trim() || undefined })),
+      rowLabel: form.rowLabel || null,
+      colNo: form.colNo,
+      infoUrl: form.infoUrl.trim() || undefined,
+      userId: form.userId === NO_ACCOUNT ? null : form.userId,
     };
 
     setSaving(true);
@@ -256,8 +285,10 @@ export default function BoothManager() {
           <table className="w-full text-sm">
             <thead className="bg-[#f7fbf9] text-primary text-[12px] font-bold border-b border-[#e0f0ea]">
               <tr>
+                <th className="px-4 py-3 text-left">위치</th>
                 <th className="px-4 py-3 text-left">부스명</th>
                 <th className="px-4 py-3 text-left">대표자</th>
+                <th className="px-4 py-3 text-left">담당 계정</th>
                 <th className="px-4 py-3 text-left">키워드</th>
                 <th className="px-4 py-3 text-left">연령</th>
                 <th className="px-4 py-3 text-left">등록일</th>
@@ -273,8 +304,14 @@ export default function BoothManager() {
                     key={booth.id}
                     className="border-b border-[#f0f0f0] last:border-0 hover:bg-[#f9fdfb]"
                   >
+                    <td className="px-4 py-3 text-[#555] whitespace-nowrap">
+                      {booth.row_label ? `${booth.row_label}-${booth.col_no}` : "-"}
+                    </td>
                     <td className="px-4 py-3 font-medium text-[#212121]">{booth.name}</td>
                     <td className="px-4 py-3 text-[#555]">{owner?.name ?? "-"}</td>
+                    <td className="px-4 py-3 text-[#555]">
+                      {booth.user_id ? accountNickname.get(booth.user_id) ?? "연결됨" : "-"}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {booth.keywords.map((kw) => (
@@ -323,6 +360,54 @@ export default function BoothManager() {
             <DialogTitle>{editingId ? "부스 수정" : "부스 등록"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>행번</Label>
+                <Select
+                  value={form.rowLabel || NO_ACCOUNT}
+                  onValueChange={(v) =>
+                    setForm((f) => ({ ...f, rowLabel: v === NO_ACCOUNT ? "" : (v as BoothRowLabel), colNo: null }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue>{(v: string) => (v === NO_ACCOUNT ? "미배치" : v)}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_ACCOUNT}>미배치</SelectItem>
+                    {BOOTH_ROWS.map((row) => (
+                      <SelectItem key={row} value={row}>{row}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>열번</Label>
+                <Select
+                  value={form.colNo ? String(form.colNo) : ""}
+                  onValueChange={(v) => setForm((f) => ({ ...f, colNo: Number(v) }))}
+                  disabled={!form.rowLabel}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="열 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: form.rowLabel ? BOOTH_ROW_MAX[form.rowLabel] : 0 }, (_, i) => i + 1).map(
+                      (col) => {
+                        const taken = booths.some(
+                          (b) => b.id !== editingId && b.row_label === form.rowLabel && b.col_no === col,
+                        );
+                        return (
+                          <SelectItem key={col} value={String(col)} disabled={taken}>
+                            {col}{taken ? " (등록됨)" : ""}
+                          </SelectItem>
+                        );
+                      },
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <Label>부스명 *</Label>
               <Input
@@ -369,6 +454,16 @@ export default function BoothManager() {
               <p className="text-[11px] text-[#888] leading-relaxed">
                 썸네일과 동일한 사이즈 권장 (14:10 · 942×660px)
               </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>인포 링크</Label>
+              <Input
+                value={form.infoUrl}
+                onChange={(e) => setForm((f) => ({ ...f, infoUrl: e.target.value }))}
+                placeholder="https:// (선택)"
+                maxLength={500}
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -461,6 +556,30 @@ export default function BoothManager() {
                   </button>
                 </div>
               ))}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>담당 계정</Label>
+              <Select value={form.userId} onValueChange={(v) => setForm((f) => ({ ...f, userId: v ?? NO_ACCOUNT }))}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {(v: string) => (v === NO_ACCOUNT ? "연결 안 함" : accountNickname.get(v) ?? v)}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_ACCOUNT}>연결 안 함</SelectItem>
+                  {sortedAccounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.nickname}
+                      {a.booth_name ? ` · ${a.booth_name}` : ""}
+                      {a.role === "admin" ? " (관리자)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-[#888]">
+                연결된 계정은 부스홍보게시판에서 이 부스를 직접 수정할 수 있습니다.
+              </p>
             </div>
 
             {formError && <p className="text-sm text-destructive">{formError}</p>}

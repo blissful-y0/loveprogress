@@ -7,9 +7,11 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   folder: string;
   placeholder?: string;
+  /** 업로드 API. 부스어 화면은 /api/booth-board/upload 사용 */
+  endpoint?: string;
 }
 
-export function ImageUpload({ value, onChange, folder, placeholder = "이미지 선택" }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, folder, placeholder = "이미지 선택", endpoint = "/api/admin/upload" }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -22,7 +24,7 @@ export function ImageUpload({ value, onChange, folder, placeholder = "이미지 
       formData.append("file", file);
       formData.append("folder", folder);
 
-      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      const res = await fetch(endpoint, { method: "POST", body: formData });
       const data = (await res.json()) as { url?: string; error?: string };
 
       if (!res.ok || !data.url) {

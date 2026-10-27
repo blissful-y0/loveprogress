@@ -17,6 +17,13 @@ export interface BoothCardData {
   readonly thumbnailImageKey: string;
   readonly hoverImageKey: string | null;
   readonly ageType: "general" | "adult";
+  readonly rowLabel: string | null;
+  readonly colNo: number | null;
+  /** 관리자 구역이 여러 칸을 차지할 때 마지막 열 */
+  readonly colEnd: number | null;
+  readonly infoUrl: string | null;
+  readonly promoPostedAt: string | null;
+  readonly userId: string | null;
   readonly keywords: readonly BoothKeyword[];
   readonly owner: { readonly name: string; readonly snsUrl: string | null };
   readonly participants: readonly {
@@ -30,8 +37,9 @@ export function toBoothCardData(booth: BoothWithDetails): BoothCardData {
   const sorted = [...booth.participants].sort(
     (a, b) => a.role_order - b.role_order,
   );
-  const owner = sorted[0];
-  const rest = sorted.slice(1);
+  // role_order 0이 대표자. 관리자 구역은 대표자 없이 등록될 수 있음
+  const owner = sorted.find((p) => p.role_order === 0);
+  const rest = sorted.filter((p) => p.role_order !== 0);
 
   return {
     id: booth.id,
@@ -39,6 +47,12 @@ export function toBoothCardData(booth: BoothWithDetails): BoothCardData {
     thumbnailImageKey: booth.thumbnail_image_key,
     hoverImageKey: booth.hover_image_key,
     ageType: booth.age_type,
+    rowLabel: booth.row_label ?? null,
+    colNo: booth.col_no ?? null,
+    colEnd: booth.col_end ?? null,
+    infoUrl: booth.info_url ?? null,
+    promoPostedAt: booth.promo_posted_at ?? null,
+    userId: booth.user_id ?? null,
     keywords: booth.keywords.map((k) => k.keyword),
     owner: owner
       ? { name: owner.name, snsUrl: owner.sns_url }
