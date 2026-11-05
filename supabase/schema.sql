@@ -225,7 +225,7 @@ CREATE TABLE booths (
       col_no >= 1
       AND (col_end IS NULL OR col_end > col_no)
       AND COALESCE(col_end, col_no) <= CASE row_label
-        WHEN '오' THEN 11 WHEN '리' THEN 11 WHEN '와' THEN 7 WHEN '토' THEN 3 WHEN '끼' THEN 8 ELSE 0
+        WHEN '거' THEN 11 WHEN '위' THEN 11 WHEN '와' THEN 7 WHEN '토' THEN 3 WHEN '끼' THEN 8 ELSE 0
       END
     )
   ),
